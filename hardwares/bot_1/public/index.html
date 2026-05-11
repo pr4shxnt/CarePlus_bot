@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="ne">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>CarePlus Assistant</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="app-container">
+      <main class="main-stage">
+        <div class="stage-content">
+          <div id="reply" class="reply-area"></div>
+          <div id="transcript" class="transcript-area"></div>
+        </div>
+        
+        <div class="bottom-bar">
+          <div class="meeting-info">
+            <span class="app-name">CarePlus Assistant</span>
+            <div class="status-indicator" id="activationIndicator" data-active="false">Sleeping</div>
+          </div>
+          
+          <div class="controls-center">
+            <button id="startBtn" class="control-btn mic-btn" title="Start Listening">🎤</button>
+            <button id="stopBtn" class="control-btn stop-btn" disabled title="Stop">🛑</button>
+            <button id="clearBtn" class="control-btn clear-btn" title="Clear">🧹</button>
+          </div>
+          
+          <div class="controls-right">
+            <button id="toggleSidebar" class="control-btn side-toggle" title="Settings">⚙️</button>
+            <div id="status" class="status-text">Idle</div>
+          </div>
+        </div>
+      </main>
+
+      <aside id="sidebar" class="sidebar hidden">
+        <header class="sidebar-header">
+          <h2>Meeting details</h2>
+          <button id="closeSidebar" class="close-btn">&times;</button>
+        </header>
+        
+        <div class="sidebar-content">
+          <section class="settings-group">
+            <h3>AI Settings</h3>
+            <div class="field">
+              <span>User ID</span>
+              <input id="userId" type="text" placeholder="web-user" />
+            </div>
+            <div class="field">
+              <span>FastAPI Chat URL</span>
+              <input id="aiUrl" type="url" />
+            </div>
+            <div class="field">
+              <span>Piper TTS URL</span>
+              <input id="ttsUrl" type="url" />
+            </div>
+            <button id="askBtn" class="sidebar-action">Ask AI Manually</button>
+          </section>
+
+          <section class="settings-group">
+            <h3>Recognition Settings</h3>
+            <label class="toggle-row">
+              <input id="autoReplyToggle" type="checkbox" checked />
+              <span>Auto reply</span>
+            </label>
+            <label class="toggle-row">
+              <input id="wakeWordToggle" type="checkbox" checked />
+              <span>Wake word (CarePlus)</span>
+            </label>
+            <label class="toggle-row">
+              <input id="continuousToggle" type="checkbox" checked />
+              <span>Continuous</span>
+            </label>
+            <label class="toggle-row">
+              <input id="interimToggle" type="checkbox" checked />
+              <span>Interim results</span>
+            </label>
+          </section>
+
+          <section class="settings-group">
+            <h3>System Status</h3>
+            <div class="status-item">
+              <label>AI Status:</label>
+              <span id="aiStatus">Idle</span>
+            </div>
+            <div class="status-item">
+              <label>Last AI Error:</label>
+              <span id="aiError" class="error-text">None</span>
+            </div>
+            <div class="status-item">
+              <label>Last Mic Error:</label>
+              <span id="error" class="error-text">None</span>
+            </div>
+          </section>
+        </div>
+        <audio id="replyAudio" style="display:none"></audio>
+      </aside>
+    </div>
+
+    <script type="module" src="app.js"></script>
+  </body>
+</html>
