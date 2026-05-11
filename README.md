@@ -61,9 +61,15 @@ This server handles the voice interface, TTS, and AI logic.
     ```bash
     pip install -r requirements.txt
     ```
-4.  **Piper TTS Setup**:
-    - Download the Piper binary from [Piper GitHub](https://github.com/rhasspy/piper).
-    - Ensure the `piper` executable is in your system PATH, or set the `PIPER_BIN` environment variable.
+4. **Piper TTS Setup**:
+    Piper is **required** for the Carebot to speak. You can install it in two ways:
+    - **Option A (Easy)**: Install via pip:
+      ```bash
+      pip install piper-tts
+      ```
+    - **Option B (Binary)**: Download the standalone binary from [Piper GitHub](https://github.com/rhasspy/piper), extract it, and ensure the `piper` executable is in your system PATH or set the `PIPER_BIN` environment variable.
+
+    *The required Nepali voice models are already included in `hardwares/bot_1/models/`.*
 5.  **Initialize Database**:
     ```bash
     python -m app.database.db
