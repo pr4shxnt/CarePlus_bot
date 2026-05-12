@@ -1,6 +1,7 @@
 import { handleRequest } from "./routes";
+import { connectToDatabase } from "./config/database";
 
-const APP_NAME = "server_orc";
+const APP_NAME = "Careplus API";
 const DEFAULT_PORT = 3000;
 
 export function resolvePort(portValue: string | undefined): number {
@@ -15,7 +16,14 @@ export function resolvePort(portValue: string | undefined): number {
 
 export { handleRequest };
 
-export function startServer(port = resolvePort(Bun.env.PORT)) {
+export async function startServer(port = resolvePort(Bun.env.PORT)) {
+  const connected = await connectToDatabase();
+  if (connected) {
+    console.log("✅ Connected to MongoDB");
+  } else {
+    console.warn("⚠️ Database URI not found. Running without persistence.");
+  }
+
 	return Bun.serve({
 		port,
 		fetch: handleRequest,
@@ -23,6 +31,7 @@ export function startServer(port = resolvePort(Bun.env.PORT)) {
 }
 
 if (import.meta.main) {
-	const server = startServer();
-	console.log(`🚀 ${APP_NAME} listening on http://localhost:${server.port}`);
+	startServer().then((server) => {
+	  console.log(`🚀 ${APP_NAME} listening on http://localhost:${server.port}`);
+  });
 }

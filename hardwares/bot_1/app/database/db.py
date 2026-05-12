@@ -35,8 +35,30 @@ def init_db():
         time TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )
     ''')
+
+    # Chat history table
+    cursor.execute('''
+    CREATE TABLE IF NOT EXISTS chat_history (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id TEXT NOT NULL,
+        session_id TEXT,
+        role TEXT NOT NULL,
+        content TEXT NOT NULL,
+        timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        is_synced INTEGER DEFAULT 0
+    )
+    ''')
     
     conn.commit()
+    
+    # Migration: Add session_id to chat_history if missing
+    try:
+        cursor.execute("ALTER TABLE chat_history ADD COLUMN session_id TEXT")
+        conn.commit()
+    except sqlite3.OperationalError:
+        # Column already exists
+        pass
+        
     conn.close()
 
 if __name__ == "__main__":

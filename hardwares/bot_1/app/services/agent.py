@@ -1,6 +1,8 @@
 import json
 import re
 import asyncio
+import uuid
+import time
 from .llm import llm_service
 from .rag import rag_service
 from .router import router_service
@@ -8,27 +10,36 @@ from ..database.db import get_db
 
 class SwasthaAgent:
     def __init__(self):
+        # --- Session Management ---
+        self.sessions = {} # {user_id: {"id": uuid, "last_active": timestamp}}
+        self.SESSION_TIMEOUT = 1800 # 30 minutes in seconds
+
         # --- System Prompts (Multi-Language Intelligence) ---
         self.PROMPT_QA_NE = (
             "तपाईं एक नेपाली स्वास्थ्य सहायक हुनुहुन्छ।\n"
             "नियम: केवल शुद्ध नेपाली भाषा (देवनागरी लिपि) मा जवाफ दिनुहोस्।\n"
             "कुनै पनि अंग्रेजी शब्द (English), रोमन नेपाली (Romanized), वा अनावश्यक भूमिका नथप्नुहोस्।\n"
-            "केभल सन्दर्भबाट प्रश्नको सिधा जवाफ मात्र दिनुहोस्।"
+            "केभल सन्दर्भबाट प्रश्नको सिधा जवाफ मात्र दिनुहोस्।\n"
+            "महत्त्वपूर्ण: कुनै पनि मार्कडाउन (Markdown) जस्तै bold (**), italic (*), वा सूची (-) प्रयोग नगर्नुहोस्। केबल सादा पाठ (Plain Text) मा जवाफ दिनुहोस्।"
         )
         self.PROMPT_GENERAL_NE = (
             "तपाईं 'स्वस्थ साथी' (Swastha Sathi) हुनुहुन्छ — एक मैत्रीपूर्ण नेपाली स्वास्थ्य सहायक।\n"
             "नियमहरू:\n"
             "१. केवल नेपाली देवनागरी लिपिमा जवाफ दिनुहोस्।\n"
             "२. छोटो, स्पष्ट र सहयोगी बन्नुहोस्।\n"
-            "३. चिकित्सा प्रश्नहरूको लागि RAG सन्दर्भ प्रयोग गरिन्छ, तर यहाँ तपाईं सामान्य कुराकानी र स्वागत (greeting) को लागि हुनुहुन्छ।"
+            "३. कुनै पनि मार्कडाउन (bold, italic) प्रयोग नगर्नुहोस्। केबल सादा पाठ प्रयोग गर्नुहोस्।"
         )
         
-        self.PROMPT_QA_EN = "You are a health assistant. Reply only in English. No Nepali or Romanized Nepali. Answer only from provided context. Add medical disclaimer at the end."
+        self.PROMPT_QA_EN = (
+            "You are a health assistant. Reply only in English. No Nepali or Romanized Nepali. "
+            "Answer only from provided context. Add medical disclaimer at the end. "
+            "STRICT RULE: Do NOT use any Markdown (no bold **, no italic *, no headers #, no lists). Use ONLY plain text."
+        )
         self.PROMPT_GENERAL_EN = (
             "You are Swastha Sathi, a friendly assistant.\n"
             "Strict rules:\n"
             "1. Reply ONLY in plain English. No Nepali, no Romanized Nepali.\n"
-            "2. Never add translations or transliterations.\n"
+            "2. NEVER use Markdown (no **, no *, no #). Use only plain text.\n"
             "3. Never assume the user is sick unless explicitly stated.\n"
             "Example:\n"
             "User: I am fine\n"
@@ -45,7 +56,46 @@ class SwasthaAgent:
         resp = (await llm_service.generate_response(prompt, num_predict=10)).strip().lower()
         return "yes" in resp
 
+    def _get_session_id(self, user_id):
+        """Gets existing session ID or creates a new one if timed out."""
+        now = time.time()
+        if user_id in self.sessions:
+            session = self.sessions[user_id]
+            if now - session["last_active"] < self.SESSION_TIMEOUT:
+                session["last_active"] = now
+                return session["id"]
+        
+        # New session
+        new_id = str(uuid.uuid4())
+        self.sessions[user_id] = {"id": new_id, "last_active": now}
+        return new_id
+
+    def is_active(self, threshold=600):
+        """Checks if any session has been active within the last 'threshold' seconds."""
+        now = time.time()
+        for session in self.sessions.values():
+            if now - session["last_active"] < threshold:
+                return True
+        return False
+
+    async def _save_chat(self, user_id, role, content):
+        """Saves a message to the local chat_history table with session_id."""
+        try:
+            session_id = self._get_session_id(user_id)
+            conn = get_db()
+            conn.execute(
+                "INSERT INTO chat_history (user_id, session_id, role, content) VALUES (?, ?, ?, ?)", 
+                (user_id, session_id, role, content)
+            )
+            conn.commit()
+            conn.close()
+        except Exception as e:
+            print(f"Failed to save chat: {e}")
+
     async def run_chat_stream(self, user_id, message, history=None):
+        # Save user message
+        await self._save_chat(user_id, "user", message)
+        
         # Run detection and classification in parallel
         lang_task = asyncio.create_task(llm_service.detect_language(message))
         intent_task = asyncio.create_task(router_service.classify(message))
@@ -62,13 +112,19 @@ class SwasthaAgent:
                 rows = cursor.fetchall()
                 conn.close()
                 meds = [{"name": r["name"], "dosage": r["dosage"], "schedule": json.loads(r["schedule"])} for r in rows]
+                
                 if meds:
                     res = ("यहाँ तपाईंका औषधिहरू छन्:\n" if lang == "ne" else "Here are your medicines:\n") + "\n".join([f"- **{m['name']}** ({m['dosage']}) - {', '.join([s['time'] for s in m['schedule']])}" for m in meds])
                 else:
                     res = "तपाईंले अहिलेसम्म कुनै औषधि थप्नुभएको छैन।" if lang == "ne" else "You haven't added any medicines yet."
+                
+                full_res = ""
                 for word in res.split():
+                    full_res += word + " "
                     yield word + " "
                     await asyncio.sleep(0.01)
+                
+                await self._save_chat(user_id, "assistant", full_res.strip())
                 return
             except:
                 yield "Error accessing records."
@@ -80,14 +136,19 @@ class SwasthaAgent:
             if not relevant_chunks:
                 res = "माफ गर्नुहोस्, मसँग जानकारी छैन।" if lang == "ne" else "Sorry, I don't have that info."
                 yield res
+                await self._save_chat(user_id, "assistant", res)
                 return
             
             raw_context = "\n\n".join([c["content"] for c in relevant_chunks])
             context = "\n".join([line.strip() for line in raw_context.split('\n') if not line.strip().startswith('प्र:')])
             system_prompt = self.PROMPT_QA_NE if lang == "ne" else self.PROMPT_QA_EN
             prompt = f"{context}\n\n{message}"
+            
+            full_reply = ""
             async for chunk in llm_service.chat_stream([{"role": "user", "content": prompt}], system_prompt=system_prompt):
+                full_reply += chunk
                 yield chunk
+            await self._save_chat(user_id, "assistant", full_reply)
 
         # --- OBJECT QUERY ---
         elif intent == "OBJECT_QUERY":
@@ -106,6 +167,7 @@ class SwasthaAgent:
                 else:
                     res = f"माफ गर्नुहोस्, **{obj_name}** को रेकर्ड छैन।" if lang == "ne" else f"Sorry, no record of **{obj_name}**."
                 yield res
+                await self._save_chat(user_id, "assistant", res)
                 return
             except:
                 yield "Database error."
@@ -124,7 +186,9 @@ class SwasthaAgent:
                     conn.execute("INSERT INTO objects (user_id, name, location) VALUES (?, ?, ?)", (user_id, name, loc))
                     conn.commit()
                     conn.close()
-                    yield f"बचत भयो: **{name}** **{loc}** मा।" if lang == "ne" else f"Saved: **{name}** at **{loc}**."
+                    res = f"बचत भयो: **{name}** **{loc}** मा।" if lang == "ne" else f"Saved: **{name}** at **{loc}**."
+                    yield res
+                    await self._save_chat(user_id, "assistant", res)
                 except: yield "Save failed."
             else: yield "Extraction failed."
             return
@@ -134,8 +198,12 @@ class SwasthaAgent:
             system_prompt = self.PROMPT_GENERAL_NE if lang == "ne" else self.PROMPT_GENERAL_EN
             chat_messages = history or []
             chat_messages.append({"role": "user", "content": message})
+            
+            full_reply = ""
             async for chunk in llm_service.chat_stream(chat_messages, system_prompt=system_prompt):
+                full_reply += chunk
                 yield chunk
+            await self._save_chat(user_id, "assistant", full_reply)
 
     async def generate_report(self, user_id, history=None):
         """Generate a daily health report by analyzing chat history."""

@@ -17,6 +17,7 @@
     "typescript": "^5"
   },
   "dependencies": {
+    "mongoose": "^8.0.0",
     "@types/mongoose": "^5.11.97"
   }
 }

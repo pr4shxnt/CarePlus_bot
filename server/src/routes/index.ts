@@ -1,5 +1,6 @@
 import { getHealthController, getStatusController } from "../controllers/health.controller";
 import { createUserController, listUsersController } from "../controllers/user.controller";
+import { syncChatHistory, getChatHistory, getChatSessions } from "../controllers/chat.history.controller";
 
 function jsonResponse(data: unknown, status = 200): Response {
   return Response.json(data, {
@@ -28,6 +29,18 @@ export async function handleRequest(request: Request): Promise<Response> {
 
   if (method === "GET" && url.pathname === "/api/users") {
     return listUsersController();
+  }
+
+  if (method === "POST" && url.pathname === "/api/history/sync") {
+    return syncChatHistory(request);
+  }
+
+  if (method === "GET" && url.pathname === "/api/history") {
+    return getChatHistory(request);
+  }
+
+  if (method === "GET" && url.pathname === "/api/history/sessions") {
+    return getChatSessions(request);
   }
 
   return jsonResponse(
