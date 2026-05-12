@@ -48,6 +48,21 @@ def init_db():
         is_synced INTEGER DEFAULT 0
     )
     ''')
+
+    # Medicine intake logs table — tracks when each dose was taken/missed/skipped
+    cursor.execute('''
+    CREATE TABLE IF NOT EXISTS medicine_logs (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id TEXT NOT NULL,
+        medicine_name TEXT NOT NULL,
+        dosage TEXT DEFAULT '',
+        scheduled_time TEXT DEFAULT '',
+        taken_at TIMESTAMP,
+        status TEXT DEFAULT 'taken' CHECK(status IN ('taken', 'missed', 'skipped')),
+        timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        is_synced INTEGER DEFAULT 0
+    )
+    ''')
     
     conn.commit()
     
