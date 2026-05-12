@@ -1,0 +1,97 @@
+@import "tailwindcss";
+
+:root {
+  --background: #C8E8E5; /* Soft Mint */
+  --foreground: #1e293b; /* Slate 800 for readability */
+  --wave-1: #B0D8D5;
+  --wave-2: #A0CBCA;
+  --highlight: #E8F4F3;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
+  overflow-x: hidden;
+}
+
+/* Medical Mesh Gradient */
+.mesh-gradient {
+  background-color: #C8E8E5;
+  background-image: 
+    radial-gradient(at 0% 0%, #B0D8D5 0, transparent 50%), 
+    radial-gradient(at 50% 10%, #E8F4F3 0, transparent 40%), 
+    radial-gradient(at 100% 0%, #A0CBCA 0, transparent 50%),
+    radial-gradient(at 50% 100%, #B0D8D5 0, transparent 50%);
+}
+
+/* Soft Glassmorphism */
+.glass {
+  background: rgba(255, 255, 255, 0.25);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.glass-card {
+  background: linear-gradient(135deg, rgba(255,255,255,0.4) 0%, rgba(255,255,255,0.1) 100%);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255,255,255,0.5);
+  box-shadow: 0 20px 40px -10px rgba(100, 150, 150, 0.15);
+}
+
+/* Subtle Glow Borders for light theme */
+.glow-border {
+  position: relative;
+}
+
+.glow-border::after {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  background: linear-gradient(45deg, transparent, rgba(160, 203, 202, 0.5), transparent);
+  border-radius: inherit;
+  z-index: -1;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.glow-border:hover::after {
+  opacity: 1;
+}
+
+/* Animations */
+@keyframes float {
+  0% { transform: translateY(0px) rotate(0deg); }
+  50% { transform: translateY(-15px) rotate(0.5deg); }
+  100% { transform: translateY(0px) rotate(0deg); }
+}
+
+.animate-float {
+  animation: float 6s ease-in-out infinite;
+}
+
+.animate-float-delayed {
+  animation: float 8s ease-in-out infinite;
+  animation-delay: 1s;
+}
+
+@keyframes spin-slow {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.animate-spin-slow {
+  animation: spin-slow 20s linear infinite;
+}
