@@ -71,6 +71,28 @@ describe("handleRequest", () => {
     expect(response.status).toBe(422);
     expect(body.error).toBe("Field 'name' must be at least 2 characters");
   });
+
+  test("returns 400 for history sync with missing fields", async () => {
+    const response = await handleRequest(
+      new Request("http://localhost/api/history/sync", {
+        method: "POST",
+        body: JSON.stringify({ userId: "test-user" }),
+        headers: { "content-type": "application/json" },
+      }),
+    );
+    const body = await response.json();
+
+    expect(response.status).toBe(400);
+    expect(body.error).toBe("Missing required fields");
+  });
+
+  test("returns 400 for history retrieval without userId", async () => {
+    const response = await handleRequest(new Request("http://localhost/api/history"));
+    const body = await response.json();
+
+    expect(response.status).toBe(400);
+    expect(body.error).toBe("userId is required");
+  });
 });
 
 describe("parseCreateUserPayload", () => {

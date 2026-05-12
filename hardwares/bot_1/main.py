@@ -13,6 +13,7 @@ import json
 import asyncio
 from app.services.agent import swastha_agent
 from app.database.db import init_db
+from app.services.sync import start_sync_worker
 
 # Setup logging
 logging.basicConfig(level=logging.INFO)
@@ -20,8 +21,10 @@ logger = logging.getLogger("careplus")
 
 app = FastAPI(title="CarePlus Unified Server")
 
-# Initialize database
-init_db()
+@app.on_event("startup")
+async def startup_event():
+    init_db()
+    start_sync_worker()
 
 # CORS configuration
 app.add_middleware(
@@ -51,6 +54,13 @@ class ChatRequest(BaseModel):
 @app.get("/health")
 async def health():
     return {"ok": True, "server": "CarePlus Unified"}
+
+@app.post("/api/sync/now")
+async def trigger_sync():
+    """Manual trigger for testing sync."""
+    from app.services.sync import sync_history
+    await sync_history()
+    return {"status": "Sync triggered"}
 
 # WebSocket for streaming chat
 @app.websocket("/ws/chat")
@@ -163,4 +173,4 @@ app.mount("/", StaticFiles(directory=str(BASE_DIR / "public"), html=True), name=
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=3000)
+    uvicorn.run(app, host="0.0.0.0", port=5000)
