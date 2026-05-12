@@ -4,6 +4,7 @@ from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 from pathlib import Path
+from typing import Optional, List
 import subprocess
 import tempfile
 import os
@@ -12,7 +13,7 @@ import logging
 import json
 import asyncio
 from app.services.agent import swastha_agent
-from app.database.db import init_db
+from app.database.db import init_db, get_db
 from app.services.sync import start_sync_worker
 
 # Setup logging
@@ -50,6 +51,17 @@ class ChatRequest(BaseModel):
     userId: str
     message: str
     history: list = []
+
+class MedicineLogEntry(BaseModel):
+    medicineName: str
+    dosage: Optional[str] = ""
+    scheduledTime: Optional[str] = ""
+    takenAt: Optional[str] = None
+    status: Optional[str] = "taken"
+
+class MedicineLogRequest(BaseModel):
+    userId: str
+    logs: List[MedicineLogEntry]
 
 @app.get("/health")
 async def health():
@@ -113,6 +125,26 @@ async def report_endpoint(request: Request):
         
     result = await swastha_agent.generate_report(user_id, history)
     return result
+
+@app.post("/api/medicine/log")
+async def log_medicine_endpoint(request: MedicineLogRequest):
+    """Log medicine intake events (taken, missed, skipped)."""
+    if not request.userId or not request.logs:
+        raise HTTPException(status_code=400, detail="userId and logs are required")
+    
+    try:
+        conn = get_db()
+        for entry in request.logs:
+            conn.execute(
+                "INSERT INTO medicine_logs (user_id, medicine_name, dosage, scheduled_time, taken_at, status) VALUES (?, ?, ?, ?, ?, ?)",
+                (request.userId, entry.medicineName, entry.dosage, entry.scheduledTime, entry.takenAt, entry.status),
+            )
+        conn.commit()
+        conn.close()
+        return {"success": True, "count": len(request.logs)}
+    except Exception as e:
+        logger.error(f"Medicine log error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 # TTS Endpoint (refactored to be async)
 @app.post("/tts")
