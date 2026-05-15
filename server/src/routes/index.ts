@@ -1,6 +1,7 @@
 import { getHealthController, getStatusController } from "../controllers/health.controller";
 import { createUserController, listUsersController } from "../controllers/user.controller";
 import { syncChatHistory, getChatHistory, getChatSessions } from "../controllers/chat.history.controller";
+import { getReport, logMedicine } from "../controllers/report.controller";
 
 function jsonResponse(data: unknown, status = 200): Response {
   return Response.json(data, {
@@ -15,39 +16,73 @@ export async function handleRequest(request: Request): Promise<Response> {
   const url = new URL(request.url);
   const method = request.method.toUpperCase();
 
+  // ─── CORS preflight ────────────────────────────────────────────
+  if (method === "OPTIONS") {
+    return new Response(null, {
+      status: 204,
+      headers: {
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+        "Access-Control-Allow-Headers": "Content-Type",
+      },
+    });
+  }
+
+  // Helper to add CORS headers to any response
+  const corsify = (response: Response): Response => {
+    const headers = new Headers(response.headers);
+    headers.set("Access-Control-Allow-Origin", "*");
+    return new Response(response.body, {
+      status: response.status,
+      statusText: response.statusText,
+      headers,
+    });
+  };
+
   if (method === "GET" && url.pathname === "/") {
-    return getStatusController();
+    return corsify(getStatusController());
   }
 
   if (method === "GET" && url.pathname === "/health") {
-    return getHealthController();
+    return corsify(getHealthController());
   }
 
   if (method === "POST" && url.pathname === "/api/users") {
-    return createUserController(request);
+    return corsify(await createUserController(request));
   }
 
   if (method === "GET" && url.pathname === "/api/users") {
-    return listUsersController();
+    return corsify(await listUsersController());
   }
 
   if (method === "POST" && url.pathname === "/api/history/sync") {
-    return syncChatHistory(request);
+    return corsify(await syncChatHistory(request));
   }
 
   if (method === "GET" && url.pathname === "/api/history") {
-    return getChatHistory(request);
+    return corsify(await getChatHistory(request));
   }
 
   if (method === "GET" && url.pathname === "/api/history/sessions") {
-    return getChatSessions(request);
+    return corsify(await getChatSessions(request));
   }
 
-  return jsonResponse(
-    {
-      error: "Not Found",
-      path: url.pathname,
-    },
-    404,
+  // ─── Report endpoints ──────────────────────────────────────────
+  if (method === "GET" && url.pathname === "/api/reports") {
+    return corsify(await getReport(request));
+  }
+
+  if (method === "POST" && url.pathname === "/api/medicine/log") {
+    return corsify(await logMedicine(request));
+  }
+
+  return corsify(
+    jsonResponse(
+      {
+        error: "Not Found",
+        path: url.pathname,
+      },
+      404,
+    ),
   );
 }
