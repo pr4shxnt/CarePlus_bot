@@ -3,7 +3,7 @@
 import React from "react";
 import { motion } from "framer-motion";
 import { ArrowRight, Sparkles } from "lucide-react";
-import RobotModel from "./RobotModel";
+import RobotShowcase from "./RobotShowcase";
 
 const Hero = () => {
   return (
@@ -42,36 +42,8 @@ const Hero = () => {
           </div>
         </motion.div>
 
-        {/* 3D Robot Model Section - CENTERPIECE */}
-        <motion.div
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 1.2, delay: 0.3 }}
-          className="mt-12 flex justify-center relative"
-        >
-          <RobotModel />
-
-          {/* Spatial Cards around the model (Medical Theme) */}
-          <div className="absolute top-0 right-0 md:right-10 p-6 glass-card rounded-3xl animate-float border border-white/50 z-20">
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 bg-[#B0D8D5] rounded-2xl flex items-center justify-center shadow-sm">
-                <Sparkles className="w-6 h-6 text-[#1e293b]" />
-              </div>
-              <div className="text-left">
-                <p className="text-xs text-[#1e293b]/50 font-bold uppercase tracking-widest">System</p>
-                <p className="text-lg font-bold text-[#1e293b]">Ready to Help</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="absolute bottom-20 left-0 md:left-10 p-6 glass-card rounded-3xl animate-float-delayed border border-white/50 z-20">
-            <p className="text-xs text-[#1e293b]/50 font-bold mb-2 uppercase tracking-widest text-left">Morning Check-in</p>
-            <div className="flex items-center gap-3">
-              <div className="w-3 h-3 bg-[#A0CBCA] rounded-full animate-pulse shadow-[0_0_8px_#A0CBCA]" />
-              <span className="text-lg font-bold text-[#1e293b]">Healthy & Calm</span>
-            </div>
-          </div>
-        </motion.div>
+        {/* 3D Robot Model Section - CENTERPIECE with scroll-triggered descriptions */}
+        <RobotShowcase />
       </div>
     </section>
   );
