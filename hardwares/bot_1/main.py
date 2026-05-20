@@ -1,6 +1,6 @@
 from fastapi import FastAPI, Request, HTTPException, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, Response
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 from pathlib import Path
@@ -202,6 +202,10 @@ async def tts(request: TtsRequest):
     return FileResponse(path=str(output_path), media_type="audio/wav", filename="tts.wav")
 
 app.mount("/", StaticFiles(directory=str(BASE_DIR / "public"), html=True), name="static")
+
+@app.get("/favicon.ico", include_in_schema=False)
+async def favicon():
+    return FileResponse("public/favicon.ico") if os.path.exists("public/favicon.ico") else Response(status_code=204)
 
 if __name__ == "__main__":
     import uvicorn

@@ -23,6 +23,8 @@ const activationIndicator = document.getElementById("activationIndicator");
 const sidebar = document.getElementById("sidebar");
 const toggleSidebarBtn = document.getElementById("toggleSidebar");
 const closeSidebarBtn = document.getElementById("closeSidebar");
+const startOverlay = document.getElementById("startOverlay");
+const overlayStartBtn = document.getElementById("overlayStartBtn");
 
 let recognition;
 let isListening = false;
@@ -105,10 +107,11 @@ const handleError = (event) => {
   const message = errorMessages[event.error] || event.message || "Unknown error";
   errorEl.textContent = message;
   updateStatus("Error", "error");
+  console.error("SpeechRecognition error detail:", event.error, message);
   if (event.error === "not-allowed" || event.error === "service-not-allowed") {
+    console.warn("Permanent STT error detected, blocking auto-restart");
     autoRestartBlocked = true;
   }
-  console.error("SpeechRecognition error:", event.error, event.message || "");
 };
 
 const updateReply = (text) => {
@@ -223,10 +226,20 @@ const initWebSocket = () => {
             const errText = await ttsResponse.text();
             console.error(`TTS Request failed with status ${ttsResponse.status}: ${errText}`);
             updateAiStatus("TTS Error", "error");
+            // Ensure STT is running even if TTS fails
+            if (AUTO_START_LISTENING && !autoRestartBlocked && !isListening) {
+              console.log("Ensuring STT is active after TTS error...");
+              startListening();
+            }
           }
         } catch (e) {
           console.error("TTS Fetch failed:", e);
           updateAiStatus("TTS Network Error", "error");
+          // Ensure STT is running even if network fails
+          if (AUTO_START_LISTENING && !autoRestartBlocked && !isListening) {
+            console.log("Ensuring STT is active after TTS fetch failure...");
+            startListening();
+          }
         }
         updateAiStatus("Ready", "idle");
       }
@@ -343,13 +356,15 @@ const setupRecognition = () => {
     isListening = false;
     setButtons(false);
     updateStatus("Idle", "idle");
-    console.log("STT Ended");
+    console.log("STT Ended. autoRestartBlocked:", autoRestartBlocked, "AUTO_START_LISTENING:", AUTO_START_LISTENING);
     if (AUTO_START_LISTENING && !autoRestartBlocked) {
+      console.log("Scheduling STT restart...");
       setTimeout(() => startListening(), 500);
     }
   };
 
   recognition.onerror = (event) => {
+    console.error("SpeechRecognition error event:", event.error, event.message);
     handleError(event);
   };
 
@@ -436,11 +451,14 @@ const setupRecognition = () => {
 };
 
 const startListening = () => {
+  console.log("startListening() called. isListening:", isListening);
   if (!recognition) {
+    console.log("Recognition not initialized, setting up...");
     setupRecognition();
   }
 
   if (!recognition || isListening) {
+    console.log("Recognition already running or initialization failed. Skipping start.");
     return;
   }
 
@@ -448,6 +466,7 @@ const startListening = () => {
   recognition.interimResults = interimToggle.checked;
   errorEl.textContent = "None";
   try {
+    console.log("Attempting recognition.start()...");
     recognition.start();
   } catch (error) {
     errorEl.textContent = "Failed to start recognition. Try reloading the page.";
@@ -552,4 +571,30 @@ autoReplyToggle.checked = AUTO_REPLY_ENABLED;
 wakeWordToggle.checked = true; // Default to ON as per user request
 replyAudio.autoplay = AUTO_PLAY_AUDIO;
 updateAiStatus("Idle", "idle");
-autoStartListening();
+
+// Instead of autoStartListening(), wait for user interaction to satisfy Autoplay policy
+const handleUserInteraction = () => {
+  console.log("User interacted, initializing audio and STT...");
+  startOverlay.classList.add("hidden");
+  
+  // Try to play an empty sound or just start STT - this click permits future audio.play()
+  replyAudio.play().catch(() => { /* expected to fail if empty, but interaction is registered */ });
+  
+  autoStartListening();
+  
+  window.removeEventListener("click", handleUserInteraction);
+};
+
+if (startOverlay) {
+  startOverlay.addEventListener("click", handleUserInteraction);
+} else {
+  autoStartListening();
+}
+
+// Heartbeat safety net: Ensure STT stays active
+setInterval(() => {
+  if (AUTO_START_LISTENING && !isListening && !autoRestartBlocked) {
+    console.log("Heartbeat: STT was inactive, restarting...");
+    startListening();
+  }
+}, 5000);

@@ -1,168 +1,195 @@
-import React, { useState, useEffect } from 'react';
-import {
-  ScrollView,
-  StatusBar,
-  StyleSheet,
-  Text,
-  useColorScheme,
-  View,
-  TextInput,
-  TouchableOpacity,
-  FlatList,
-  ActivityIndicator,
-} from 'react-native';
+import React from 'react';
+import { View, StyleSheet, Platform, StatusBar, Text } from 'react-native';
+import { NavigationContainer } from '@react-navigation/native';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
+import { Home, User, BarChart2, Smartphone, ClipboardList } from 'lucide-react-native';
 
-const BOT_URL = 'http://localhost:3000'; // Change to your local machine IP
-const SERVER_URL = 'http://localhost:3000'; // Change to your server IP
-const USER_ID = 'mobile-user';
+import { Colors } from './src/theme/colors';
+import LoginScreen from './src/screens/LoginScreen';
+import DoctorHomeScreen from './src/screens/DoctorHomeScreen';
+import GuardianHomeScreen from './src/screens/GuardianHomeScreen';
+import { 
+  PatientDetail, 
+  CriticalScreen, 
+  ReportScreen, 
+  ConnectDevice, 
+  ProfileScreen 
+} from './src/screens/CommonScreens';
+
+const Stack = createNativeStackNavigator();
+const Tab = createBottomTabNavigator();
+
+const TabBarIcon = ({ Icon, color, size, focused, label }: any) => (
+  <View style={styles.tabItemContainer}>
+    <View style={[styles.iconWrapper, focused && styles.activeIconWrapper]}>
+      <Icon color={color} size={22} strokeWidth={focused ? 2.5 : 2} />
+    </View>
+    <Text style={[styles.tabLabel, { color: color, fontWeight: focused ? '800' : '600' }]}>
+      {label}
+    </Text>
+  </View>
+);
+
+const DoctorTabs = () => (
+  <Tab.Navigator
+    screenOptions={{
+      headerShown: false,
+      tabBarShowLabel: false,
+      tabBarStyle: styles.tabBar,
+      tabBarActiveTintColor: Colors.secondary,
+      tabBarInactiveTintColor: Colors.gray,
+    }}
+  >
+    <Tab.Screen 
+      name="DoctorHomeTab" 
+      component={DoctorHomeScreen} 
+      options={{
+        tabBarIcon: (props) => <TabBarIcon Icon={Home} label="Home" {...props} />
+      }}
+    />
+    <Tab.Screen 
+      name="CriticalTab" 
+      component={CriticalScreen} 
+      options={{
+        tabBarIcon: (props) => <TabBarIcon Icon={ClipboardList} label="Alerts" {...props} />
+      }}
+    />
+    <Tab.Screen 
+      name="DoctorProfileTab" 
+      children={(props) => <ProfileScreen {...props} role="doctor" />} 
+      options={{
+        tabBarIcon: (props) => <TabBarIcon Icon={User} label="Profile" {...props} />
+      }}
+    />
+  </Tab.Navigator>
+);
+
+const GuardianTabs = () => (
+  <Tab.Navigator
+    screenOptions={{
+      headerShown: false,
+      tabBarShowLabel: false,
+      tabBarStyle: styles.tabBar,
+      tabBarActiveTintColor: Colors.secondary,
+      tabBarInactiveTintColor: Colors.gray,
+    }}
+  >
+    <Tab.Screen 
+      name="GuardianHomeTab" 
+      component={GuardianHomeScreen} 
+      options={{
+        tabBarIcon: (props) => <TabBarIcon Icon={Home} label="Home" {...props} />
+      }}
+    />
+    <Tab.Screen 
+      name="ReportTab" 
+      component={ReportScreen} 
+      options={{
+        tabBarIcon: (props) => <TabBarIcon Icon={BarChart2} label="Reports" {...props} />
+      }}
+    />
+    <Tab.Screen 
+      name="ConnectTab" 
+      component={ConnectDevice} 
+      options={{
+        tabBarIcon: (props) => <TabBarIcon Icon={Smartphone} label="Bot" {...props} />
+      }}
+    />
+    <Tab.Screen 
+      name="GuardianProfileTab" 
+      children={(props) => <ProfileScreen {...props} role="guardian" />} 
+      options={{
+        tabBarIcon: (props) => <TabBarIcon Icon={User} label="Profile" {...props} />
+      }}
+    />
+  </Tab.Navigator>
+);
 
 const App = () => {
-  const isDarkMode = useColorScheme() === 'dark';
-  const [view, setView] = useState('chat'); // 'chat' or 'history'
-  const [message, setMessage] = useState('');
-  const [chatLog, setChatLog] = useState([]);
-  const [history, setHistory] = useState([]);
-  const [loading, setLoading] = useState(false);
-
-  const sendMessage = async () => {
-    if (!message.trim()) return;
-
-    const userMsg = { role: 'user', content: message };
-    setChatLog([...chatLog, userMsg]);
-    setMessage('');
-
-    try {
-      const response = await fetch(`${BOT_URL}/api/chat/agent`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId: USER_ID, message }),
-      });
-      const data = await response.json();
-      const botMsg = { role: 'assistant', content: data.reply };
-      setChatLog(prev => [...prev, botMsg]);
-    } catch (error) {
-      console.error('Chat error:', error);
-    }
-  };
-
-  const fetchHistory = async () => {
-    setLoading(true);
-    try {
-      const response = await fetch(`${SERVER_URL}/api/history?userId=${USER_ID}`);
-      const data = await response.json();
-      if (Array.isArray(data)) {
-        setHistory(data);
-      }
-    } catch (error) {
-      console.error('History fetch error:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    if (view === 'history') {
-      fetchHistory();
-    }
-  }, [view]);
-
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: isDarkMode ? '#1a1a1a' : '#f5f5f5' }]}>
-      <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} />
-      
-      <View style={styles.header}>
-        <Text style={[styles.title, { color: isDarkMode ? '#fff' : '#000' }]}>CarePlus</Text>
-        <View style={styles.tabBar}>
-          <TouchableOpacity onPress={() => setView('chat')} style={[styles.tab, view === 'chat' && styles.activeTab]}>
-            <Text style={[styles.tabText, view === 'chat' && styles.activeTabText]}>Chat</Text>
-          </TouchableOpacity>
-          <TouchableOpacity onPress={() => setView('history')} style={[styles.tab, view === 'history' && styles.activeTab]}>
-            <Text style={[styles.tabText, view === 'history' && styles.activeTabText]}>History</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
-
-      {view === 'chat' ? (
-        <View style={styles.chatContainer}>
-          <FlatList
-            data={chatLog}
-            keyExtractor={(_, index) => index.toString()}
-            renderItem={({ item }) => (
-              <View style={[styles.messageBubble, item.role === 'user' ? styles.userBubble : styles.assistantBubble]}>
-                <Text style={styles.messageText}>{item.content}</Text>
-              </View>
-            )}
-            contentContainerStyle={styles.chatList}
-          />
-          <View style={styles.inputContainer}>
-            <TextInput
-              style={[styles.input, { color: isDarkMode ? '#fff' : '#000' }]}
-              value={message}
-              onChangeText={setMessage}
-              placeholder="Type a message..."
-              placeholderTextColor="#888"
-            />
-            <TouchableOpacity onPress={sendMessage} style={styles.sendButton}>
-              <Text style={styles.sendButtonText}>Send</Text>
-            </TouchableOpacity>
+    <SafeAreaProvider>
+      <View style={styles.blackBackground}>
+        <StatusBar barStyle="light-content" backgroundColor={Colors.black} />
+        <SafeAreaView style={styles.safeContainer} edges={['top', 'bottom']}>
+          <View style={styles.appContent}>
+            <NavigationContainer>
+              <Stack.Navigator 
+                initialRouteName="Login"
+                screenOptions={{
+                  headerShown: false,
+                  animation: 'slide_from_right'
+                }}
+              >
+                <Stack.Screen name="Login" component={LoginScreen} />
+                <Stack.Screen name="DoctorHome" component={DoctorTabs} />
+                <Stack.Screen name="GuardianHome" component={GuardianTabs} />
+                <Stack.Screen name="PatientDetail" component={PatientDetail} />
+                <Stack.Screen name="CriticalScreen" component={CriticalScreen} />
+                <Stack.Screen name="ReportScreen" component={ReportScreen} />
+                <Stack.Screen name="ConnectDevice" component={ConnectDevice} />
+                <Stack.Screen name="DoctorProfile" children={(props) => <ProfileScreen {...props} role="doctor" />} />
+                <Stack.Screen name="GuardianProfile" children={(props) => <ProfileScreen {...props} role="guardian" />} />
+              </Stack.Navigator>
+            </NavigationContainer>
           </View>
-        </View>
-      ) : (
-        <View style={styles.historyContainer}>
-          {loading ? (
-            <ActivityIndicator size="large" color="#007AFF" style={styles.loader} />
-          ) : (
-            <FlatList
-              data={history}
-              keyExtractor={(item) => item._id}
-              renderItem={({ item }) => (
-                <View style={styles.historyItem}>
-                  <Text style={styles.historyRole}>{item.role === 'user' ? 'You' : 'Assistant'}:</Text>
-                  <Text style={styles.historyContent}>{item.content}</Text>
-                  <Text style={styles.historyTime}>{new Date(item.timestamp).toLocaleString()}</Text>
-                </View>
-              )}
-              ListEmptyComponent={<Text style={styles.emptyText}>No history synced yet.</Text>}
-            />
-          )}
-        </View>
-      )}
-    </SafeAreaView>
+        </SafeAreaView>
+      </View>
+    </SafeAreaProvider>
   );
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1 },
-  header: { padding: 16, borderBottomWidth: 1, borderBottomColor: '#ddd' },
-  title: { fontSize: 24, fontWeight: 'bold', marginBottom: 12 },
-  tabBar: { flexDirection: 'row' },
-  tab: { paddingVertical: 8, paddingHorizontal: 16, marginRight: 12 },
-  activeTab: { borderBottomWidth: 2, borderBottomColor: '#007AFF' },
-  tabText: { fontSize: 16, color: '#888' },
-  activeTabText: { color: '#007AFF', fontWeight: 'bold' },
-  chatContainer: { flex: 1 },
-  chatList: { padding: 16 },
-  messageBubble: { padding: 12, borderRadius: 16, marginBottom: 8, maxWidth: '80%' },
-  userBubble: { alignSelf: 'flex-end', backgroundColor: '#007AFF' },
-  assistantBubble: { alignSelf: 'flex-start', backgroundColor: '#E5E5EA' },
-  messageText: { fontSize: 16, color: '#fff' },
-  assistantBubbleText: { color: '#000' },
-  inputContainer: { flexDirection: 'row', padding: 16, borderTopWidth: 1, borderTopColor: '#ddd' },
-  input: { flex: 1, height: 40, borderWidth: 1, borderColor: '#ddd', borderRadius: 20, paddingHorizontal: 16, marginRight: 8 },
-  sendButton: { backgroundColor: '#007AFF', borderRadius: 20, paddingHorizontal: 20, justifyContent: 'center' },
-  sendButtonText: { color: '#fff', fontWeight: 'bold' },
-  historyContainer: { flex: 1, padding: 16 },
-  historyItem: { padding: 12, borderBottomWidth: 1, borderBottomColor: '#eee' },
-  historyRole: { fontWeight: 'bold', marginBottom: 4 },
-  historyContent: { fontSize: 14, color: '#333' },
-  historyTime: { fontSize: 10, color: '#999', marginTop: 4 },
-  loader: { marginTop: 50 },
-  emptyText: { textAlign: 'center', marginTop: 50, color: '#888' },
+  blackBackground: {
+    flex: 1,
+    backgroundColor: Colors.black,
+  },
+  safeContainer: {
+    flex: 1,
+  },
+  appContent: {
+    flex: 1,
+    backgroundColor: Colors.background,
+  },
+  tabBar: {
+    position: 'absolute',
+    bottom: 15, // Closer to the bottom safe area
+    left: 15,
+    right: 15,
+    elevation: 10,
+    backgroundColor: Colors.white,
+    borderRadius: 25,
+    height: 75, // Slightly more compact
+    borderTopWidth: 0,
+    shadowColor: Colors.black,
+    shadowOffset: { width: 0, height: 5 },
+    shadowOpacity: 0.1,
+    shadowRadius: 10,
+    paddingBottom: 0,
+    paddingTop: 0,
+  },
+  tabItemContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    height: '100%',
+    width: 70, // Fixed width for better centering
+  },
+  iconWrapper: {
+    padding: 6,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  activeIconWrapper: {
+    backgroundColor: Colors.softGold,
+  },
+  tabLabel: {
+    fontSize: 9,
+    marginTop: 2,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  }
 });
 
-export default () => (
-  <SafeAreaProvider>
-    <App />
-  </SafeAreaProvider>
-);
+export default App;

@@ -1,5 +1,12 @@
 import { getHealthController, getStatusController } from "../controllers/health.controller";
-import { createUserController, listUsersController } from "../controllers/user.controller";
+import { 
+  createUserController, 
+  listUsersController, 
+  loginController, 
+  searchPatientsController, 
+  listCriticalPatientsController, 
+  connectUserController 
+} from "../controllers/user.controller";
 import { syncChatHistory, getChatHistory, getChatSessions } from "../controllers/chat.history.controller";
 import { getReport, logMedicine } from "../controllers/report.controller";
 
@@ -47,12 +54,28 @@ export async function handleRequest(request: Request): Promise<Response> {
     return corsify(getHealthController());
   }
 
+  if (method === "POST" && url.pathname === "/api/login") {
+    return corsify(await loginController(request));
+  }
+
   if (method === "POST" && url.pathname === "/api/users") {
     return corsify(await createUserController(request));
   }
 
   if (method === "GET" && url.pathname === "/api/users") {
     return corsify(await listUsersController());
+  }
+
+  if (method === "GET" && url.pathname === "/api/patients") {
+    return corsify(await searchPatientsController(request));
+  }
+
+  if (method === "GET" && url.pathname === "/api/patients/critical") {
+    return corsify(await listCriticalPatientsController());
+  }
+
+  if (method === "POST" && url.pathname === "/api/connect/user") {
+    return corsify(await connectUserController(request));
   }
 
   if (method === "POST" && url.pathname === "/api/history/sync") {

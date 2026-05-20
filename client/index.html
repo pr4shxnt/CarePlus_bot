@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CarePlus | Nano Mega Inspired Design</title>
+    <!-- Google Fonts: Inter -->
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="./src/style.css" />
+  </head>
+  <body>
+    <!-- 3D Canvas Background for Hero -->
+    <canvas class="webgl" id="webgl"></canvas>
+
+    <!-- Content Overlay -->
+    <div class="content">
+      <nav class="navbar">
+        <div class="logo"><a href="/" data-link>CarePlus<span class="dot">.</span></a></div>
+        <ul class="nav-links">
+          <li><a href="/" data-link>Home</a></li>
+          <li><a href="/registration" data-link>Register</a></li>
+          <li><a href="/download" data-link>Download</a></li>
+        </ul>
+        <button class="nav-btn" id="launch-btn">Launch App</button>
+      </nav>
+
+      <div id="router-view"></div>
+
+      <footer class="footer">
+        <p>
+          &copy; 2026 CarePlus Innovation. All Rights Reserved. Not a substitute
+          for emergency medical services.
+        </p>
+      </footer>
+    </div>
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
