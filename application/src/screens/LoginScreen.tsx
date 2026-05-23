@@ -13,10 +13,13 @@ import {
   Animated,
   Easing,
   Image,
+  Alert,
+  ActivityIndicator,
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import { Colors } from '../theme/colors';
 import { User, Lock, ShieldCheck, ArrowRight, Zap } from 'lucide-react-native';
+import { AuthService } from '../services/auth.service';
 
 const { width } = Dimensions.get('window');
 
@@ -24,6 +27,7 @@ const LoginScreen = ({ navigation }: any) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [role, setRole] = useState<'doctor' | 'guardian'>('guardian');
+  const [loading, setLoading] = useState(false);
   const [isPasswordVisible] = useState(false);
 
   // Animation values
@@ -57,11 +61,31 @@ const LoginScreen = ({ navigation }: any) => {
     }).start();
   };
 
-  const handleLogin = () => {
-    if (role === 'doctor') {
-      navigation.replace('DoctorHome');
-    } else {
-      navigation.replace('GuardianHome');
+  const handleLogin = async () => {
+    if (!email || !password) {
+      Alert.alert('Error', 'Please enter email and password');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const result = await AuthService.login(email, password);
+      
+      if (result.success) {
+        const user = result.data.user;
+        
+        if (user.role === 'doctor') {
+          navigation.replace('DoctorHome');
+        } else if (user.role === 'guardian') {
+          navigation.replace('GuardianHome');
+        } else {
+          Alert.alert('Error', 'This role is not yet supported in the mobile app.');
+        }
+      }
+    } catch (error: any) {
+      Alert.alert('Login Failed', error.message || 'Invalid credentials');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -102,7 +126,7 @@ const LoginScreen = ({ navigation }: any) => {
                   <View style={styles.goldBadge}>
                     <Zap color={Colors.white} size={12} fill={Colors.white} />
                   </View>
-                </View>
+                </div>
                 <Text style={styles.brandName}>CarePlus<Text style={styles.dot}>.</Text></Text>
                 <Text style={styles.welcomeText}>Empowering Compassionate Care</Text>
               </View>
@@ -177,10 +201,17 @@ const LoginScreen = ({ navigation }: any) => {
                 <TouchableOpacity 
                   style={styles.primaryBtn} 
                   onPress={handleLogin}
+                  disabled={loading}
                   activeOpacity={0.8}
                 >
-                  <Text style={styles.primaryBtnText}>Continue</Text>
-                  <ArrowRight color={Colors.white} size={20} style={styles.btnIcon} />
+                  {loading ? (
+                    <ActivityIndicator color={Colors.white} />
+                  ) : (
+                    <>
+                      <Text style={styles.primaryBtnText}>Continue</Text>
+                      <ArrowRight color={Colors.white} size={20} style={styles.btnIcon} />
+                    </>
+                  )}
                 </TouchableOpacity>
               </View>
 

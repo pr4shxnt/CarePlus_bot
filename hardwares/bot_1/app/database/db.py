@@ -14,6 +14,13 @@ def init_db():
     conn = get_db()
     cursor = conn.cursor()
     
+    # Migration: Check if medicines table has user_id
+    try:
+        cursor.execute("SELECT user_id FROM medicines LIMIT 1")
+    except sqlite3.OperationalError:
+        print("Migrating medicines table: dropping old version.")
+        cursor.execute("DROP TABLE IF EXISTS medicines")
+    
     # Medicines table
     cursor.execute('''
     CREATE TABLE IF NOT EXISTS medicines (
@@ -49,11 +56,12 @@ def init_db():
     )
     ''')
 
-    # Medicine intake logs table — tracks when each dose was taken/missed/skipped
+    # Medicine intake logs table
     cursor.execute('''
     CREATE TABLE IF NOT EXISTS medicine_logs (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         user_id TEXT NOT NULL,
+        session_id TEXT,
         medicine_name TEXT NOT NULL,
         dosage TEXT DEFAULT '',
         scheduled_time TEXT DEFAULT '',
@@ -63,17 +71,21 @@ def init_db():
         is_synced INTEGER DEFAULT 0
     )
     ''')
+
+    # Mood logs table
+    cursor.execute('''
+    CREATE TABLE IF NOT EXISTS mood_logs (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id TEXT NOT NULL,
+        session_id TEXT,
+        mood TEXT NOT NULL,
+        intensity INTEGER DEFAULT 5,
+        timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        is_synced INTEGER DEFAULT 0
+    )
+    ''')
     
     conn.commit()
-    
-    # Migration: Add session_id to chat_history if missing
-    try:
-        cursor.execute("ALTER TABLE chat_history ADD COLUMN session_id TEXT")
-        conn.commit()
-    except sqlite3.OperationalError:
-        # Column already exists
-        pass
-        
     conn.close()
 
 if __name__ == "__main__":

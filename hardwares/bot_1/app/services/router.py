@@ -4,9 +4,10 @@ class RouterService:
     async def classify(self, message):
         msg_lower = message.lower().strip()
         
-        # 1. Immediate Fast-Path (GREETINGS/SMALL TALK)
+        # 1. Immediate Fast-Path (GREETINGS/IDENTITY/SMALL TALK)
         greetings = {"hi", "hello", "hey", "namaste", "नमस्ते", "सन्चै", "हजुर"}
-        if msg_lower in greetings or len(msg_lower.split()) <= 1:
+        identity_keywords = {"नाम", "हुँ", "हो", "name", "who am i", "i am", "who are you", "स्वस्थ साथी", "swastha sathi"}
+        if msg_lower in greetings or any(kw in msg_lower for kw in identity_keywords) or len(msg_lower.split()) <= 1:
             return "GENERAL"
 
         # 2. HEALTH_QA (Symptoms/Diseases)
@@ -20,9 +21,14 @@ class RouterService:
         # 3. MEDICINE_ADD / QUERY
         medicine_keywords = {"medicine", "tablet", "dabaai", "ausadhi", "औषधि", "दबाई", "digene", "syrup"}
         if any(kw in msg_lower for kw in medicine_keywords):
+            # Only classify as QUERY if it looks like a request for information
+            # Added "बजे", "baje", "time" for time-specific queries
+            if any(kw in msg_lower for kw in ["list", "what", "show", "मेरो औषधि", "कुन", "कहिले", "बजे", "baje", "time"]):
+                return "MEDICINE_QUERY"
             if any(kw in msg_lower for kw in ["add", "save", "thap", "थप", "khanchu", "khana"]):
                 return "MEDICINE_ADD"
-            return "MEDICINE_QUERY"
+            # Statements like "I forgot medicine" should stay GENERAL
+            return "GENERAL"
 
         # 4. OBJECT_QUERY / SAVE
         object_keywords = {"kaha", "khoi", "kata", "कहाँ", "खोई", "find", "where", "lost", "mero", "मेरो"}

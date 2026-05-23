@@ -189,12 +189,43 @@ const initViewInteractions = () => {
     // Form Submission logic
     const regForm = document.getElementById("registration-form");
     if (regForm) {
-        regForm.addEventListener("submit", (e) => {
+        regForm.addEventListener("submit", async (e) => {
             e.preventDefault();
             const formData = new FormData(regForm);
-            console.log("Registration Data:", Object.fromEntries(formData.entries()));
-            alert("Thank you for registering! Your CarePlus profile is being created.");
-            regForm.reset();
+            const data = Object.fromEntries(formData.entries());
+
+            if (data.password !== data["confirm-password"]) {
+                alert("Passwords do not match!");
+                return;
+            }
+
+            // Calculate age from DOB
+            if (data.dob) {
+                const birthDate = new Date(data.dob);
+                const age = new Date().getFullYear() - birthDate.getFullYear();
+                data.age = age;
+            }
+
+            try {
+                const response = await fetch("http://localhost:4000/api/auth/register", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify(data),
+                });
+
+                const result = await response.json();
+                if (result.success) {
+                    alert("Registration successful! You can now log in to the app.");
+                    navigateTo("/");
+                } else {
+                    alert("Error: " + result.error);
+                }
+            } catch (error) {
+                console.error("Registration error:", error);
+                alert("Failed to connect to the server.");
+            }
         });
     }
 };

@@ -22,6 +22,38 @@ logger = logging.getLogger("careplus")
 
 app = FastAPI(title="CarePlus Unified Server")
 
+class PatientUpdate(BaseModel):
+    type: str
+    patientId: str
+    medicines: List[dict]
+
+@app.post("/api/update")
+async def update_records(request: Request, update: PatientUpdate):
+    """Endpoint for central server to push updates to the bot."""
+    # Security check
+    api_key = request.headers.get("X-Bot-Api-Key")
+    if not api_key or api_key != os.getenv("BOT_API_KEY", "CHANGE_THIS_TO_A_RANDOM_BOT_KEY"):
+        raise HTTPException(status_code=401, detail="Invalid bot API key")
+
+    if update.type == "PATIENT_UPDATE":
+        try:
+            conn = get_db()
+            # Clear old medicines for this patient and add new ones
+            conn.execute("DELETE FROM medicines WHERE user_id = ?", (update.patientId,))
+            for med in update.medicines:
+                conn.execute(
+                    "INSERT INTO medicines (user_id, name, dosage, schedule) VALUES (?, ?, ?, ?)",
+                    (update.patientId, med["name"], med["dosage"], json.dumps([{"time": t} for t in med.get("times", [])]))
+                )
+            conn.commit()
+            conn.close()
+            logger.info(f"Updated {len(update.medicines)} medicines for patient {update.patientId}")
+            return {"success": True}
+        except Exception as e:
+            logger.error(f"Failed to update medicines: {e}")
+            raise HTTPException(status_code=500, detail=str(e))
+    return {"success": False, "message": "Unknown update type"}
+
 @app.on_event("startup")
 async def startup_event():
     init_db()

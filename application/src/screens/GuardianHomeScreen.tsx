@@ -92,7 +92,7 @@ const GuardianHomeScreen = ({ navigation }: any) => {
             {/* Mood Trend Card */}
             <TouchableOpacity 
               style={[styles.bentoCard, { width: HALF_WIDTH, backgroundColor: Colors.white }]}
-              onPress={() => navigation.navigate('ReportScreen')}
+              onPress={() => navigation.navigate('ReportScreen', { role: 'guardian' })}
             >
               <Smile color={Colors.primary} size={32} />
               <Text style={styles.cardTitle}>Daily Mood</Text>
@@ -123,7 +123,7 @@ const GuardianHomeScreen = ({ navigation }: any) => {
           <View style={styles.row}>
             <TouchableOpacity 
               style={[styles.bentoCard, { width: HALF_WIDTH, backgroundColor: Colors.secondary }]}
-              onPress={() => navigation.navigate('ReportScreen')}
+              onPress={() => navigation.navigate('ReportScreen', { role: 'guardian' })}
             >
               <MessageSquare color={Colors.primary} size={24} />
               <Text style={[styles.smallTitle, { color: Colors.white }]}>Social Isolation</Text>

@@ -6,6 +6,7 @@ import time
 from .llm import llm_service
 from .rag import rag_service
 from .router import router_service
+from .sync import PATIENT_ID
 from ..database.db import get_db
 
 class SwasthaAgent:
@@ -16,34 +17,36 @@ class SwasthaAgent:
 
         # --- System Prompts (Multi-Language Intelligence) ---
         self.PROMPT_QA_NE = (
-            "तपाईं एक नेपाली स्वास्थ्य सहायक हुनुहुन्छ।\n"
-            "नियम: केवल शुद्ध नेपाली भाषा (देवनागरी लिपि) मा जवाफ दिनुहोस्।\n"
-            "कुनै पनि अंग्रेजी शब्द (English), रोमन नेपाली (Romanized), वा अनावश्यक भूमिका नथप्नुहोस्।\n"
-            "केभल सन्दर्भबाट प्रश्नको सिधा जवाफ मात्र दिनुहोस्।\n"
-            "महत्त्वपूर्ण: कुनै पनि मार्कडाउन (Markdown) जस्तै bold (**), italic (*), वा सूची (-) प्रयोग नगर्नुहोस्। केबल सादा पाठ (Plain Text) मा जवाफ दिनुहोस्।"
+            "तपाईं एक अनुभवी र दयालु नेपाली स्वास्थ्य सहायक हुनुहुन्छ।\n"
+            "नियमहरू:\n"
+            "१. केवल शुद्ध नेपाली भाषा र देवनागरी लिपिमा जवाफ दिनुहोस्।\n"
+            "२. जवाफ प्राकृतिक, व्याकरणिय रूपमा सही र आत्मीय हुनुपर्छ।\n"
+            "३. प्रयोगकर्तालाई सम्मानका साथ 'तपाईं' वा 'हजुर' भन्नुहोस्।\n"
+            "४. रोमन नेपाली वा अंग्रेजी शब्दहरूको अनावश्यक प्रयोग नगर्नुहोस्।\n"
+            "५. केबल सादा पाठमा जवाफ दिनुहोस् (कुनै मार्कडाउन प्रयोग नगर्नुहोस्)।"
         )
         self.PROMPT_GENERAL_NE = (
-            "तपाईं 'स्वस्थ साथी' (Swastha Sathi) हुनुहुन्छ — एक मैत्रीपूर्ण नेपाली स्वास्थ्य सहायक।\n"
+            "तपाईं 'स्वस्थ साथी' (Swastha Sathi) हुनुहुन्छ — एक न्यानो, सहयोगी र उच्च स्तरको नेपाली स्वास्थ्य सहायक।\n"
+            "तपाईंको उद्देश्य प्रयोगकर्तासँग प्राकृतिक र आत्मीय नेपालीमा कुराकानी गर्नु हो।\n"
             "नियमहरू:\n"
-            "१. केवल नेपाली देवनागरी लिपिमा जवाफ दिनुहोस्।\n"
-            "२. छोटो, स्पष्ट र सहयोगी बन्नुहोस्।\n"
-            "३. कुनै पनि मार्कडाउन (bold, italic) प्रयोग नगर्नुहोस्। केबल सादा पाठ प्रयोग गर्नुहोस्।"
+            "१. व्याकरणिय रूपमा शुद्ध र सुन्नमा मिठो नेपाली देवनागरी प्रयोग गर्नुहोस्।\n"
+            "२. प्रयोगकर्ताको मुड र स्वास्थ्यको बारेमा सोध्नुहोस्।\n"
+            "३. कुराकानीलाई व्यक्तिगत र मित्रवत बनाउनुहोस्।\n"
+            "४. कुनै पनि मार्कडाउन प्रयोग नगर्नुहोस्।"
         )
         
         self.PROMPT_QA_EN = (
-            "You are a health assistant. Reply only in English. No Nepali or Romanized Nepali. "
-            "Answer only from provided context. Add medical disclaimer at the end. "
-            "STRICT RULE: Do NOT use any Markdown (no bold **, no italic *, no headers #, no lists). Use ONLY plain text."
+            "You are a kind and friendly health assistant. Reply only in English.\n"
+            "Always address the user warmly and show concern for their well-being.\n"
+            "Answer only from provided context. Use ONLY plain text (no markdown)."
         )
         self.PROMPT_GENERAL_EN = (
-            "You are Swastha Sathi, a friendly assistant.\n"
+            "You are Swastha Sathi, a warm, caring, and friendly health assistant.\n"
+            "Your goal is to make the user feel supported and cared for.\n"
             "Strict rules:\n"
-            "1. Reply ONLY in plain English. No Nepali, no Romanized Nepali.\n"
-            "2. NEVER use Markdown (no **, no *, no #). Use only plain text.\n"
-            "3. Never assume the user is sick unless explicitly stated.\n"
-            "Example:\n"
-            "User: I am fine\n"
-            "Assistant: Great to hear! How can I help you today?"
+            "1. Reply ONLY in plain English. No markdown.\n"
+            "2. Be proactive: ask the user how they are feeling, if they've taken their medicine, and if they need anything.\n"
+            "3. Use the user's name if you know it to make the conversation personal."
         )
 
     async def is_confirmation(self, text):
@@ -92,63 +95,207 @@ class SwasthaAgent:
         except Exception as e:
             print(f"Failed to save chat: {e}")
 
+    async def _get_user_info(self, user_id):
+        """Fetch user name and basic info if available."""
+        try:
+            conn = get_db()
+            cursor = conn.cursor()
+            cursor.execute("SELECT name FROM medicines WHERE user_id = ? LIMIT 1", (user_id,))
+            row = cursor.fetchone()
+            conn.close()
+            # Default to Prashant if no records yet
+            return {"name": "प्रशान्त अधिकारी"} if user_id == PATIENT_ID else None
+        except:
+            return None
+
+    def clean_markdown(self, text):
+        """Final safety layer: Strips all common markdown symbols from the text."""
+        if not text: return ""
+        # Remove bold/italic asterisks
+        text = text.replace("**", "").replace("*", "")
+        # Remove markdown headers
+        text = re.sub(r'^#+\s*', '', text, flags=re.MULTILINE)
+        # Remove markdown lists
+        text = re.sub(r'^[*-]\s*', '', text, flags=re.MULTILINE)
+        # Remove markdown underscores
+        text = text.replace("__", "").replace("_", "")
+        # Remove any lingering backticks
+        text = text.replace("`", "")
+        return text.strip()
+
+    async def _log_mood(self, user_id, session_id, message, response):
+        """Analyzes and logs mood for the current interaction."""
+        try:
+            prompt = f"Analyze user mood from message: \"{message}\". Reply with one word (e.g., Happy, Sad, Anxious, Neutral) and an intensity score 1-10. Format: MOOD: <word>, SCORE: <number>."
+            analysis = await llm_service.generate_response(prompt, num_predict=20)
+            
+            mood_match = re.search(r'MOOD:\s*(\w+)', analysis, re.I)
+            score_match = re.search(r'SCORE:\s*(\d+)', analysis, re.I)
+            
+            if mood_match and score_match:
+                mood = mood_match.group(1).capitalize()
+                intensity = int(score_match.group(1))
+                
+                conn = get_db()
+                conn.execute(
+                    "INSERT INTO mood_logs (user_id, session_id, mood, intensity) VALUES (?, ?, ?, ?)",
+                    (user_id, session_id, mood, intensity)
+                )
+                conn.commit()
+                conn.close()
+                print(f"DEBUG: Logged mood: {mood} ({intensity}) for session {session_id}")
+        except Exception as e:
+            print(f"Mood Logging Error: {e}")
+
     async def run_chat_stream(self, user_id, message, history=None):
-        # Save user message
+        target_user_id = PATIENT_ID if user_id == "web-user" else user_id
+        session_id = self._get_session_id(user_id)
+        
+        print(f"DEBUG: Processing message: '{message}' for user: {user_id} (Target: {target_user_id}, Session: {session_id})")
+        user_info = await self._get_user_info(target_user_id)
+        user_name = user_info["name"] if user_info else None
+
         await self._save_chat(user_id, "user", message)
         
-        # Run detection and classification in parallel
         lang_task = asyncio.create_task(llm_service.detect_language(message))
         intent_task = asyncio.create_task(router_service.classify(message))
         
         lang = await lang_task
         intent = await intent_task
+        print(f"DEBUG: Language: {lang}, Intent: {intent}")
+
+        final_res = ""
+
+        # Identity check
+        is_prashant = "prashant" in message.lower() or "प्रशान्त" in message
+        is_adhikari = "adhikari" in message.lower() or "अधिकारी" in message
+        is_stating_name = any(kw in message.lower() for kw in ["name", "नाम", "हुँ", "हो", "am", "is"])
+
+        if is_prashant and is_stating_name:
+            final_res = f"नमस्ते प्रशान्त अधिकारी ज्यू! तपाईंलाई फेरि भेट्दा धेरै खुसी लाग्यो। आज तपाईंलाई कस्तो छ? के तपाईंले समयमा औषधि खानुभयो?" if lang == "ne" else f"Hello Prashant Adhikari! It's wonderful to see you. How are you feeling today? Have you taken your medicines yet?"
+            yield final_res
+            await self._save_chat(user_id, "assistant", final_res)
+            asyncio.create_task(self._log_mood(target_user_id, session_id, message, final_res))
+            return
+
+        # Bot Identity check
+        is_asking_bot_name = any(kw in message for kw in ["your name", "तिम्रो नाम", "तपाईंको नाम", "तपाई को हो", "who are you"])
+        if is_asking_bot_name:
+            final_res = "मेरो नाम स्वस्थ साथी (Swastha Sathi) हो। म तपाईंको स्वास्थ्य सहायक हुँ। आज म तपाईंलाई कसरी सहयोग गर्न सक्छु?" if lang == "ne" else "My name is Swastha Sathi. I am your health assistant. How can I help you today?"
+            yield final_res
+            await self._save_chat(user_id, "assistant", final_res)
+            return
         
         # --- MEDICINE QUERY ---
         if intent == "MEDICINE_QUERY":
             try:
                 conn = get_db()
                 cursor = conn.cursor()
-                cursor.execute("SELECT * FROM medicines WHERE user_id = ?", (user_id,))
+                cursor.execute("SELECT * FROM medicines WHERE user_id = ?", (target_user_id,))
                 rows = cursor.fetchall()
                 conn.close()
-                meds = [{"name": r["name"], "dosage": r["dosage"], "schedule": json.loads(r["schedule"])} for r in rows]
+                
+                meds = []
+                for r in rows:
+                    try:
+                        schedule = json.loads(r["schedule"]) if r["schedule"] else []
+                        meds.append({"name": r["name"], "dosage": r["dosage"], "schedule": schedule})
+                    except:
+                        meds.append({"name": r["name"], "dosage": r["dosage"], "schedule": []})
                 
                 if meds:
-                    res = ("यहाँ तपाईंका औषधिहरू छन्:\n" if lang == "ne" else "Here are your medicines:\n") + "\n".join([f"- **{m['name']}** ({m['dosage']}) - {', '.join([s['time'] for s in m['schedule']])}" for m in meds])
+                    # Check for time-specific query
+                    target_time = None
+                    time_match = re.search(r'(\d+)\s*(?:baje|बजे|am|pm)', message.lower())
+                    if time_match:
+                        target_hour = int(time_match.group(1))
+                        # Basic mapping for filtering (simple hour match)
+                        target_time = f"{target_hour:02d}:00"
+                        # Handle common offsets or 12h/24h if needed, but for now exact or simple baje
+
+                    filtered_meds = meds
+                    if target_time:
+                        # Try to find meds matching that hour
+                        filtered_meds = [m for m in meds if any(s.get('time', '').startswith(f"{target_hour:02d}:") or s.get('time', '').startswith(f"{target_hour+12:02d}:") for s in m['schedule'])]
+                    
+                    if not filtered_meds and target_time:
+                        res = f"माफ गर्नुहोस्, {target_hour} बजे खाने कुनै औषधिको रेकord छैन।" if lang == "ne" else f"Sorry, I don't have any records for medicine at {target_hour} o'clock."
+                        yield res
+                        await self._save_chat(user_id, "assistant", res)
+                        return
+
+                    if lang == "ne":
+                        # Translate medicine list to Nepali
+                        med_text = "\n".join([f"- {m['name']} ({m['dosage']}) - {', '.join([s.get('time', '') for s in m['schedule']])}" for m in filtered_meds])
+                        translate_prompt = f"TASK: Translate the following medicine list to pure Nepali Devanagari. \nRULES:\n1. Output ONLY translated data.\n2. NO symbols like * or -.\n3. Include NAME, DOSAGE, and NATURAL TIME.\n4. NATURAL TIME RULE: 08:00 must be 'बिहानको ८ बजे', 21:00 must be 'बेलुकाको ९ बजे'. Use 'बिहानको' (Morning), 'दिउँसोको' (Afternoon), or 'बेलुकाको' (Evening) for all times.\n5. NO English words or numbers (use Devanagari digits if possible, e.g., ८ instead of 8).\n\nLIST:\n{med_text}"
+                        translated_meds_raw = await llm_service.generate_response(translate_prompt, system_prompt="Strict Nepali Translator. Use only Devanagari script.")
+                        
+                        clean_lines = []
+                        for line in translated_meds_raw.split('\n'):
+                            if re.search(r'[\u0900-\u097F]', line):
+                                clean_line = line.replace('*', '').replace('-', '').replace('•', '').strip()
+                                if clean_line: clean_lines.append(clean_line)
+                        
+                        translated_meds = "\n".join(clean_lines)
+                        
+                        time_desc = f"{target_hour} बजे"
+                        if target_hour < 12: time_desc = f"बिहानको {target_hour} बजे"
+                        elif target_hour >= 18: time_desc = f"बेलुकाको {target_hour-12 if target_hour > 12 else target_hour} बजे"
+                        
+                        intro = f"नमस्ते {user_name or 'हजुर'}, यहाँ तपाईंका {time_desc if target_time else ''}का औषधिहरू छन्:" if target_time else f"नमस्ते {user_name or 'हजुर'}, यहाँ तपाईंका औषधिहरू छन्:"
+                        final_res = f"{intro}\n{translated_meds.strip()}"
+                        final_res += "\n\n" + "के तपाईंले आजका यी औषधिहरू खानुभयो?"
+                    else:
+                        med_lines = "\n".join([f"- {m['name']} ({m['dosage']}) - {', '.join([s.get('time', '') for s in m['schedule']])}" for m in filtered_meds])
+                        intro = f"Hello {user_name or ''}, here are your {target_hour if target_time else ''} o'clock medicines:" if target_time else f"Hello {user_name or ''}, here are your medicines:"
+                        final_res = f"{intro}\n{med_lines}\n\nHave you taken these doses yet?"
                 else:
-                    res = "तपाईंले अहिलेसम्म कुनै औषधि थप्नुभएको छैन।" if lang == "ne" else "You haven't added any medicines yet."
+                    final_res = "अहिले मसँग तपाईंको कुनै औषधिको रेकर्ड छैन। के म डाक्टरलाई सम्पर्क गरूँ?" if lang == "ne" else "I don't have any medicine records for you right now. Should I contact your doctor?"
                 
-                full_res = ""
-                for word in res.split():
-                    full_res += word + " "
-                    yield word + " "
-                    await asyncio.sleep(0.01)
-                
-                await self._save_chat(user_id, "assistant", full_res.strip())
+                yield final_res
+                await self._save_chat(user_id, "assistant", final_res)
+                asyncio.create_task(self._log_mood(target_user_id, session_id, message, final_res))
                 return
-            except:
-                yield "Error accessing records."
+            except Exception as e:
+                print(f"Medicine Query Error: {e}")
+                yield "माफ गर्नुहोस्, रेकर्ड हेर्दा समस्या भयो।" if lang == "ne" else "Sorry, I had trouble accessing your records."
                 return
 
         # --- HEALTH QA (RAG) ---
         elif intent == "HEALTH_QA":
             relevant_chunks = rag_service.retrieve(message)
             if not relevant_chunks:
-                res = "माफ गर्नुहोस्, मसँग जानकारी छैन।" if lang == "ne" else "Sorry, I don't have that info."
-                yield res
-                await self._save_chat(user_id, "assistant", res)
+                # If no RAG context, try to answer from general knowledge using history
+                system_prompt = self.PROMPT_GENERAL_NE if lang == "ne" else self.PROMPT_GENERAL_EN
+                chat_messages = (history or [])[-10:] # Keep last 10 messages for context
+                chat_messages.append({"role": "user", "content": message})
+                
+                async for chunk in llm_service.chat_stream(chat_messages, system_prompt=system_prompt):
+                    final_res += chunk
+                    yield chunk
+                
+                clean_res = self.clean_markdown(final_res)
+                await self._save_chat(user_id, "assistant", clean_res)
+                asyncio.create_task(self._log_mood(target_user_id, session_id, message, clean_res))
                 return
             
             raw_context = "\n\n".join([c["content"] for c in relevant_chunks])
             context = "\n".join([line.strip() for line in raw_context.split('\n') if not line.strip().startswith('प्र:')])
             system_prompt = self.PROMPT_QA_NE if lang == "ne" else self.PROMPT_QA_EN
-            prompt = f"{context}\n\n{message}"
             
-            full_reply = ""
-            async for chunk in llm_service.chat_stream([{"role": "user", "content": prompt}], system_prompt=system_prompt):
-                full_reply += chunk
+            # Build messages including context AND history
+            chat_messages = [{"role": "system", "content": f"Context for answering:\n{context}"}]
+            if history:
+                chat_messages.extend(history[-6:]) # Last 3 exchanges
+            chat_messages.append({"role": "user", "content": message})
+            
+            async for chunk in llm_service.chat_stream(chat_messages, system_prompt=system_prompt):
+                final_res += chunk
                 yield chunk
-            await self._save_chat(user_id, "assistant", full_reply)
+            
+            clean_res = self.clean_markdown(final_res)
+            await self._save_chat(user_id, "assistant", clean_res)
+            asyncio.create_task(self._log_mood(target_user_id, session_id, message, clean_res))
 
         # --- OBJECT QUERY ---
         elif intent == "OBJECT_QUERY":
@@ -159,15 +306,15 @@ class SwasthaAgent:
             try:
                 conn = get_db()
                 cursor = conn.cursor()
-                cursor.execute("SELECT * FROM objects WHERE user_id = ? AND name LIKE ? ORDER BY time DESC LIMIT 1", (user_id, f"%{obj_name}%"))
+                cursor.execute("SELECT * FROM objects WHERE user_id = ? AND name LIKE ? ORDER BY time DESC LIMIT 1", (target_user_id, f"%{obj_name}%"))
                 row = cursor.fetchone()
                 conn.close()
                 if row:
-                    res = f"भेटियो: **{obj_name}** **{row['location']}** मा छ।" if lang == "ne" else f"Found it: **{obj_name}** is at **{row['location']}**."
+                    final_res = f"भेटियो: {obj_name} {row['location']} मा छ।" if lang == "ne" else f"Found it: {obj_name} is at {row['location']}."
                 else:
-                    res = f"माफ गर्नुहोस्, **{obj_name}** को रेकर्ड छैन।" if lang == "ne" else f"Sorry, no record of **{obj_name}**."
-                yield res
-                await self._save_chat(user_id, "assistant", res)
+                    final_res = f"माफ गर्नुहोस्, {obj_name} को रेकर्ड छैन।" if lang == "ne" else f"Sorry, no record of {obj_name}."
+                yield final_res
+                await self._save_chat(user_id, "assistant", final_res)
                 return
             except:
                 yield "Database error."
@@ -183,12 +330,12 @@ class SwasthaAgent:
                 name, loc = obj_name.group(1).strip(), obj_loc.group(1).strip()
                 try:
                     conn = get_db()
-                    conn.execute("INSERT INTO objects (user_id, name, location) VALUES (?, ?, ?)", (user_id, name, loc))
+                    conn.execute("INSERT INTO objects (user_id, name, location) VALUES (?, ?, ?)", (target_user_id, name, loc))
                     conn.commit()
                     conn.close()
-                    res = f"बचत भयो: **{name}** **{loc}** मा।" if lang == "ne" else f"Saved: **{name}** at **{loc}**."
-                    yield res
-                    await self._save_chat(user_id, "assistant", res)
+                    final_res = f"बचत भयो: {name} {loc} मा।" if lang == "ne" else f"Saved: {name} at {loc}."
+                    yield final_res
+                    await self._save_chat(user_id, "assistant", final_res)
                 except: yield "Save failed."
             else: yield "Extraction failed."
             return
@@ -196,14 +343,24 @@ class SwasthaAgent:
         # --- GENERAL ---
         else:
             system_prompt = self.PROMPT_GENERAL_NE if lang == "ne" else self.PROMPT_GENERAL_EN
-            chat_messages = history or []
+            chat_messages = (history or [])[-10:] # Keep last 10 messages for context
             chat_messages.append({"role": "user", "content": message})
             
-            full_reply = ""
             async for chunk in llm_service.chat_stream(chat_messages, system_prompt=system_prompt):
-                full_reply += chunk
+                if chunk.startswith("Error:"):
+                    final_res = "माफ गर्नुहोस्, मेरो दिमाग अहिले अलि थाकेको छ। फेरि प्रयास गर्नुहोस्।" if lang == "ne" else "I'm sorry, my brain is a bit tired right now. Please try again."
+                    yield final_res
+                    break
+                final_res += chunk
                 yield chunk
-            await self._save_chat(user_id, "assistant", full_reply)
+            
+            if not final_res.strip():
+                final_res = "माफ गर्नुहोस्, मैले बुझिन। फेरि भन्नुहुन्छ कि?" if lang == "ne" else "I'm sorry, I didn't quite catch that. Could you repeat it?"
+                yield final_res
+            
+            clean_res = self.clean_markdown(final_res)
+            await self._save_chat(user_id, "assistant", clean_res)
+            asyncio.create_task(self._log_mood(target_user_id, session_id, message, clean_res))
 
     async def generate_report(self, user_id, history=None):
         """Generate a daily health report by analyzing chat history."""

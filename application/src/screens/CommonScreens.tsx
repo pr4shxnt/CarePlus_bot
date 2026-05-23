@@ -54,7 +54,7 @@ export const PatientDetail = ({ route, navigation }: any) => {
           {/* Psychology Analysis Wide Block */}
           <TouchableOpacity 
             style={[styles.bentoCard, styles.reportWide]}
-            onPress={() => navigation.navigate('ReportScreen', { patient })}
+            onPress={() => navigation.navigate('ReportScreen', { patient, role: 'doctor' })}
           >
             <View style={styles.reportIconBox}>
               <Activity color={Colors.secondary} size={24} />
@@ -126,57 +126,63 @@ export const CriticalScreen = ({ navigation }: any) => (
   </SafeAreaView>
 );
 
-export const ReportScreen = ({ navigation }: any) => (
-  <SafeAreaView style={styles.container}>
-    <View style={styles.header}>
-      <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
-        <ArrowLeft color={Colors.secondary} size={24} />
-      </TouchableOpacity>
-      <Text style={styles.title}>CarePlus Insight</Text>
-      <View style={styles.headerSpacer} />
-    </View>
-    <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-      <View style={styles.bentoGrid}>
-        <View style={styles.reportHeaderBlock}>
-          <Text style={styles.reportDay}>Wednesday</Text>
-          <Text style={styles.reportDate}>May 20, 2026</Text>
-        </View>
+export const ReportScreen = ({ route, navigation, role: propRole }: any) => {
+  const role = propRole || route?.params?.role || 'guardian';
 
-        <View style={styles.row}>
-          <View style={[styles.bentoCard, { width: HALF_WIDTH, height: 180 }]}>
-            <Smile color={Colors.primary} size={30} />
-            <Text style={styles.insightTitle}>Mood Score</Text>
-            <Text style={styles.insightVal}>85/100</Text>
-            <Text style={styles.insightDesc}>High positive sentiment detected.</Text>
-          </View>
-          <View style={[styles.bentoCard, { width: HALF_WIDTH, height: 180, backgroundColor: Colors.gold }]}>
-            <MessageSquare color={Colors.secondary} size={30} />
-            <Text style={[styles.insightTitle, { color: 'rgba(25, 52, 61, 0.6)' }]}>Loneliness</Text>
-            <Text style={[styles.insightVal, { color: Colors.secondary }]}>12%</Text>
-            <Text style={[styles.insightDesc, { color: 'rgba(25, 52, 61, 0.6)' }]}>Minimal signs of isolation.</Text>
-          </View>
-        </View>
-
-        <View style={[styles.bentoCard, { width: FULL_WIDTH }]}>
-          <Text style={styles.sectionTitle}>Medication Adherence</Text>
-          <View style={styles.complianceRow}>
-            <View style={styles.compCircle}>
-              <Text style={styles.compPerc}>100%</Text>
-            </View>
-            <View style={styles.compInfo}>
-              <Text style={styles.compTitle}>Perfect Adherence</Text>
-              <Text style={styles.compSub}>Last Dose: 8:45 AM (On-time)</Text>
-            </View>
-          </View>
-        </View>
-
-        <TouchableOpacity style={styles.actionBtn}>
-          <Text style={styles.actionBtnText}>Approve Psych-Report</Text>
+  return (
+    <SafeAreaView style={styles.container}>
+      <View style={styles.header}>
+        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
+          <ArrowLeft color={Colors.secondary} size={24} />
         </TouchableOpacity>
+        <Text style={styles.title}>CarePlus Insight</Text>
+        <View style={styles.headerSpacer} />
       </View>
-    </ScrollView>
-  </SafeAreaView>
-);
+      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+        <View style={styles.bentoGrid}>
+          <View style={styles.reportHeaderBlock}>
+            <Text style={styles.reportDay}>Wednesday</Text>
+            <Text style={styles.reportDate}>May 20, 2026</Text>
+          </View>
+
+          <View style={styles.row}>
+            <View style={[styles.bentoCard, { width: HALF_WIDTH, height: 180 }]}>
+              <Smile color={Colors.primary} size={30} />
+              <Text style={styles.insightTitle}>Mood Score</Text>
+              <Text style={styles.insightVal}>85/100</Text>
+              <Text style={styles.insightDesc}>High positive sentiment detected.</Text>
+            </View>
+            <View style={[styles.bentoCard, { width: HALF_WIDTH, height: 180, backgroundColor: Colors.gold }]}>
+              <MessageSquare color={Colors.secondary} size={30} />
+              <Text style={[styles.insightTitle, { color: 'rgba(25, 52, 61, 0.6)' }]}>Loneliness</Text>
+              <Text style={[styles.insightVal, { color: Colors.secondary }]}>12%</Text>
+              <Text style={[styles.insightDesc, { color: 'rgba(25, 52, 61, 0.6)' }]}>Minimal signs of isolation.</Text>
+            </View>
+          </View>
+
+          <View style={[styles.bentoCard, { width: FULL_WIDTH }]}>
+            <Text style={styles.sectionTitle}>Medication Adherence</Text>
+            <View style={styles.complianceRow}>
+              <View style={styles.compCircle}>
+                <Text style={styles.compPerc}>100%</Text>
+              </View>
+              <View style={styles.compInfo}>
+                <Text style={styles.compTitle}>Perfect Adherence</Text>
+                <Text style={styles.compSub}>Last Dose: 8:45 AM (On-time)</Text>
+              </View>
+            </View>
+          </View>
+
+          {role === 'doctor' && (
+            <TouchableOpacity style={styles.actionBtn}>
+              <Text style={styles.actionBtnText}>Approve Psych-Report</Text>
+            </TouchableOpacity>
+          )}
+        </View>
+      </ScrollView>
+    </SafeAreaView>
+  );
+};
 
 export const ConnectDevice = ({ navigation }: any) => (
   <SafeAreaView style={styles.container}>

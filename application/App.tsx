@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, StyleSheet, Platform, StatusBar, Text } from 'react-native';
+import { View, StyleSheet, Platform, StatusBar, Text, TouchableOpacity } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
@@ -21,10 +21,10 @@ import {
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
 
-const TabBarIcon = ({ Icon, color, size, focused, label }: any) => (
+const TabBarIcon = ({ Icon, color, focused, label }: any) => (
   <View style={styles.tabItemContainer}>
     <View style={[styles.iconWrapper, focused && styles.activeIconWrapper]}>
-      <Icon color={color} size={22} strokeWidth={focused ? 2.5 : 2} />
+      <Icon color={color} size={20} strokeWidth={focused ? 2.5 : 2} />
     </View>
     <Text style={[styles.tabLabel, { color: color, fontWeight: focused ? '800' : '600' }]}>
       {label}
@@ -32,14 +32,47 @@ const TabBarIcon = ({ Icon, color, size, focused, label }: any) => (
   </View>
 );
 
+const CustomTabBar = ({ state, descriptors, navigation }: any) => {
+  return (
+    <View style={styles.customTabBar}>
+      {state.routes.map((route: any, index: number) => {
+        const { options } = descriptors[route.key];
+        if (options.tabBarButton && options.tabBarButton() === null) return null;
+
+        const isFocused = state.index === index;
+
+        const onPress = () => {
+          const event = navigation.emit({
+            type: 'tabPress',
+            target: route.key,
+            canPreventDefault: true,
+          });
+
+          if (!isFocused && !event.defaultPrevented) {
+            navigation.navigate({ name: route.name, merge: true });
+          }
+        };
+
+        return (
+          <TouchableOpacity
+            key={route.key}
+            onPress={onPress}
+            style={styles.customTabItem}
+            activeOpacity={0.7}
+          >
+            {options.tabBarIcon({ focused: isFocused, color: isFocused ? Colors.secondary : Colors.gray })}
+          </TouchableOpacity>
+        );
+      })}
+    </View>
+  );
+};
+
 const DoctorTabs = () => (
   <Tab.Navigator
+    tabBar={(props) => <CustomTabBar {...props} />}
     screenOptions={{
       headerShown: false,
-      tabBarShowLabel: false,
-      tabBarStyle: styles.tabBar,
-      tabBarActiveTintColor: Colors.secondary,
-      tabBarInactiveTintColor: Colors.gray,
     }}
   >
     <Tab.Screen 
@@ -63,17 +96,24 @@ const DoctorTabs = () => (
         tabBarIcon: (props) => <TabBarIcon Icon={User} label="Profile" {...props} />
       }}
     />
+    <Tab.Screen 
+      name="PatientDetail" 
+      component={PatientDetail} 
+      options={{ tabBarButton: () => null }} 
+    />
+    <Tab.Screen 
+      name="ReportScreen" 
+      component={ReportScreen} 
+      options={{ tabBarButton: () => null }} 
+    />
   </Tab.Navigator>
 );
 
 const GuardianTabs = () => (
   <Tab.Navigator
+    tabBar={(props) => <CustomTabBar {...props} />}
     screenOptions={{
       headerShown: false,
-      tabBarShowLabel: false,
-      tabBarStyle: styles.tabBar,
-      tabBarActiveTintColor: Colors.secondary,
-      tabBarInactiveTintColor: Colors.gray,
     }}
   >
     <Tab.Screen 
@@ -85,7 +125,7 @@ const GuardianTabs = () => (
     />
     <Tab.Screen 
       name="ReportTab" 
-      component={ReportScreen} 
+      children={(props) => <ReportScreen {...props} role="guardian" />} 
       options={{
         tabBarIcon: (props) => <TabBarIcon Icon={BarChart2} label="Reports" {...props} />
       }}
@@ -103,6 +143,11 @@ const GuardianTabs = () => (
       options={{
         tabBarIcon: (props) => <TabBarIcon Icon={User} label="Profile" {...props} />
       }}
+    />
+    <Tab.Screen 
+      name="PatientDetail" 
+      component={PatientDetail} 
+      options={{ tabBarButton: () => null }} 
     />
   </Tab.Navigator>
 );
@@ -125,12 +170,6 @@ const App = () => {
                 <Stack.Screen name="Login" component={LoginScreen} />
                 <Stack.Screen name="DoctorHome" component={DoctorTabs} />
                 <Stack.Screen name="GuardianHome" component={GuardianTabs} />
-                <Stack.Screen name="PatientDetail" component={PatientDetail} />
-                <Stack.Screen name="CriticalScreen" component={CriticalScreen} />
-                <Stack.Screen name="ReportScreen" component={ReportScreen} />
-                <Stack.Screen name="ConnectDevice" component={ConnectDevice} />
-                <Stack.Screen name="DoctorProfile" children={(props) => <ProfileScreen {...props} role="doctor" />} />
-                <Stack.Screen name="GuardianProfile" children={(props) => <ProfileScreen {...props} role="guardian" />} />
               </Stack.Navigator>
             </NavigationContainer>
           </View>
@@ -152,43 +191,44 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: Colors.background,
   },
-  tabBar: {
-    position: 'absolute',
-    bottom: 15, // Closer to the bottom safe area
-    left: 15,
-    right: 15,
-    elevation: 10,
+  customTabBar: {
+    flexDirection: 'row',
     backgroundColor: Colors.white,
-    borderRadius: 25,
-    height: 75, // Slightly more compact
-    borderTopWidth: 0,
+    height: 70, // Smaller height
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(0,0,0,0.1)',
+    elevation: 20,
     shadowColor: Colors.black,
-    shadowOffset: { width: 0, height: 5 },
-    shadowOpacity: 0.1,
-    shadowRadius: 10,
-    paddingBottom: 0,
-    paddingTop: 0,
+    shadowOffset: { width: 0, height: -10 },
+    shadowOpacity: 0.05,
+    shadowRadius: 20,
+    paddingBottom: Platform.OS === 'ios' ? 15 : 5, // Reduced safe area padding
+  },
+  customTabItem: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    height: '100%',
   },
   tabItemContainer: {
     alignItems: 'center',
     justifyContent: 'center',
-    height: '100%',
-    width: 70, // Fixed width for better centering
   },
   iconWrapper: {
-    padding: 6,
-    borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
+    padding: 6, // Smaller padding
+    borderRadius: 12,
   },
   activeIconWrapper: {
     backgroundColor: Colors.softGold,
   },
   tabLabel: {
-    fontSize: 9,
-    marginTop: 2,
+    fontSize: 9, // Smaller font
+    marginTop: 2, // Smaller margin
     textTransform: 'uppercase',
-    letterSpacing: 0.5,
+    letterSpacing: 0.8,
+    fontWeight: '700',
   }
 });
 

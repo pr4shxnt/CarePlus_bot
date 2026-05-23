@@ -3,7 +3,7 @@ import httpx
 import asyncio
 
 class LLMService:
-    def __init__(self, model="gemma4:e2b", base_url="http://localhost:11434"):
+    def __init__(self, model="gemma3:4b", base_url="http://localhost:11434"):
         self.model = model
         self.base_url = f"{base_url}/api"
         # Persistent client for connection pooling
@@ -27,6 +27,9 @@ class LLMService:
         if system_prompt: payload["system"] = system_prompt
         try:
             response = await self.client.post(f"{self.base_url}/generate", json=payload)
+            if response.status_code != 200:
+                print(f"Ollama Error ({response.status_code}): {response.text}")
+                return f"Error: {response.status_code}"
             return response.json().get("response", "")
         except Exception as e:
             return f"Error: {str(e)}"
@@ -44,6 +47,12 @@ class LLMService:
         
         try:
             async with self.client.stream("POST", f"{self.base_url}/chat", json=payload) as response:
+                if response.status_code != 200:
+                    err_body = await response.aread()
+                    print(f"Ollama Chat Error ({response.status_code}): {err_body.decode()}")
+                    yield f"Error: LLM server returned {response.status_code}"
+                    return
+
                 async for line in response.aiter_lines():
                     if not line: continue
                     chunk = json.loads(line)
@@ -51,6 +60,7 @@ class LLMService:
                         yield chunk["message"]["content"]
                     if chunk.get("done"): break
         except Exception as e:
+            print(f"Chat Stream Exception: {e}")
             yield f"Error: {str(e)}"
 
     async def detect_language(self, text):

@@ -127,15 +127,37 @@ const clearReplyAudio = () => {
   replyAudio.load();
 };
 
+// Handle audio playback lifecycle to prevent bot from hearing itself
+replyAudio.onplay = () => {
+  console.log("Assistant speaking: Pausing STT");
+  if (recognition && isListening) {
+    autoRestartBlocked = true; // Prevent heartbeat/onend from restarting while speaking
+    recognition.stop();
+  }
+};
+
+replyAudio.onended = () => {
+  console.log("Assistant finished: Resuming STT");
+  autoRestartBlocked = false;
+  startListening();
+};
+
 const setReplyAudio = (blob) => {
   clearReplyAudio();
   replyAudioUrl = URL.createObjectURL(blob);
   replyAudio.src = replyAudioUrl;
   console.log("Audio blob received, starting playback...");
   if (AUTO_PLAY_AUDIO) {
+    // Ensure STT is stopped before play() triggers
+    if (recognition && isListening) {
+      autoRestartBlocked = true;
+      recognition.stop();
+    }
     replyAudio.play().catch((e) => {
       console.warn("Autoplay blocked by browser. Interaction required.", e);
       aiErrorEl.textContent = "Click to play audio";
+      autoRestartBlocked = false; // Release lock if play fails
+      startListening();
     });
   }
 };
@@ -209,6 +231,13 @@ const initWebSocket = () => {
       updateAiStatus("Reply ready", "idle");
       const fullReply = data.full_reply;
 
+      if (!fullReply.trim()) {
+        console.warn("AI returned empty reply. Restarting STT.");
+        autoRestartBlocked = false;
+        startListening();
+        return;
+      }
+
       const ttsUrl = ttsUrlInput.value.trim();
       if (ttsUrl) {
         updateAiStatus("Synthesizing…", "listening");
@@ -263,6 +292,12 @@ const requestAiReply = (text) => {
   aiErrorEl.textContent = "None";
   updateReply("");
   clearReplyAudio();
+
+  // Ensure STT is paused while processing to prevent feedback
+  if (recognition && isListening) {
+    autoRestartBlocked = true;
+    recognition.stop();
+  }
 
   if (socket && socket.readyState === WebSocket.OPEN) {
     socket.send(JSON.stringify({
@@ -357,9 +392,13 @@ const setupRecognition = () => {
     setButtons(false);
     updateStatus("Idle", "idle");
     console.log("STT Ended. autoRestartBlocked:", autoRestartBlocked, "AUTO_START_LISTENING:", AUTO_START_LISTENING);
+    
+    // Safety check: if we are supposed to be listening but blocked is false, restart
     if (AUTO_START_LISTENING && !autoRestartBlocked) {
       console.log("Scheduling STT restart...");
-      setTimeout(() => startListening(), 500);
+      setTimeout(() => {
+        if (!isListening) startListening();
+      }, 100);
     }
   };
 
