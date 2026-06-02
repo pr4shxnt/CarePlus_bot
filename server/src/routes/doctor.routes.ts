@@ -19,11 +19,18 @@ router.patch("/patients/:id", doctor.updatePatient);
 // Sessions
 router.get("/sessions", doctor.listSessions);
 router.get("/sessions/:id", doctor.getSession);
-router.post("/sessions/:id/approve", doctor.approveSession);
-router.post("/sessions/:id/reject", doctor.rejectSession);
+
+// Reports
+router.get("/reports", doctor.listReports);
+router.get("/reports/:id", doctor.getReport);
+router.post("/reports/:id/approve", doctor.approveReport);
+router.post("/reports/:id/reject", doctor.rejectReport);
 
 // Guardian management
 router.get("/guardians", doctor.listGuardians);
 router.post("/assign-guardian", doctor.assignGuardian);
+
+// Manual trigger for testing/cron
+router.post("/generate-daily", doctor.triggerDailyReports);
 
 export default router;

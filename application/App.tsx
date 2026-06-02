@@ -14,9 +14,11 @@ import {
   PatientDetail, 
   CriticalScreen, 
   ReportScreen, 
+  SessionHistoryScreen,
   ConnectDevice, 
   ProfileScreen 
 } from './src/screens/CommonScreens';
+import ConversationScreen from './src/screens/ConversationScreen';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -71,40 +73,22 @@ const CustomTabBar = ({ state, descriptors, navigation }: any) => {
 const DoctorTabs = () => (
   <Tab.Navigator
     tabBar={(props) => <CustomTabBar {...props} />}
-    screenOptions={{
-      headerShown: false,
-    }}
+    screenOptions={{ headerShown: false }}
   >
     <Tab.Screen 
       name="DoctorHomeTab" 
       component={DoctorHomeScreen} 
-      options={{
-        tabBarIcon: (props) => <TabBarIcon Icon={Home} label="Home" {...props} />
-      }}
+      options={{ tabBarIcon: (props) => <TabBarIcon Icon={Home} label="Home" {...props} /> }}
     />
     <Tab.Screen 
       name="CriticalTab" 
       component={CriticalScreen} 
-      options={{
-        tabBarIcon: (props) => <TabBarIcon Icon={ClipboardList} label="Alerts" {...props} />
-      }}
+      options={{ tabBarIcon: (props) => <TabBarIcon Icon={ClipboardList} label="Alerts" {...props} /> }}
     />
     <Tab.Screen 
       name="DoctorProfileTab" 
       children={(props) => <ProfileScreen {...props} role="doctor" />} 
-      options={{
-        tabBarIcon: (props) => <TabBarIcon Icon={User} label="Profile" {...props} />
-      }}
-    />
-    <Tab.Screen 
-      name="PatientDetail" 
-      component={PatientDetail} 
-      options={{ tabBarButton: () => null }} 
-    />
-    <Tab.Screen 
-      name="ReportScreen" 
-      component={ReportScreen} 
-      options={{ tabBarButton: () => null }} 
+      options={{ tabBarIcon: (props) => <TabBarIcon Icon={User} label="Profile" {...props} /> }}
     />
   </Tab.Navigator>
 );
@@ -112,42 +96,27 @@ const DoctorTabs = () => (
 const GuardianTabs = () => (
   <Tab.Navigator
     tabBar={(props) => <CustomTabBar {...props} />}
-    screenOptions={{
-      headerShown: false,
-    }}
+    screenOptions={{ headerShown: false }}
   >
     <Tab.Screen 
       name="GuardianHomeTab" 
       component={GuardianHomeScreen} 
-      options={{
-        tabBarIcon: (props) => <TabBarIcon Icon={Home} label="Home" {...props} />
-      }}
+      options={{ tabBarIcon: (props) => <TabBarIcon Icon={Home} label="Home" {...props} /> }}
     />
     <Tab.Screen 
       name="ReportTab" 
       children={(props) => <ReportScreen {...props} role="guardian" />} 
-      options={{
-        tabBarIcon: (props) => <TabBarIcon Icon={BarChart2} label="Reports" {...props} />
-      }}
+      options={{ tabBarIcon: (props) => <TabBarIcon Icon={BarChart2} label="Reports" {...props} /> }}
     />
     <Tab.Screen 
       name="ConnectTab" 
       component={ConnectDevice} 
-      options={{
-        tabBarIcon: (props) => <TabBarIcon Icon={Smartphone} label="Bot" {...props} />
-      }}
+      options={{ tabBarIcon: (props) => <TabBarIcon Icon={Smartphone} label="Bot" {...props} /> }}
     />
     <Tab.Screen 
       name="GuardianProfileTab" 
       children={(props) => <ProfileScreen {...props} role="guardian" />} 
-      options={{
-        tabBarIcon: (props) => <TabBarIcon Icon={User} label="Profile" {...props} />
-      }}
-    />
-    <Tab.Screen 
-      name="PatientDetail" 
-      component={PatientDetail} 
-      options={{ tabBarButton: () => null }} 
+      options={{ tabBarIcon: (props) => <TabBarIcon Icon={User} label="Profile" {...props} /> }}
     />
   </Tab.Navigator>
 );
@@ -170,6 +139,11 @@ const App = () => {
                 <Stack.Screen name="Login" component={LoginScreen} />
                 <Stack.Screen name="DoctorHome" component={DoctorTabs} />
                 <Stack.Screen name="GuardianHome" component={GuardianTabs} />
+                {/* These live in the root Stack so any nested screen can navigate to them */}
+                <Stack.Screen name="ReportScreen" component={ReportScreen} />
+                <Stack.Screen name="SessionHistoryScreen" component={SessionHistoryScreen} />
+                <Stack.Screen name="ConversationScreen" component={ConversationScreen} />
+                <Stack.Screen name="PatientDetail" component={PatientDetail} />
               </Stack.Navigator>
             </NavigationContainer>
           </View>

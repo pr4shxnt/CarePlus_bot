@@ -3,7 +3,9 @@ import mongoose from "mongoose";
 import { Session } from "../models/Session";
 import { Patient } from "../models/Patient";
 import { User } from "../models/User";
+import { Report } from "../models/Report";
 import { ok } from "../types";
+import { generateDailyReportsForToday } from "../services/report.service";
 
 // ── Dashboard Stats ────────────────────────────────────────────────────────
 export async function getDashboard(req: Request, res: Response): Promise<void> {
@@ -11,11 +13,12 @@ export async function getDashboard(req: Request, res: Response): Promise<void> {
 
   const [patients, pendingCount, approvedCount, recentSessions] = await Promise.all([
     Patient.countDocuments({ assignedDoctorId: doctorId }),
-    Session.countDocuments({ reportStatus: "pending" }),
-    Session.countDocuments({ reportStatus: "approved", reviewedBy: doctorId }),
-    Session.find({ reportStatus: "pending" }, { turns: 0, analyses: 0 })
+    Report.countDocuments({ reportStatus: "pending" }),
+    Report.countDocuments({ reportStatus: "approved", reviewedBy: doctorId }),
+    Report.find({ reportStatus: "pending" })
       .sort({ createdAt: -1 })
-      .limit(5),
+      .limit(5)
+      .populate("patientId", "name botId"),
   ]);
 
   res.json(ok({ patients, pendingCount, approvedCount, recentSessions }));
@@ -67,19 +70,20 @@ export async function updatePatient(req: Request, res: Response): Promise<void> 
 }
 
 // ── Sessions ───────────────────────────────────────────────────────────────
+// ── Sessions (Raw Chats) ───────────────────────────────────────────────────
 export async function listSessions(req: Request, res: Response): Promise<void> {
-  const { status, botId, page = "1", limit = "20" } = req.query;
+  const { botId, patientId, page = "1", limit = "20" } = req.query;
   const filter: Record<string, unknown> = {};
-  if (status) filter.reportStatus = status;
   if (botId) filter.botId = botId;
+  if (patientId) filter.patientId = new mongoose.Types.ObjectId(patientId as string);
 
   const pageNum = parseInt(page as string, 10);
   const limitNum = parseInt(limit as string, 10);
   const skip = (pageNum - 1) * limitNum;
 
   const [sessions, total] = await Promise.all([
-    Session.find(filter, { turns: 0, analyses: 0 })
-      .sort({ createdAt: -1 })
+    Session.find(filter)
+      .sort({ startedAt: -1 })
       .skip(skip)
       .limit(limitNum)
       .populate("patientId", "name botId"),
@@ -91,44 +95,82 @@ export async function listSessions(req: Request, res: Response): Promise<void> {
 
 export async function getSession(req: Request, res: Response): Promise<void> {
   const session = await Session.findById(req.params.id)
-    .populate("patientId", "name age conditions medicines")
-    .populate("reviewedBy", "name email");
+    .populate("patientId", "name age conditions medicines");
   if (!session) { res.status(404).json({ success: false, error: "Session not found." }); return; }
   res.json(ok(session));
 }
 
-export async function approveSession(req: Request, res: Response): Promise<void> {
+// ── Reports (Daily Aggregates) ─────────────────────────────────────────────
+export async function listReports(req: Request, res: Response): Promise<void> {
+  const { status, botId, patientId, page = "1", limit = "20" } = req.query;
+  const filter: Record<string, unknown> = {};
+  if (status) filter.reportStatus = status;
+  if (botId) filter.botId = botId;
+  if (patientId) filter.patientId = new mongoose.Types.ObjectId(patientId as string);
+
+  const pageNum = parseInt(page as string, 10);
+  const limitNum = parseInt(limit as string, 10);
+  const skip = (pageNum - 1) * limitNum;
+
+  const [reports, total] = await Promise.all([
+    Report.find(filter)
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limitNum)
+      .populate("patientId", "name botId"),
+    Report.countDocuments(filter),
+  ]);
+
+  res.json(ok({ reports, total, page: pageNum, pages: Math.ceil(total / limitNum) }));
+}
+
+export async function getReport(req: Request, res: Response): Promise<void> {
+  const report = await Report.findById(req.params.id)
+    .populate("patientId", "name age conditions medicines")
+    .populate("reviewedBy", "name email");
+  if (!report) { res.status(404).json({ success: false, error: "Report not found." }); return; }
+  res.json(ok(report));
+}
+
+export async function approveReport(req: Request, res: Response): Promise<void> {
   const doctorId = new mongoose.Types.ObjectId(req.user!.userId);
   const { notes } = req.body as { notes?: string };
 
-  const session = await Session.findById(req.params.id);
-  if (!session) { res.status(404).json({ success: false, error: "Session not found." }); return; }
-  if (session.reportStatus !== "pending") {
-    res.status(409).json({ success: false, error: `Session is already ${session.reportStatus}.` });
+  const report = await Report.findById(req.params.id);
+  if (!report) { res.status(404).json({ success: false, error: "Report not found." }); return; }
+  if (report.reportStatus !== "pending") {
+    res.status(409).json({ success: false, error: `Report is already ${report.reportStatus}.` });
     return;
   }
 
-  session.reportStatus = "approved";
-  session.reviewedBy = doctorId;
-  session.reviewedAt = new Date();
-  if (notes) session.doctorNotes = notes;
-  await session.save();
+  const updateData: Record<string, any> = {
+    reportStatus: "approved",
+    reviewedBy: doctorId,
+    reviewedAt: new Date(),
+  };
+  if (notes) updateData.doctorNotes = notes;
 
-  console.log(`[Doctor] Approved session ${session.sessionId}`);
-  res.json(ok(session, "Report approved and visible to guardian."));
+  const updatedReport = await Report.findByIdAndUpdate(
+    req.params.id,
+    updateData,
+    { new: true }
+  );
+
+  console.log(`[Doctor] Approved report ${updatedReport?.id}`);
+  res.json(ok(updatedReport, "Report approved and visible to guardian."));
 }
 
-export async function rejectSession(req: Request, res: Response): Promise<void> {
+export async function rejectReport(req: Request, res: Response): Promise<void> {
   const doctorId = new mongoose.Types.ObjectId(req.user!.userId);
   const { notes } = req.body as { notes?: string };
 
-  const session = await Session.findByIdAndUpdate(
+  const report = await Report.findByIdAndUpdate(
     req.params.id,
     { reportStatus: "rejected", reviewedBy: doctorId, reviewedAt: new Date(), doctorNotes: notes },
     { new: true }
   );
-  if (!session) { res.status(404).json({ success: false, error: "Session not found." }); return; }
-  res.json(ok(session, "Report rejected."));
+  if (!report) { res.status(404).json({ success: false, error: "Report not found." }); return; }
+  res.json(ok(report, "Report rejected."));
 }
 
 // ── Guardian Management ────────────────────────────────────────────────────
@@ -157,3 +199,13 @@ export async function assignGuardian(req: Request, res: Response): Promise<void>
 
   res.json(ok({ patient, guardian }, "Guardian assigned to patient."));
 }
+
+export async function triggerDailyReports(req: Request, res: Response): Promise<void> {
+  try {
+    await generateDailyReportsForToday();
+    res.json(ok(null, "Daily reports generated successfully."));
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message || "Failed to generate daily reports." });
+  }
+}
+

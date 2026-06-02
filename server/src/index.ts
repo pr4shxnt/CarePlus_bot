@@ -34,6 +34,9 @@ app.use(
   })
 );
 
+// Trust first proxy hop so express-rate-limit can read X-Forwarded-For correctly
+app.set("trust proxy", 1);
+
 // Rate limit: 1000 requests per 15 minutes per IP
 app.use(
   rateLimit({
@@ -70,9 +73,62 @@ app.use("/api/guardian", guardianRoutes);
 app.use(notFound);
 app.use(errorHandler);
 
+import { Session } from "./models/Session";
+import { Patient } from "./models/Patient";
+
+// Migrate existing sessions lacking botId
+async function migrateMissingBotIds() {
+  try {
+    const sessionsWithoutBotId = await Session.find({
+      $or: [{ botId: { $exists: false } }, { botId: "" }, { botId: null }],
+    });
+    if (sessionsWithoutBotId.length > 0) {
+      console.log(`[Migration] Found ${sessionsWithoutBotId.length} sessions missing botId. Migrating...`);
+      for (const session of sessionsWithoutBotId) {
+        let targetBotId = "bot_1";
+        if (session.patientId) {
+          const patient = await Patient.findById(session.patientId);
+          if (patient && patient.botId) {
+            targetBotId = patient.botId;
+          }
+        }
+        await Session.updateOne({ _id: session._id }, { $set: { botId: targetBotId } });
+        console.log(`[Migration] Updated session ${session.sessionId} with botId ${targetBotId}`);
+      }
+      console.log("[Migration] BotId migration complete.");
+    }
+  } catch (err) {
+    console.error("[Migration] Error running migration:", err);
+  }
+}
+
 // ── Bootstrap ─────────────────────────────────────────────────────────────
+import { generateDailyReportsForToday } from "./services/report.service";
+
+function startScheduler() {
+  let lastRunDate = "";
+  setInterval(async () => {
+    const now = new Date();
+    // Check for 10:00 PM (hour 22, minute 0)
+    if (now.getHours() === 22 && now.getMinutes() === 0) {
+      const todayStr = now.toDateString();
+      if (lastRunDate !== todayStr) {
+        lastRunDate = todayStr;
+        try {
+          console.log("[Scheduler] Triggering daily report generation at 10:00 PM...");
+          await generateDailyReportsForToday();
+        } catch (err) {
+          console.error("[Scheduler] Error in automated daily report generation:", err);
+        }
+      }
+    }
+  }, 60000);
+}
+
 async function main() {
   await connectDB(MONGO_URI);
+  await migrateMissingBotIds();
+  startScheduler();
   app.listen(PORT, () => {
     console.log(`\n🚀 Jarvis Server v2.0 running on http://localhost:${PORT}`);
     console.log(`   Auth:     /api/auth`);
