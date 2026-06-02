@@ -17,12 +17,12 @@ class LLMService:
             await self.client.post(f"{self.base_url}/generate", json={"model": self.model, "prompt": "", "keep_alive": -1})
         except: pass
 
-    async def generate_response(self, prompt, system_prompt=None, model=None, num_predict=512):
+    async def generate_response(self, prompt, system_prompt=None, model=None, num_predict=512, temperature=0.7):
         payload = {
             "model": model or self.model,
             "prompt": prompt,
             "stream": False,
-            "options": {"temperature": 0.7, "num_predict": num_predict}
+            "options": {"temperature": temperature, "num_predict": num_predict}
         }
         if system_prompt: payload["system"] = system_prompt
         try:
@@ -34,12 +34,12 @@ class LLMService:
         except Exception as e:
             return f"Error: {str(e)}"
 
-    async def chat_stream(self, messages, system_prompt=None, model=None, num_predict=512):
+    async def chat_stream(self, messages, system_prompt=None, model=None, num_predict=512, temperature=0.7):
         payload = {
             "model": model or self.model,
             "messages": messages,
             "stream": True,
-            "options": {"temperature": 0.7, "num_predict": num_predict}
+            "options": {"temperature": temperature, "num_predict": num_predict}
         }
         if system_prompt:
             if not messages or messages[0].get("role") != "system":

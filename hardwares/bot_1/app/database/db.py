@@ -21,6 +21,15 @@ def init_db():
         print("Migrating medicines table: dropping old version.")
         cursor.execute("DROP TABLE IF EXISTS medicines")
 
+    # Migration: Check if mood_logs table has user_id
+    try:
+        cursor.execute("SELECT user_id FROM mood_logs LIMIT 1")
+    except sqlite3.OperationalError:
+        cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='mood_logs'")
+        if cursor.fetchone():
+            print("Migrating mood_logs table: dropping old version to align with user_id schema.")
+            cursor.execute("DROP TABLE IF EXISTS mood_logs")
+
     # Migration: Check if session_id exists in other tables
     for table in ['chat_history', 'medicine_logs', 'mood_logs']:
         try:

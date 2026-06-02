@@ -2,6 +2,7 @@ import asyncio
 import httpx
 import os
 import logging
+import uuid
 from datetime import datetime, time
 from ..database.db import get_db
 
@@ -216,7 +217,7 @@ async def push_daily_summary():
         all_meds = cursor.fetchall()
 
         # Create a unique ID for the daily summary session
-        daily_session_id = f"daily-{datetime.now().strftime('%Y-%m-%d')}"
+        daily_session_id = str(uuid.uuid5(uuid.NAMESPACE_DNS, f"daily-{PATIENT_ID}-{datetime.now().strftime('%Y-%m-%d')}"))
         
         analyses = []
         for m in all_moods:
