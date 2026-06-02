@@ -3,6 +3,7 @@ import re
 import asyncio
 import uuid
 import time
+from datetime import datetime
 from .llm import llm_service
 from .rag import rag_service
 from .router import router_service
@@ -178,6 +179,167 @@ class SwasthaAgent:
         except Exception as e:
             print(f"Mood Logging Error: {e}")
 
+    async def _evaluate_and_log_medicine_intake(self, target_user_id, session_id, user_message, last_assistant_msg, lang):
+        """Analyzes the user's response to evaluate which medicines they have taken, missed, or skipped."""
+        try:
+            conn = get_db()
+            cursor = conn.cursor()
+            cursor.execute("SELECT * FROM medicines WHERE user_id = ?", (target_user_id,))
+            rows = cursor.fetchall()
+            conn.close()
+            if not rows:
+                return None
+            
+            meds_list = []
+            for r in rows:
+                schedule = []
+                try:
+                    schedule = json.loads(r["schedule"]) if r["schedule"] else []
+                except:
+                    pass
+                meds_list.append({
+                    "name": r["name"],
+                    "dosage": r["dosage"] or "",
+                    "times": [s.get("time", "") for s in schedule]
+                })
+            
+            # Rule-based heuristic check
+            intake_records = None
+            msg = user_message.strip().lower()
+            
+            nepali_negs = ["खाइन", "खाइनँ", "खाएको छैन", "खाएकोछैन", "लिन पाइन", "लिन पाइनँ", "लिन सकिन", "लिन सकिनँ", "छैन", "पाइन", "पाइनँ", "सकिन", "सकिनँ", "खाइँन", "नखाने", "नखाएको"]
+            english_negs = ["no", "didn't", "did not", "haven't", "have not", "missed", "skipped", "not yet", "forgot"]
+            is_negation = any(neg in msg for neg in nepali_negs + english_negs)
+            
+            nepali_pos = ["खाएँ", "खाइसकेँ", "खाए", "खाइसके", "लिनुभयो", "हो"]
+            english_pos = ["yes", "yep", "yeah", "done", "taken", "took", "did"]
+            is_confirmation = any(pos in msg for pos in nepali_pos + english_pos)
+            
+            morning_meds = []
+            evening_meds = []
+            all_meds = []
+            for m in meds_list:
+                all_meds.append(m["name"])
+                is_morning = False
+                is_evening = False
+                for t in m.get("times", []):
+                    try:
+                        hour = int(t.split(':')[0])
+                        if hour < 12:
+                            is_morning = True
+                        else:
+                            is_evening = True
+                    except:
+                        pass
+                if is_morning:
+                    morning_meds.append(m["name"])
+                if is_evening:
+                    evening_meds.append(m["name"])
+            
+            has_morning_ref = any(w in msg for w in ["बिहान", "bihan", "morning"])
+            has_evening_ref = any(w in msg for w in ["बेलुका", "राति", "beluka", "rati", "evening", "night"])
+            
+            if has_morning_ref and is_negation and not is_confirmation:
+                intake_records = []
+                for name in morning_meds:
+                    intake_records.append({"name": name, "status": "missed"})
+                for name in evening_meds:
+                    if name not in morning_meds:
+                        intake_records.append({"name": name, "status": "missed"})
+            elif has_morning_ref and is_confirmation and not is_negation:
+                intake_records = []
+                for name in morning_meds:
+                    intake_records.append({"name": name, "status": "taken"})
+                for name in evening_meds:
+                    if name not in morning_meds:
+                        intake_records.append({"name": name, "status": "missed"})
+            elif has_evening_ref and is_negation and not is_confirmation:
+                intake_records = []
+                for name in evening_meds:
+                    intake_records.append({"name": name, "status": "missed"})
+                for name in morning_meds:
+                    if name not in evening_meds:
+                        intake_records.append({"name": name, "status": "missed"})
+            elif is_negation and not is_confirmation and not has_morning_ref and not has_evening_ref:
+                intake_records = []
+                for name in all_meds:
+                    intake_records.append({"name": name, "status": "missed"})
+            elif is_confirmation and not is_negation and not has_morning_ref and not has_evening_ref:
+                intake_records = []
+                for name in all_meds:
+                    intake_records.append({"name": name, "status": "taken"})
+            
+            if intake_records is None:
+                prompt = (
+                    f"You are a clinical tracking assistant.\n"
+                    f"The assistant previously listed these medicines and asked the user if they had taken them:\n"
+                    f"Assistant's message: \"{last_assistant_msg}\"\n\n"
+                    f"User's reply: \"{user_message}\"\n\n"
+                    f"Here is the user's full list of registered medicines:\n"
+                    f"{json.dumps(meds_list, indent=2)}\n\n"
+                    f"Task:\n"
+                    f"Analyze the user's reply and classify the status of each registered medicine. The status must be exactly one of:\n"
+                    f"- 'taken' (if they confirmed taking it, or general confirmation like 'Yes' / 'खाएँ' / 'खाइसकेँ')\n"
+                    f"- 'skipped' (if they explicitly chose to skip it or not take it)\n"
+                    f"- 'missed' (if they forgot to take it, missed the dose, or general negation like 'No' / 'छैन' / 'खाएको छैन' / 'खाइन' / 'लिन पाइन')\n\n"
+                    f"CRITICAL NEPALI LANGUAGE RULES:\n"
+                    f"1. 'खाइन' (khaina) means 'I did NOT eat/take' (negated/missed). It is NOT positive. Any status associated with 'खाइन' MUST be classified as 'missed'.\n"
+                    f"2. 'लिन पाइन' or 'लिन सकिन' or 'लिन पाइएन' means 'I could not take it' (missed/skipped).\n"
+                    f"3. 'खाएँ' (khae) or 'खाइसकेँ' (khaisake) means 'I did take/eat' (taken/positive).\n"
+                    f"4. Be very strict: if the response translates to a negative action ('didn't take', 'no', 'not yet'), classify it as 'missed'.\n\n"
+                    f"Format the output strictly as a JSON array of objects, with no markdown codeblocks, like this:\n"
+                    f"[\n"
+                    f"  {{\"name\": \"medicine_name\", \"status\": \"taken\" | \"missed\" | \"skipped\"}}\n"
+                    f"]\n\n"
+                    f"Output only the JSON. Do not include markdown tags."
+                )
+                
+                response = await llm_service.generate_response(prompt, num_predict=150, temperature=0.0)
+                response_clean = response.strip().replace("```json", "").replace("```", "").strip()
+                intake_records = json.loads(response_clean)
+                
+            if not isinstance(intake_records, list):
+                print(f"DEBUG: Intake response was not a list: {intake_records}")
+                return None
+            
+            conn = get_db()
+            logged_count = 0
+            for record in intake_records:
+                name = record.get("name")
+                status = record.get("status")
+                if not name or status not in ['taken', 'missed', 'skipped']:
+                    continue
+                
+                # Retrieve matching dosage/times from db row
+                matched_row = next((r for r in rows if r["name"].lower() == name.lower()), None)
+                dosage = matched_row["dosage"] if matched_row else ""
+                
+                scheduled_time = ""
+                if matched_row and matched_row["schedule"]:
+                    try:
+                        sched = json.loads(matched_row["schedule"])
+                        if sched:
+                            scheduled_time = sched[0].get("time", "")
+                    except:
+                        pass
+                
+                taken_at = datetime.now().strftime("%Y-%m-%d %H:%M:%S") if status == 'taken' else None
+                
+                conn.execute(
+                    "INSERT INTO medicine_logs (user_id, session_id, medicine_name, dosage, scheduled_time, taken_at, status, is_synced) VALUES (?, ?, ?, ?, ?, ?, ?, 0)",
+                    (target_user_id, session_id, name, dosage, scheduled_time, taken_at, status)
+                )
+                logged_count += 1
+            
+            conn.commit()
+            conn.close()
+            print(f"DEBUG: Logged {logged_count} medicine logs for session {session_id}")
+            return intake_records
+            
+        except Exception as e:
+            print(f"Error evaluating medicine intake: {e}")
+            return None
+
     async def run_chat_stream(self, user_id, message, history=None):
         target_user_id = PATIENT_ID if user_id == "web-user" else user_id
         session_id = self._get_session_id(user_id)
@@ -185,6 +347,23 @@ class SwasthaAgent:
         print(f"DEBUG: Processing message: '{message}' for user: {user_id} (Target: {target_user_id}, Session: {session_id})")
         user_info = await self._get_user_info(target_user_id)
         user_name = user_info["name"] if user_info else None
+
+        # Resolve history from database if not passed
+        effective_history = history
+        if not effective_history:
+            try:
+                conn = get_db()
+                cursor = conn.cursor()
+                cursor.execute(
+                    "SELECT role, content FROM chat_history WHERE session_id = ? ORDER BY timestamp ASC",
+                    (session_id,)
+                )
+                rows = cursor.fetchall()
+                conn.close()
+                effective_history = [{"role": "user" if r["role"] == "user" else "assistant", "content": r["content"]} for r in rows]
+            except Exception as e:
+                print(f"Error fetching history from db: {e}")
+                effective_history = []
 
         await self._save_chat(user_id, "user", message)
         
@@ -202,6 +381,106 @@ class SwasthaAgent:
             profile_context = f"\nPatient Profile Context:\nName: {profile['name']}\nMedical Conditions/Diseases: {cond_str}\n"
 
         final_res = ""
+
+        # --- MEDICINE RESPONSE TRACKING HANDLER ---
+        last_assistant_msg = ""
+        if effective_history:
+            assistant_messages = [h for h in effective_history if h.get("role") in ["assistant", "bot"]]
+            if assistant_messages:
+                last_assistant_msg = assistant_messages[-1].get("content", "")
+        
+        is_replying_to_med_check = False
+        if last_assistant_msg:
+            is_replying_to_med_check = any(kw in last_assistant_msg for kw in [
+                "औषधिहरू खानुभयो", "medicine", "doses yet", "medicines yet"
+            ]) and not any(kw in last_assistant_msg for kw in [
+                "सम्पर्क गरूँ", "contact your doctor"
+            ])
+
+        if is_replying_to_med_check:
+            intake_records = await self._evaluate_and_log_medicine_intake(
+                target_user_id, session_id, message, last_assistant_msg, lang
+            )
+            if intake_records:
+                taken_list = [r["name"] for r in intake_records if r["status"] == "taken"]
+                missed_list = [r["name"] for r in intake_records if r["status"] in ["missed", "skipped"]]
+
+                # --- Deterministic responses for clear cases (avoids LLM tone-drift) ---
+                if lang == "ne":
+                    if missed_list and not taken_list:
+                        # All missed — express concern, no celebration
+                        missed_str = "\n".join([f"- {n}" for n in missed_list])
+                        final_res = (
+                            f"ठीक छ, मैले नोट गरेँ।\n"
+                            f"तपाईंले आज यी औषधिहरू खानुभएको छैन:\n{missed_str}\n\n"
+                            f"के कुनै कारण छ? कोशिश गर्नुहोस् चाँडै नै खान — समयमा औषधि खानु तपाईंको स्वास्थ्यको लागि महत्त्वपूर्ण छ।"
+                        )
+                    elif taken_list and not missed_list:
+                        # All taken — celebrate
+                        taken_str = "\n".join([f"- {n}" for n in taken_list])
+                        final_res = (
+                            f"राम्रो! तपाईंले सबै औषधिहरू खानुभयो:\n{taken_str}\n\n"
+                            f"आफ्नो स्वास्थ्यको ख्याल राख्नुभएकोमा धन्यवाद।"
+                        )
+                    else:
+                        # Mixed — use LLM with strict instructions
+                        taken_str = ', '.join(taken_list) if taken_list else 'कुनै पनि होइन'
+                        missed_str = ', '.join(missed_list) if missed_list else 'कुनै पनि होइन'
+                        context_instruction = (
+                            f"\n[System Info — Medicine Intake Logged:\n"
+                            f"- खानुभएको: {taken_str}\n"
+                            f"- नखानुभएको: {missed_str}\n\n"
+                            f"STRICT RULES:\n"
+                            f"1. नखानुभएको औषधिको बारेमा चिन्ता व्यक्त गर्नुहोस् — खुशी नदेखाउनुहोस्।\n"
+                            f"2. खानुभएकोको प्रशंसा गर्नुहोस्।\n"
+                            f"3. Plain text, no markdown.\n"
+                            f"4. Reply in Nepali only.]"
+                        )
+                        system_prompt = self.PROMPT_GENERAL_NE
+                        system_prompt = f"{system_prompt}\n{profile_context}{context_instruction}"
+                        chat_messages = (effective_history or [])[-6:]
+                        chat_messages.append({"role": "user", "content": message})
+                        async for chunk in self._clean_stream_generator(llm_service.chat_stream(chat_messages, system_prompt=system_prompt, temperature=0.3)):
+                            final_res += chunk
+                            yield chunk
+                        clean_res = self.clean_markdown(final_res)
+                        await self._save_chat(user_id, "assistant", clean_res)
+                        asyncio.create_task(self._log_mood(target_user_id, session_id, message, clean_res))
+                        return
+                else:
+                    if missed_list and not taken_list:
+                        missed_str = ", ".join(missed_list)
+                        final_res = (
+                            f"Noted. It looks like you haven't taken: {missed_str}.\n\n"
+                            f"Is there a reason you missed it? Try to take it as soon as possible — staying on schedule is important for your health."
+                        )
+                    elif taken_list and not missed_list:
+                        taken_str = ", ".join(taken_list)
+                        final_res = f"Great job! You've taken: {taken_str}. Keep up the good work!"
+                    else:
+                        taken_str = ', '.join(taken_list) if taken_list else 'None'
+                        missed_str = ', '.join(missed_list) if missed_list else 'None'
+                        context_instruction = (
+                            f"\n[System Info — Medicine Intake Logged: Taken: {taken_str} | Missed: {missed_str}. "
+                            f"Express concern for missed, praise for taken. No markdown. English only.]"
+                        )
+                        system_prompt = self.PROMPT_GENERAL_EN
+                        system_prompt = f"{system_prompt}\n{profile_context}{context_instruction}"
+                        chat_messages = (effective_history or [])[-6:]
+                        chat_messages.append({"role": "user", "content": message})
+                        async for chunk in self._clean_stream_generator(llm_service.chat_stream(chat_messages, system_prompt=system_prompt, temperature=0.3)):
+                            final_res += chunk
+                            yield chunk
+                        clean_res = self.clean_markdown(final_res)
+                        await self._save_chat(user_id, "assistant", clean_res)
+                        asyncio.create_task(self._log_mood(target_user_id, session_id, message, clean_res))
+                        return
+
+                yield final_res
+                clean_res = self.clean_markdown(final_res)
+                await self._save_chat(user_id, "assistant", clean_res)
+                asyncio.create_task(self._log_mood(target_user_id, session_id, message, clean_res))
+                return
 
         # Identity check
         is_prashant = "prashant" in message.lower() or "प्रशान्त" in message
@@ -250,13 +529,41 @@ class SwasthaAgent:
                         target_time = f"{target_hour:02d}:00"
                         # Handle common offsets or 12h/24h if needed, but for now exact or simple baje
 
+                    # --- Detect "what have I NOT taken" type queries ---
+                    is_not_taken_query = any(kw in message for kw in [
+                        "खाएको छैन", "खाएकोछैन", "नखाएको", "कुन कुन खाएको छैन", "के खाएको छैन",
+                        "have not taken", "haven't taken", "not taken", "what did i miss", "what have i missed"
+                    ])
+
                     filtered_meds = meds
-                    if target_time:
-                        # Try to find meds matching that hour
-                        filtered_meds = [m for m in meds if any(s.get('time', '').startswith(f"{target_hour:02d}:") or s.get('time', '').startswith(f"{target_hour+12:02d}:") for s in m['schedule'])]
-                    
-                    if not filtered_meds and target_time:
-                        res = f"माफ गर्नुहोस्, {target_hour} बजे खाने कुनै औषधिको रेकord छैन।" if lang == "ne" else f"Sorry, I don't have any records for medicine at {target_hour} o'clock."
+                    if is_not_taken_query:
+                        # Filter to only meds NOT logged as taken today
+                        try:
+                            today_str = datetime.now().strftime("%Y-%m-%d")
+                            conn2 = get_db()
+                            cursor2 = conn2.cursor()
+                            cursor2.execute(
+                                "SELECT DISTINCT medicine_name FROM medicine_logs WHERE user_id = ? AND status = 'taken' AND timestamp >= ?",
+                                (target_user_id, f"{today_str} 00:00:00")
+                            )
+                            taken_rows = cursor2.fetchall()
+                            conn2.close()
+                            taken_names = {r["medicine_name"].lower() for r in taken_rows}
+                            filtered_meds = [m for m in meds if m["name"].lower() not in taken_names]
+                        except Exception as e:
+                            print(f"Error querying taken meds for filter: {e}")
+                    elif target_time:
+                        filtered_meds = [m for m in meds if any(
+                            s.get('time', '').startswith(f"{target_hour:02d}:")
+                            or s.get('time', '').startswith(f"{target_hour+12:02d}:")
+                            for s in m['schedule']
+                        )]
+
+                    if not filtered_meds:
+                        if is_not_taken_query:
+                            res = "तपाईंले आजका सबै औषधिहरू खाइसक्नुभएको छ। राम्रो काम!" if lang == "ne" else "You have taken all your medicines for today. Great job!"
+                        else:
+                            res = f"माफ गर्नुहोस्, {target_hour} बजे खाने कुनै औषधिको रेकर्ड छैन।" if lang == "ne" else f"Sorry, I don't have any records for medicine at {target_hour} o'clock."
                         yield res
                         await self._save_chat(user_id, "assistant", res)
                         return
@@ -266,26 +573,35 @@ class SwasthaAgent:
                         med_text = "\n".join([f"- {m['name']} ({m['dosage']}) - {', '.join([s.get('time', '') for s in m['schedule']])}" for m in filtered_meds])
                         translate_prompt = f"TASK: Translate the following medicine list to pure Nepali Devanagari. \nRULES:\n1. Output ONLY translated data.\n2. NO symbols like * or -.\n3. Include NAME, DOSAGE, and NATURAL TIME.\n4. NATURAL TIME RULE: 08:00 must be 'बिहानको ८ बजे', 21:00 must be 'बेलुकाको ९ बजे'. Use 'बिहानको' (Morning), 'दिउँसोको' (Afternoon), or 'बेलुकाको' (Evening) for all times.\n5. NO English words or numbers (use Devanagari digits if possible, e.g., ८ instead of 8).\n\nLIST:\n{med_text}"
                         translated_meds_raw = await llm_service.generate_response(translate_prompt, system_prompt="Strict Nepali Translator. Use only Devanagari script.")
-                        
+
                         clean_lines = []
                         for line in translated_meds_raw.split('\n'):
                             if re.search(r'[\u0900-\u097F]', line):
                                 clean_line = line.replace('*', '').replace('-', '').replace('•', '').strip()
                                 if clean_line: clean_lines.append(clean_line)
-                        
+
                         translated_meds = "\n".join(clean_lines)
-                        
-                        time_desc = f"{target_hour} बजे"
-                        if target_hour < 12: time_desc = f"बिहानको {target_hour} बजे"
-                        elif target_hour >= 18: time_desc = f"बेलुकाको {target_hour-12 if target_hour > 12 else target_hour} बजे"
-                        
-                        intro = f"नमस्ते {user_name or 'हजुर'}, यहाँ तपाईंका {time_desc if target_time else ''}का औषधिहरू छन्:" if target_time else f"नमस्ते {user_name or 'हजुर'}, यहाँ तपाईंका औषधिहरू छन्:"
-                        final_res = f"{intro}\n{translated_meds.strip()}"
-                        final_res += "\n\n" + "के तपाईंले आजका यी औषधिहरू खानुभयो?"
+
+                        if is_not_taken_query:
+                            intro = f"नमस्ते {user_name or 'हजुर'}, यहाँ तपाईंले आज अझै नखाएका औषधिहरू छन्:"
+                            final_res = f"{intro}\n{translated_meds.strip()}"
+                        elif target_time:
+                            time_desc = f"{target_hour} बजे"
+                            if target_hour < 12: time_desc = f"बिहानको {target_hour} बजे"
+                            elif target_hour >= 18: time_desc = f"बेलुकाको {target_hour-12 if target_hour > 12 else target_hour} बजे"
+                            intro = f"नमस्ते {user_name or 'हजुर'}, यहाँ तपाईंका {time_desc}का औषधिहरू छन्:"
+                            final_res = f"{intro}\n{translated_meds.strip()}\n\nके तपाईंले यी औषधिहरू खानुभयो?"
+                        else:
+                            intro = f"नमस्ते {user_name or 'हजुर'}, यहाँ तपाईंका औषधिहरू छन्:"
+                            final_res = f"{intro}\n{translated_meds.strip()}\n\nके तपाईंले आजका यी औषधिहरू खानुभयो?"
                     else:
                         med_lines = "\n".join([f"- {m['name']} ({m['dosage']}) - {', '.join([s.get('time', '') for s in m['schedule']])}" for m in filtered_meds])
-                        intro = f"Hello {user_name or ''}, here are your {target_hour if target_time else ''} o'clock medicines:" if target_time else f"Hello {user_name or ''}, here are your medicines:"
-                        final_res = f"{intro}\n{med_lines}\n\nHave you taken these doses yet?"
+                        if is_not_taken_query:
+                            intro = f"Hello {user_name or ''}, here are the medicines you haven't taken today:"
+                            final_res = f"{intro}\n{med_lines}"
+                        else:
+                            intro = f"Hello {user_name or ''}, here are your {target_hour} o'clock medicines:" if target_time else f"Hello {user_name or ''}, here are your medicines:"
+                            final_res = f"{intro}\n{med_lines}\n\nHave you taken these doses yet?"
                 else:
                     final_res = "अहिले मसँग तपाईंको कुनै औषधिको रेकर्ड छैन। के म डाक्टरलाई सम्पर्क गरूँ?" if lang == "ne" else "I don't have any medicine records for you right now. Should I contact your doctor?"
                 
@@ -310,7 +626,7 @@ class SwasthaAgent:
                 # If no RAG context, try to answer from general knowledge using history
                 system_prompt = self.PROMPT_GENERAL_NE if lang == "ne" else self.PROMPT_GENERAL_EN
                 system_prompt = f"{system_prompt}\n{profile_context}"
-                chat_messages = (history or [])[-10:] # Keep last 10 messages for context
+                chat_messages = (effective_history or [])[-10:] # Keep last 10 messages for context
                 chat_messages.append({"role": "user", "content": message})
                 
                 async for chunk in self._clean_stream_generator(llm_service.chat_stream(chat_messages, system_prompt=system_prompt)):
@@ -329,8 +645,8 @@ class SwasthaAgent:
             
             # Build messages without system messages at the start so that llm_service injects system_prompt properly
             chat_messages = []
-            if history:
-                chat_messages.extend(history[-6:]) # Last 3 exchanges
+            if effective_history:
+                chat_messages.extend(effective_history[-6:]) # Last 3 exchanges
             chat_messages.append({"role": "user", "content": message})
             
             async for chunk in self._clean_stream_generator(llm_service.chat_stream(chat_messages, system_prompt=system_prompt)):
@@ -388,7 +704,7 @@ class SwasthaAgent:
         else:
             system_prompt = self.PROMPT_GENERAL_NE if lang == "ne" else self.PROMPT_GENERAL_EN
             system_prompt = f"{system_prompt}\n{profile_context}"
-            chat_messages = (history or [])[-10:] # Keep last 10 messages for context
+            chat_messages = (effective_history or [])[-10:] # Keep last 10 messages for context
             chat_messages.append({"role": "user", "content": message})
             
             async for chunk in self._clean_stream_generator(llm_service.chat_stream(chat_messages, system_prompt=system_prompt)):

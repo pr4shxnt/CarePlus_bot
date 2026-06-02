@@ -36,6 +36,7 @@ async def update_records(request: Request, update: PatientUpdate):
         raise HTTPException(status_code=401, detail="Invalid bot API key")
 
     if update.type == "PATIENT_UPDATE":
+        conn = None
         try:
             conn = get_db()
             # Clear old medicines for this patient and add new ones
@@ -46,12 +47,14 @@ async def update_records(request: Request, update: PatientUpdate):
                     (update.patientId, med["name"], med["dosage"], json.dumps([{"time": t} for t in med.get("times", [])]))
                 )
             conn.commit()
-            conn.close()
             logger.info(f"Updated {len(update.medicines)} medicines for patient {update.patientId}")
             return {"success": True}
         except Exception as e:
             logger.error(f"Failed to update medicines: {e}")
             raise HTTPException(status_code=500, detail=str(e))
+        finally:
+            if conn:
+                conn.close()
     return {"success": False, "message": "Unknown update type"}
 
 @app.on_event("startup")
@@ -164,6 +167,7 @@ async def log_medicine_endpoint(request: MedicineLogRequest):
     if not request.userId or not request.logs:
         raise HTTPException(status_code=400, detail="userId and logs are required")
     
+    conn = None
     try:
         conn = get_db()
         for entry in request.logs:
@@ -172,11 +176,13 @@ async def log_medicine_endpoint(request: MedicineLogRequest):
                 (request.userId, entry.medicineName, entry.dosage, entry.scheduledTime, entry.takenAt, entry.status),
             )
         conn.commit()
-        conn.close()
         return {"success": True, "count": len(request.logs)}
     except Exception as e:
         logger.error(f"Medicine log error: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        if conn:
+            conn.close()
 
 # TTS Endpoint (refactored to be async)
 @app.post("/tts")
