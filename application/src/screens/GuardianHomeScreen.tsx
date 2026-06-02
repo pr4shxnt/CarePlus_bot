@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
@@ -8,104 +8,154 @@ import {
   SafeAreaView,
   StatusBar,
   Dimensions,
+  ActivityIndicator,
+  RefreshControl,
+  Alert,
 } from 'react-native';
 import { Colors } from '../theme/colors';
 import { Pill, Activity, Smartphone, User, TrendingUp, Smile, Zap, MessageSquare, Coffee } from 'lucide-react-native';
+import { request } from '../services/api';
+import { AuthService } from '../services/auth.service';
 
 const { width } = Dimensions.get('window');
 const FULL_WIDTH = width - 40;
 const HALF_WIDTH = (width - 50) / 2;
 
 const GuardianHomeScreen = ({ navigation }: any) => {
+  const [dashboard, setDashboard] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+
+  const fetchData = useCallback(async () => {
+    try {
+      const res = await request('/guardian/dashboard');
+      setDashboard(res.data);
+    } catch (err: any) {
+      Alert.alert('Error', err.message || 'Failed to load dashboard');
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
+
+  const onRefresh = () => {
+    setRefreshing(true);
+    fetchData();
+  };
+
+  const handleLogout = async () => {
+    await AuthService.logout();
+    navigation.replace('Login');
+  };
+
+  const patient = dashboard?.patient;
+  const reports = dashboard?.reports ?? [];
+  const totalReports = dashboard?.stats?.total ?? 0;
+
+  // Derive latest mood from most recent report's analyses
+  const latestReport = reports[0];
+  const latestMood = latestReport?.analyses?.[0]?.mood || 'Stable';
+  const latestMoodIntensity = latestReport?.analyses?.[0]?.mood_intensity ?? 5;
+
+  if (loading) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.loadingBox}>
+          <ActivityIndicator size="large" color={Colors.primary} />
+          <Text style={styles.loadingText}>Loading dashboard...</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" />
-      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-        {/* Header Section */}
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[Colors.primary]} />}
+      >
+        {/* Header */}
         <View style={styles.header}>
           <View>
             <Text style={styles.welcome}>Overview</Text>
             <Text style={styles.userName}>Guardian Dashboard</Text>
           </View>
-          <TouchableOpacity 
-            style={styles.profileBtn} 
-            onPress={() => navigation.navigate('GuardianProfile')}
-          >
+          <TouchableOpacity style={styles.profileBtn} onPress={handleLogout}>
             <View style={styles.avatarMini}>
               <User color={Colors.white} size={20} />
             </View>
           </TouchableOpacity>
         </View>
 
-        {/* Bento Grid Layout */}
         <View style={styles.bentoGrid}>
-          
-          {/* Main Patient Card - Psychology Focus */}
-          <TouchableOpacity 
-            style={[styles.bentoCard, styles.mainCard]}
-            activeOpacity={0.9}
-          >
+
+          {/* Main Patient Card */}
+          <View style={[styles.bentoCard, styles.mainCard]}>
             <View style={styles.patientTop}>
               <View>
                 <Text style={styles.patientLabel}>PSYCH-MONITORING</Text>
-                <Text style={styles.patientName}>Prashant Adhikari</Text>
+                <Text style={styles.patientName}>{patient?.name ?? 'No patient linked'}</Text>
               </View>
               <View style={styles.statusBadge}>
                 <Zap color={Colors.gold} size={14} fill={Colors.gold} />
-                <Text style={styles.statusText}>Active</Text>
+                <Text style={styles.statusText}>{patient ? 'Active' : 'None'}</Text>
               </View>
             </View>
             <View style={styles.metricsGrid}>
               <View style={styles.metricItem}>
                 <Smile color={Colors.secondary} size={20} />
-                <Text style={styles.metricVal}>Good</Text>
+                <Text style={styles.metricVal}>{latestMood}</Text>
                 <Text style={styles.metricLab}>Mood</Text>
               </View>
               <View style={styles.divider} />
               <View style={styles.metricItem}>
                 <Pill color={Colors.primary} size={20} />
-                <Text style={styles.metricVal}>8:45 AM</Text>
-                <Text style={styles.metricLab}>Last Med</Text>
+                <Text style={styles.metricVal}>{patient?.medicines?.length ?? 0}</Text>
+                <Text style={styles.metricLab}>Meds</Text>
               </View>
               <View style={styles.divider} />
               <View style={styles.metricItem}>
                 <MessageSquare color={Colors.gold} size={20} />
-                <Text style={styles.metricVal}>12%</Text>
-                <Text style={styles.metricLab}>% Lonely</Text>
+                <Text style={styles.metricVal}>{latestMoodIntensity}/10</Text>
+                <Text style={styles.metricLab}>Intensity</Text>
               </View>
             </View>
-          </TouchableOpacity>
+          </View>
 
           <View style={styles.row}>
-            {/* Medication Card - Gold */}
-            <TouchableOpacity 
-              style={[styles.bentoCard, { width: HALF_WIDTH, backgroundColor: Colors.gold }]}
-            >
+            {/* Medication Card */}
+            <View style={[styles.bentoCard, { width: HALF_WIDTH, backgroundColor: Colors.gold }]}>
               <View style={styles.whiteIconBox}>
                 <Pill color={Colors.gold} size={24} />
               </View>
               <Text style={styles.cardTitleGold}>Medication</Text>
-              <Text style={styles.cardValGold}>12:30 PM</Text>
-              <Text style={styles.cardSubGold}>Next Schedule</Text>
-            </TouchableOpacity>
+              <Text style={styles.cardValGold}>{patient?.medicines?.[0]?.name ?? 'None'}</Text>
+              <Text style={styles.cardSubGold}>{patient?.medicines?.[0]?.dosage ?? '—'}</Text>
+            </View>
 
-            {/* Mood Trend Card */}
-            <TouchableOpacity 
+            {/* Reports Card */}
+            <TouchableOpacity
               style={[styles.bentoCard, { width: HALF_WIDTH, backgroundColor: Colors.white }]}
-              onPress={() => navigation.navigate('ReportScreen', { role: 'guardian' })}
+              onPress={() => navigation.navigate('ReportScreen', { role: 'guardian', patientId: patient?._id })}
             >
               <Smile color={Colors.primary} size={32} />
-              <Text style={styles.cardTitle}>Daily Mood</Text>
-              <Text style={styles.cardValue}>Positive</Text>
+              <Text style={styles.cardTitle}>Reports</Text>
+              <Text style={styles.cardValue}>{totalReports}</Text>
               <View style={styles.activeTag}>
                 <TrendingUp color={Colors.primary} size={12} />
-                <Text style={styles.activeTagText}>Stable</Text>
+                <Text style={styles.activeTagText}>Approved</Text>
               </View>
             </TouchableOpacity>
           </View>
 
-          {/* Bot Sync Wide Block */}
-          <TouchableOpacity 
+          {/* Device Status */}
+          <TouchableOpacity
             style={[styles.bentoCard, styles.botCard]}
             onPress={() => navigation.navigate('ConnectDevice')}
           >
@@ -114,29 +164,31 @@ const GuardianHomeScreen = ({ navigation }: any) => {
             </View>
             <View style={styles.botTextWrapper}>
               <Text style={styles.botLabel}>DEVICE STATUS</Text>
-              <Text style={styles.botTitle}>CarePlus Bot Linked</Text>
-              <Text style={styles.botSub}>Real-time synchronization enabled</Text>
+              <Text style={styles.botTitle}>
+                {patient?.botId ? `Bot ID: ${patient.botId}` : 'No Bot Linked'}
+              </Text>
+              <Text style={styles.botSub}>
+                {patient?.botId ? 'Real-time synchronization enabled' : 'Tap to connect a device'}
+              </Text>
             </View>
           </TouchableOpacity>
 
-          {/* Loneliness Analysis */}
+          {/* Recent Reports */}
           <View style={styles.row}>
-            <TouchableOpacity 
+            <TouchableOpacity
               style={[styles.bentoCard, { width: HALF_WIDTH, backgroundColor: Colors.secondary }]}
-              onPress={() => navigation.navigate('ReportScreen', { role: 'guardian' })}
+              onPress={() => navigation.navigate('ReportScreen', { role: 'guardian', patientId: patient?._id })}
             >
-              <MessageSquare color={Colors.primary} size={24} />
-              <Text style={[styles.smallTitle, { color: Colors.white }]}>Social Isolation</Text>
-              <Text style={styles.smallVal}>12% Lonely</Text>
+              <Activity color={Colors.primary} size={24} />
+              <Text style={[styles.smallTitle, { color: Colors.white }]}>Mood History</Text>
+              <Text style={styles.smallVal}>{reports.length} sessions</Text>
             </TouchableOpacity>
-            
-            <TouchableOpacity 
-              style={[styles.bentoCard, { width: HALF_WIDTH, backgroundColor: Colors.white }]}
-            >
+
+            <View style={[styles.bentoCard, { width: HALF_WIDTH, backgroundColor: Colors.white }]}>
               <Coffee color={Colors.gold} size={24} />
-              <Text style={styles.smallTitle}>Care Log</Text>
-              <Text style={styles.smallVal}>Daily check-in done</Text>
-            </TouchableOpacity>
+              <Text style={styles.smallTitle}>Conditions</Text>
+              <Text style={styles.smallVal}>{patient?.conditions?.[0] ?? 'None recorded'}</Text>
+            </View>
           </View>
 
         </View>
@@ -147,6 +199,8 @@ const GuardianHomeScreen = ({ navigation }: any) => {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.background },
+  loadingBox: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+  loadingText: { marginTop: 12, color: Colors.gray, fontWeight: '600' },
   scrollContent: { paddingBottom: 130 },
   header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 25, paddingTop: 20, marginBottom: 20 },
   welcome: { fontSize: 13, color: Colors.gray, fontWeight: '800', letterSpacing: 1.2, textTransform: 'uppercase' },
@@ -181,7 +235,7 @@ const styles = StyleSheet.create({
   botLabel: { color: Colors.primary, fontSize: 10, fontWeight: '900', letterSpacing: 1.5 },
   botTitle: { color: Colors.white, fontSize: 18, fontWeight: '900', marginTop: 2 },
   botSub: { color: 'rgba(255,255,255,0.6)', fontSize: 12, fontWeight: '600', marginTop: 4 },
-  smallTitle: { fontSize: 14, fontWeight: '800', color: Colors.secondary },
+  smallTitle: { fontSize: 14, fontWeight: '800', color: Colors.secondary, marginTop: 8 },
   smallVal: { fontSize: 12, color: Colors.gray, fontWeight: '700', marginTop: 4 },
 });
 

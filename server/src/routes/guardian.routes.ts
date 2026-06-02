@@ -13,6 +13,10 @@ router.get("/dashboard", guardian.getDashboard);
 // Patient info
 router.get("/patient", guardian.getMyPatient);
 
+// Sessions (raw chats, immediately viewable without approval)
+router.get("/sessions", guardian.listSessions);
+router.get("/sessions/:id", guardian.getSession);
+
 // Reports (approved only, scoped to linked patient)
 router.get("/reports", guardian.listReports);
 router.get("/reports/:id", guardian.getReport);

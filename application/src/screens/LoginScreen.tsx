@@ -33,7 +33,9 @@ const LoginScreen = ({ navigation }: any) => {
   // Animation values
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(30)).current;
-  const roleSlideAnim = useRef(new Animated.Value(role === 'guardian' ? 0 : 1)).current;
+  const roleSlideAnim = useRef(
+    new Animated.Value(role === 'guardian' ? 0 : 1),
+  ).current;
 
   useEffect(() => {
     Animated.parallel([
@@ -70,16 +72,19 @@ const LoginScreen = ({ navigation }: any) => {
     setLoading(true);
     try {
       const result = await AuthService.login(email, password);
-      
+
       if (result.success) {
         const user = result.data.user;
-        
+
         if (user.role === 'doctor') {
           navigation.replace('DoctorHome');
         } else if (user.role === 'guardian') {
           navigation.replace('GuardianHome');
         } else {
-          Alert.alert('Error', 'This role is not yet supported in the mobile app.');
+          Alert.alert(
+            'Error',
+            'This role is not yet supported in the mobile app.',
+          );
         }
       }
     } catch (error: any) {
@@ -96,8 +101,12 @@ const LoginScreen = ({ navigation }: any) => {
 
   return (
     <View style={styles.container}>
-      <StatusBar barStyle="dark-content" transparent backgroundColor="transparent" />
-      
+      <StatusBar
+        barStyle="dark-content"
+        translucent
+        backgroundColor="transparent"
+      />
+
       <LinearGradient
         colors={['#E0F7F7', '#FFFFFF', '#fcfcf0']} // Muted gold tint
         start={{ x: 0, y: 0 }}
@@ -109,58 +118,84 @@ const LoginScreen = ({ navigation }: any) => {
             behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
             style={styles.keyboardView}
           >
-            <Animated.View 
+            <Animated.View
               style={[
-                styles.content, 
-                { opacity: fadeAnim, transform: [{ translateY: slideAnim }] }
+                styles.content,
+                { opacity: fadeAnim, transform: [{ translateY: slideAnim }] },
               ]}
             >
               {/* Top Header */}
               <View style={styles.header}>
                 <View style={styles.logoContainer}>
-                  <Image 
-                    source={require('../../assets/CAREPLUS_transparent.png')} 
+                  <Image
+                    source={require('../../assets/CAREPLUS_transparent.png')}
                     style={styles.logoImage}
                     resizeMode="contain"
                   />
                   <View style={styles.goldBadge}>
                     <Zap color={Colors.white} size={12} fill={Colors.white} />
                   </View>
-                </div>
-                <Text style={styles.brandName}>CarePlus<Text style={styles.dot}>.</Text></Text>
-                <Text style={styles.welcomeText}>Empowering Compassionate Care</Text>
+                </View>
+                <Text style={styles.brandName}>
+                  CarePlus<Text style={styles.dot}>.</Text>
+                </Text>
+                <Text style={styles.welcomeText}>
+                  Empowering Compassionate Care
+                </Text>
               </View>
 
               {/* Login Card */}
               <View style={styles.card}>
                 <Text style={styles.cardTitle}>Sign In</Text>
-                
+
                 {/* Segmented Role Switcher */}
                 <View style={styles.roleContainer}>
-                  <Animated.View 
+                  <Animated.View
                     style={[
-                      styles.roleActiveIndicator, 
-                      { 
+                      styles.roleActiveIndicator,
+                      {
                         transform: [{ translateX: roleTabTranslateX }],
-                        width: '48%' 
-                      }
-                    ]} 
+                        width: '48%',
+                      },
+                    ]}
                   />
-                  <TouchableOpacity 
-                    style={styles.roleBtn} 
+                  <TouchableOpacity
+                    style={styles.roleBtn}
                     onPress={() => toggleRole('guardian')}
                     activeOpacity={1}
                   >
-                    <ShieldCheck color={role === 'guardian' ? Colors.secondary : Colors.gray} size={18} />
-                    <Text style={[styles.roleText, role === 'guardian' && styles.roleTextActive]}>Guardian</Text>
+                    <ShieldCheck
+                      color={
+                        role === 'guardian' ? Colors.secondary : Colors.gray
+                      }
+                      size={18}
+                    />
+                    <Text
+                      style={[
+                        styles.roleText,
+                        role === 'guardian' && styles.roleTextActive,
+                      ]}
+                    >
+                      Guardian
+                    </Text>
                   </TouchableOpacity>
-                  <TouchableOpacity 
-                    style={styles.roleBtn} 
+                  <TouchableOpacity
+                    style={styles.roleBtn}
                     onPress={() => toggleRole('doctor')}
                     activeOpacity={1}
                   >
-                    <User color={role === 'doctor' ? Colors.secondary : Colors.gray} size={18} />
-                    <Text style={[styles.roleText, role === 'doctor' && styles.roleTextActive]}>Doctor</Text>
+                    <User
+                      color={role === 'doctor' ? Colors.secondary : Colors.gray}
+                      size={18}
+                    />
+                    <Text
+                      style={[
+                        styles.roleText,
+                        role === 'doctor' && styles.roleTextActive,
+                      ]}
+                    >
+                      Doctor
+                    </Text>
                   </TouchableOpacity>
                 </View>
 
@@ -168,7 +203,11 @@ const LoginScreen = ({ navigation }: any) => {
                 <View style={styles.inputGroup}>
                   <Text style={styles.inputLabel}>Email</Text>
                   <View style={styles.inputBox}>
-                    <User color={Colors.gray} size={20} style={styles.fieldIcon} />
+                    <User
+                      color={Colors.gray}
+                      size={20}
+                      style={styles.fieldIcon}
+                    />
                     <TextInput
                       style={styles.textInput}
                       placeholder="e.g. hello@careplus.com"
@@ -183,7 +222,11 @@ const LoginScreen = ({ navigation }: any) => {
                 <View style={styles.inputGroup}>
                   <Text style={styles.inputLabel}>Password</Text>
                   <View style={styles.inputBox}>
-                    <Lock color={Colors.gray} size={20} style={styles.fieldIcon} />
+                    <Lock
+                      color={Colors.gray}
+                      size={20}
+                      style={styles.fieldIcon}
+                    />
                     <TextInput
                       style={styles.textInput}
                       placeholder="••••••••"
@@ -198,8 +241,8 @@ const LoginScreen = ({ navigation }: any) => {
                   <Text style={styles.forgotLabel}>Forgot Password?</Text>
                 </TouchableOpacity>
 
-                <TouchableOpacity 
-                  style={styles.primaryBtn} 
+                <TouchableOpacity
+                  style={styles.primaryBtn}
                   onPress={handleLogin}
                   disabled={loading}
                   activeOpacity={0.8}
@@ -209,7 +252,11 @@ const LoginScreen = ({ navigation }: any) => {
                   ) : (
                     <>
                       <Text style={styles.primaryBtnText}>Continue</Text>
-                      <ArrowRight color={Colors.white} size={20} style={styles.btnIcon} />
+                      <ArrowRight
+                        color={Colors.white}
+                        size={20}
+                        style={styles.btnIcon}
+                      />
                     </>
                   )}
                 </TouchableOpacity>

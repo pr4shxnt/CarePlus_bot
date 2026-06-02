@@ -28,7 +28,8 @@ class RAGService:
         # Enhanced keyword matching: stop words and weighting
         stop_words = [
             "is", "the", "a", "an", "on", "in", "my", "me", "how", "what", "where",
-            "छ", "छन्", "हो", "होइन", "मेरो", "मैले", "के", "कसरी", "कता", "कहाँ", "अनि", "र", "वा"
+            "छ", "छन्", "हो", "होइन", "मेरो", "मैले", "के", "कसरी", "कता", "कहाँ", "अनि", "र", "वा",
+            "त", "नै", "पनि", "तपाईं", "तपाई", "हजुर", "तिमी"
         ]
         
         raw_keywords = query.lower().split()
@@ -42,10 +43,17 @@ class RAGService:
         for chunk in self.chunks:
             score = 0
             content_lower = chunk["content"].lower()
+            # Clean punctuation to get exact words for short keywords
+            chunk_words = set(re.sub(r'[.,?!()\'"“”\n\-\—\_]', ' ', content_lower).split())
+            
             for kw in keywords:
-                if kw in content_lower:
-                    # Higher weight for longer words
-                    score += (len(kw) * 1.5)
+                if len(kw) >= 3:
+                    if kw in content_lower:
+                        # Higher weight for longer words
+                        score += (len(kw) * 1.5)
+                else:
+                    if kw in chunk_words:
+                        score += (len(kw) * 1.5)
             if score > 0:
                 scored_chunks.append((score, chunk))
         

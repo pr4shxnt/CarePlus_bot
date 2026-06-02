@@ -20,6 +20,24 @@ def init_db():
     except sqlite3.OperationalError:
         print("Migrating medicines table: dropping old version.")
         cursor.execute("DROP TABLE IF EXISTS medicines")
+
+    # Migration: Check if session_id exists in other tables
+    for table in ['chat_history', 'medicine_logs', 'mood_logs']:
+        try:
+            cursor.execute(f"SELECT session_id FROM {table} LIMIT 1")
+        except sqlite3.OperationalError:
+            cursor.execute(f"SELECT name FROM sqlite_master WHERE type='table' AND name='{table}'")
+            if cursor.fetchone():
+                print(f"Migrating {table} table: adding session_id column.")
+                cursor.execute(f"ALTER TABLE {table} ADD COLUMN session_id TEXT")
+        
+        try:
+            cursor.execute(f"SELECT is_synced FROM {table} LIMIT 1")
+        except sqlite3.OperationalError:
+            cursor.execute(f"SELECT name FROM sqlite_master WHERE type='table' AND name='{table}'")
+            if cursor.fetchone():
+                print(f"Migrating {table} table: adding is_synced column.")
+                cursor.execute(f"ALTER TABLE {table} ADD COLUMN is_synced INTEGER DEFAULT 0")
     
     # Medicines table
     cursor.execute('''
@@ -82,6 +100,15 @@ def init_db():
         intensity INTEGER DEFAULT 5,
         timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         is_synced INTEGER DEFAULT 0
+    )
+    ''')
+
+    # Patient profile table
+    cursor.execute('''
+    CREATE TABLE IF NOT EXISTS patient_profile (
+        user_id TEXT PRIMARY KEY,
+        name TEXT,
+        conditions TEXT
     )
     ''')
     

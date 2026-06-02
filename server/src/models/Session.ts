@@ -24,6 +24,7 @@ export interface ISession extends Document {
   analyses: IAnalysisEvent[];
   report?: string;
   reportStatus: "pending" | "approved" | "rejected";
+  isDailyReport: boolean;
   reviewedBy?: mongoose.Types.ObjectId;   // Doctor user ID
   reviewedAt?: Date;
   doctorNotes?: string;
@@ -60,6 +61,7 @@ const SessionSchema = new Schema<ISession>(
       default: "pending",
       index: true,
     },
+    isDailyReport: { type: Boolean, default: false, index: true },
     reviewedBy: { type: Schema.Types.ObjectId, ref: "User" },
     reviewedAt: Date,
     doctorNotes: String,

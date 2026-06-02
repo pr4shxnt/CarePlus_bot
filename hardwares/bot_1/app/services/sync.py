@@ -84,11 +84,11 @@ async def sync_history():
                 response = await client.post(f"{SERVER_URL}/api/bot/sync", json=payload, headers=headers)
                 
                 if response.status_code in [200, 201]:
-                    cursor.execute("UPDATE chat_history SET is_synced = 1 WHERE session_id = ?", (session_id,))
-                    cursor.execute("UPDATE mood_logs SET is_synced = 1 WHERE session_id = ?", (session_id,))
-                    cursor.execute("UPDATE medicine_logs SET is_synced = 1 WHERE session_id = ?", (session_id,))
+                    cursor.execute("DELETE FROM chat_history WHERE session_id = ?", (session_id,))
+                    cursor.execute("DELETE FROM mood_logs WHERE session_id = ?", (session_id,))
+                    cursor.execute("DELETE FROM medicine_logs WHERE session_id = ?", (session_id,))
                     conn.commit()
-                    logger.info(f"Fully synced session {session_id} ({len(full_history)} turns) for patient {PATIENT_ID}")
+                    logger.info(f"Fully synced and deleted local data for session {session_id} ({len(full_history)} turns) for patient {PATIENT_ID}")
                 else:
                     logger.error(f"Failed to sync session {session_id}: {response.text}")
                 
@@ -135,11 +135,11 @@ async def sync_medicine_logs():
                 if response.status_code == 200:
                     ids = [item["id"] for item in logs]
                     cursor.execute(
-                        f"UPDATE medicine_logs SET is_synced = 1 WHERE id IN ({','.join(['?'] * len(ids))})",
+                        f"DELETE FROM medicine_logs WHERE id IN ({','.join(['?'] * len(ids))})",
                         ids,
                     )
                     conn.commit()
-                    logger.info(f"Synced {len(ids)} medicine logs for user {user_id}")
+                    logger.info(f"Synced and deleted {len(ids)} medicine logs for user {user_id}")
                 else:
                     logger.error(f"Failed to sync medicine logs for user {user_id}: {response.text}")
 
@@ -165,6 +165,8 @@ async def pull_configuration():
                 if data.get("success"):
                     config = data["data"]
                     medicines = config.get("medicines", [])
+                    name = config.get("name", "")
+                    conditions = config.get("conditions", [])
                     
                     conn = get_db()
                     # Refresh medicines
@@ -174,9 +176,15 @@ async def pull_configuration():
                             "INSERT INTO medicines (user_id, name, dosage, schedule) VALUES (?, ?, ?, ?)",
                             (PATIENT_ID, med["name"], med["dosage"], json.dumps([{"time": t} for t in med.get("times", [])]))
                         )
+                    
+                    # Update patient profile
+                    conn.execute(
+                        "INSERT OR REPLACE INTO patient_profile (user_id, name, conditions) VALUES (?, ?, ?)",
+                        (PATIENT_ID, name, json.dumps(conditions))
+                    )
                     conn.commit()
                     conn.close()
-                    logger.info(f"Pulled and updated {len(medicines)} medicines from server.")
+                    logger.info(f"Pulled and updated {len(medicines)} medicines and patient profile from server.")
                 else:
                     logger.error(f"Failed to parse config response: {data.get('error')}")
             else:

@@ -43,6 +43,7 @@ export async function syncSession(req: Request, res: Response): Promise<void> {
   const session = await Session.findOneAndUpdate(
     { sessionId: data.sessionId },
     {
+      botId: patient.botId,
       patientId: patient._id,
       sessionId: data.sessionId,
       startedAt: new Date(data.startedAt),
