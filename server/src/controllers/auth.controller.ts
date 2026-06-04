@@ -67,18 +67,32 @@ export async function register(req: Request, res: Response): Promise<void> {
     user.patientBotId = patient.botId;
     await user.save();
   } else if (body.role === "guardian") {
+    // 1. Create Patient User (User model)
+    const patientUser = new User({
+      name: body.patientName || `${body.name}'s Patient`,
+      email: `patient_${user._id.toString()}@careplus.local`,
+      passwordHash: body.password || "patient1234", // pre-save hook will hash it
+      role: "patient",
+    });
+
+    const botId = `bot_${patientUser._id.toString().slice(-6)}`;
+    patientUser.patientBotId = botId;
+    await patientUser.save();
+
+    // 2. Create Patient Record (Patient model)
     const patient = new Patient({
+      _id: patientUser._id, // Share the same ID as the User record
       name: body.patientName || `${body.name}'s Patient`,
       age: body.age,
       gender: body.gender,
       notes: body.healthGoal,
       guardianId: user._id,
+      botId: botId,
     });
-    patient.botId = `bot_${patient._id.toString().slice(-6)}`;
     await patient.save();
 
-    // Link guardian to the generated patient botId
-    user.patientBotId = patient.botId;
+    // 3. Link guardian to the generated patient botId
+    user.patientBotId = botId;
     await user.save();
   }
 
