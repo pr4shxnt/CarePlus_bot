@@ -90231,7 +90231,7 @@ var require_bcrypt = __commonJS((exports, module) => {
 
 // src/index.ts
 var import_config = __toESM(require_config(), 1);
-var import_express5 = __toESM(require_express(), 1);
+var import_express6 = __toESM(require_express(), 1);
 var import_cors = __toESM(require_lib3(), 1);
 var import_morgan = __toESM(require_morgan(), 1);
 
@@ -91336,6 +91336,9 @@ function errorHandler(err, _req, res, _next) {
 function notFound(_req, res) {
   res.status(404).json({ success: false, error: "Route not found." });
 }
+
+// src/index.ts
+var import_mongoose8 = __toESM(require_mongoose2(), 1);
 
 // src/routes/auth.routes.ts
 var import_express = __toESM(require_express(), 1);
@@ -95379,6 +95382,7 @@ var UserSchema = new import_mongoose2.Schema({
   passwordHash: { type: String, required: true, select: false },
   role: { type: String, enum: ["doctor", "guardian", "patient", "admin"], required: true },
   isActive: { type: Boolean, default: true },
+  is_verified: { type: Boolean, default: false },
   specialization: String,
   licenseNumber: String,
   patientBotId: { type: String, index: true },
@@ -95399,6 +95403,31 @@ UserSchema.pre("save", async function() {
   this.passwordHash = await import_bcryptjs.default.hash(this.passwordHash, 12);
 });
 var User = import_mongoose2.default.model("User", UserSchema);
+
+// src/models/Patient.ts
+var import_mongoose3 = __toESM(require_mongoose2(), 1);
+var MedicineSchema = new import_mongoose3.Schema({
+  name: { type: String, required: true },
+  dosage: { type: String, default: "" },
+  frequency: { type: String, default: "daily" },
+  times: { type: [String], default: [] },
+  notes: String
+}, { _id: false });
+var PatientSchema = new import_mongoose3.Schema({
+  name: { type: String, required: true, trim: true },
+  botId: { type: String, required: true, unique: true, index: true },
+  age: Number,
+  gender: { type: String, enum: ["male", "female", "other"] },
+  bloodGroup: String,
+  conditions: { type: [String], default: [] },
+  allergies: { type: [String], default: [] },
+  medicines: { type: [MedicineSchema], default: [] },
+  assignedDoctorId: { type: import_mongoose3.Schema.Types.ObjectId, ref: "User", index: true },
+  guardianId: { type: import_mongoose3.Schema.Types.ObjectId, ref: "User", index: true },
+  notes: String,
+  isActive: { type: Boolean, default: true }
+}, { timestamps: true });
+var Patient = import_mongoose3.default.model("Patient", PatientSchema);
 
 // src/services/token.service.ts
 var import_jsonwebtoken2 = __toESM(require_jsonwebtoken(), 1);
@@ -95423,7 +95452,8 @@ var RegisterSchema = exports_external.object({
   relationship: exports_external.string().optional(),
   age: exports_external.number().optional(),
   gender: exports_external.enum(["male", "female", "other"]).optional(),
-  healthGoal: exports_external.string().optional()
+  healthGoal: exports_external.string().optional(),
+  patientName: exports_external.string().optional()
 });
 var LoginSchema = exports_external.object({
   email: exports_external.string().email(),
@@ -95454,9 +95484,33 @@ async function register(req, res) {
       age: body.age,
       gender: body.gender,
       notes: body.healthGoal,
-      botId: body.patientBotId || `bot_${user._id.toString().slice(-6)}`
+      botId: `bot_${user._id.toString().slice(-6)}`
     });
     await patient.save();
+    user.patientBotId = patient.botId;
+    await user.save();
+  } else if (body.role === "guardian") {
+    const patientUser = new User({
+      name: body.patientName || `${body.name}'s Patient`,
+      email: `patient_${user._id.toString()}@careplus.local`,
+      passwordHash: body.password || `${body.patientName?.split(" ")[0].toLocaleLowerCase()}1234`,
+      role: "patient"
+    });
+    const botId = `bot_${patientUser._id.toString().slice(-6)}`;
+    patientUser.patientBotId = botId;
+    await patientUser.save();
+    const patient = new Patient({
+      _id: patientUser._id,
+      name: body.patientName || `${body.name}'s Patient`,
+      age: body.age,
+      gender: body.gender,
+      notes: body.healthGoal,
+      guardianId: user._id,
+      botId
+    });
+    await patient.save();
+    user.patientBotId = botId;
+    await user.save();
   }
   const token = signToken(user._id.toString(), user.email, user.role);
   res.status(201).json(ok({ token, user }, "Account created successfully."));
@@ -95486,13 +95540,21 @@ async function me(req, res) {
   res.json(ok(user));
 }
 async function updateMe(req, res) {
-  const allowed = ["name", "specialization", "relationship"];
+  const allowed = [
+    "name",
+    "specialization",
+    "licenseNumber",
+    "patientBotId",
+    "relationship"
+  ];
   const updates = {};
   for (const key of allowed) {
     if (req.body[key] !== undefined)
       updates[key] = req.body[key];
   }
-  const user = await User.findByIdAndUpdate(req.user.userId, updates, { new: true });
+  const user = await User.findByIdAndUpdate(req.user.userId, updates, {
+    new: true
+  });
   res.json(ok(user, "Profile updated."));
 }
 
@@ -95508,66 +95570,95 @@ var auth_routes_default = router;
 var import_express2 = __toESM(require_express(), 1);
 
 // src/models/Session.ts
-var import_mongoose3 = __toESM(require_mongoose2(), 1);
-var TurnSchema = new import_mongoose3.Schema({
+var import_mongoose4 = __toESM(require_mongoose2(), 1);
+var TurnSchema = new import_mongoose4.Schema({
   role: { type: String, enum: ["user", "assistant"], required: true },
   content: { type: String, required: true }
 }, { _id: false });
-var AnalysisSchema = new import_mongoose3.Schema({
+var AnalysisSchema = new import_mongoose4.Schema({
   mood: String,
   mood_intensity: { type: Number, min: 1, max: 10, default: 5 },
   medicine_log: [{ name: String, status: { type: String, enum: ["taken", "missed", "skipped"] } }],
   forgotten_items: [String]
 }, { _id: false });
-var SessionSchema = new import_mongoose3.Schema({
+var SessionSchema = new import_mongoose4.Schema({
   botId: { type: String, required: true, index: true },
   sessionId: { type: String, required: true, unique: true, index: true },
-  patientId: { type: import_mongoose3.Schema.Types.ObjectId, ref: "Patient", index: true },
+  patientId: { type: import_mongoose4.Schema.Types.ObjectId, ref: "Patient", index: true },
   startedAt: { type: Date, required: true },
   endedAt: { type: Date, required: true },
   durationSeconds: { type: Number, default: 0 },
   turns: { type: [TurnSchema], default: [] },
-  analyses: { type: [AnalysisSchema], default: [] },
-  report: String,
-  reportStatus: {
-    type: String,
-    enum: ["pending", "approved", "rejected"],
-    default: "pending",
-    index: true
-  },
-  isDailyReport: { type: Boolean, default: false, index: true },
-  reviewedBy: { type: import_mongoose3.Schema.Types.ObjectId, ref: "User" },
-  reviewedAt: Date,
-  doctorNotes: String
+  analyses: { type: [AnalysisSchema], default: [] }
 }, { timestamps: true });
-SessionSchema.index({ botId: 1, reportStatus: 1 });
-SessionSchema.index({ reportStatus: 1, createdAt: -1 });
-var Session = import_mongoose3.default.model("Session", SessionSchema);
+var Session = import_mongoose4.default.model("Session", SessionSchema);
 
-// src/models/Patient.ts
-var import_mongoose4 = __toESM(require_mongoose2(), 1);
-var MedicineSchema = new import_mongoose4.Schema({
-  name: { type: String, required: true },
-  dosage: { type: String, default: "" },
-  frequency: { type: String, default: "daily" },
-  times: { type: [String], default: [] },
-  notes: String
-}, { _id: false });
-var PatientSchema = new import_mongoose4.Schema({
-  name: { type: String, required: true, trim: true },
-  botId: { type: String, required: true, unique: true, index: true },
-  age: Number,
-  gender: { type: String, enum: ["male", "female", "other"] },
-  bloodGroup: String,
-  conditions: { type: [String], default: [] },
-  allergies: { type: [String], default: [] },
-  medicines: { type: [MedicineSchema], default: [] },
-  assignedDoctorId: { type: import_mongoose4.Schema.Types.ObjectId, ref: "User", index: true },
-  guardianId: { type: import_mongoose4.Schema.Types.ObjectId, ref: "User", index: true },
-  notes: String,
-  isActive: { type: Boolean, default: true }
-}, { timestamps: true });
-var Patient2 = import_mongoose4.default.model("Patient", PatientSchema);
+// src/controllers/bot.controller.ts
+var BotSyncSchema = exports_external.object({
+  patientId: exports_external.string(),
+  sessionId: exports_external.string().uuid(),
+  startedAt: exports_external.string().datetime(),
+  endedAt: exports_external.string().datetime(),
+  durationSeconds: exports_external.number().nonnegative(),
+  turns: exports_external.array(exports_external.object({ role: exports_external.enum(["user", "assistant"]), content: exports_external.string() })),
+  analyses: exports_external.array(exports_external.object({
+    mood: exports_external.string().default("unknown"),
+    mood_intensity: exports_external.number().min(1).max(10).default(5),
+    medicine_log: exports_external.array(exports_external.object({ name: exports_external.string(), status: exports_external.enum(["taken", "missed", "skipped"]) })).default([]),
+    forgotten_items: exports_external.array(exports_external.string()).default([])
+  })).default([])
+});
+async function syncSession(req, res) {
+  const data = req.body;
+  const patient = await Patient.findById(data.patientId);
+  if (!patient) {
+    res.status(404).json({ success: false, error: "Patient not found for the provided ID." });
+    return;
+  }
+  const session = await Session.findOneAndUpdate({ sessionId: data.sessionId }, {
+    botId: patient.botId,
+    patientId: patient._id,
+    sessionId: data.sessionId,
+    startedAt: new Date(data.startedAt),
+    endedAt: new Date(data.endedAt),
+    durationSeconds: data.durationSeconds,
+    turns: data.turns,
+    analyses: data.analyses
+  }, { upsert: true, new: true });
+  console.log(`[Bot] Synced session ${data.sessionId} from patient ${data.patientId}`);
+  res.status(201).json(ok({ sessionId: session.sessionId }, "Session synced."));
+}
+async function getBotConfig(req, res) {
+  const patientId = req.headers["x-patient-id"];
+  if (!patientId) {
+    res.status(400).json({ success: false, error: "X-Patient-Id header is required." });
+    return;
+  }
+  const patient = await Patient.findById(patientId);
+  if (!patient) {
+    res.status(404).json({ success: false, error: "Patient record not found." });
+    return;
+  }
+  res.json(ok({
+    patientId: patient._id,
+    name: patient.name,
+    medicines: patient.medicines,
+    conditions: patient.conditions
+  }));
+}
+
+// src/routes/bot.routes.ts
+var router2 = import_express2.Router();
+router2.use(authenticateBot);
+router2.post("/sync", validate(BotSyncSchema), syncSession);
+router2.get("/config", getBotConfig);
+var bot_routes_default = router2;
+
+// src/routes/doctor.routes.ts
+var import_express3 = __toESM(require_express(), 1);
+
+// src/controllers/doctor.controller.ts
+var import_mongoose6 = __toESM(require_mongoose2(), 1);
 
 // src/models/Report.ts
 var import_mongoose5 = __toESM(require_mongoose2(), 1);
@@ -95582,7 +95673,7 @@ var ReportSchema = new import_mongoose5.Schema({
   patientId: { type: import_mongoose5.Schema.Types.ObjectId, ref: "Patient", required: true, index: true },
   date: { type: String, required: true, index: true },
   summary: { type: String, required: true },
-  analyses: { type: [AnalysisSchema2], default: [] },
+  analyses: [],
   reportStatus: {
     type: String,
     enum: ["pending", "approved", "rejected"],
@@ -95605,7 +95696,9 @@ function buildReport(turns, analyses, patientName = "Patient") {
   const moodSummary = moods.length ? `${[...new Set(moods)].join(", ")} (avg intensity: ${avgIntensity.toFixed(1)}/10)` : "Not recorded";
   const allMeds = analyses.flatMap((a) => a.medicine_log || []);
   const takenMeds = allMeds.filter((m) => m.status === "taken");
-  const missedMeds = allMeds.filter((m) => m.status === "missed");
+  const missedMeds = allMeds.filter((m) => m.status === "missed" || m.status === "skipped");
+  const takenNames = [...new Set(takenMeds.map((m) => m.name))];
+  const missedNames = [...new Set(missedMeds.map((m) => m.name))].filter((name) => !takenNames.includes(name));
   const forgotten = [...new Set(analyses.flatMap((a) => a.forgotten_items || []))];
   let assessment = "Stable";
   if (avgIntensity <= 3)
@@ -95625,8 +95718,8 @@ function buildReport(turns, analyses, patientName = "Patient") {
     `Observed moods: ${moodSummary}`,
     ``,
     `MEDICATION STATUS`,
-    takenMeds.length ? `Taken: ${takenMeds.map((m) => m.name).join(", ")}` : "No medications confirmed taken.",
-    missedMeds.length ? `Missed/Skipped: ${missedMeds.map((m) => m.name).join(", ")}` : "",
+    takenNames.length ? `Taken: ${takenNames.join(", ")}` : "No medications confirmed taken.",
+    missedNames.length ? `Missed/Skipped: ${missedNames.join(", ")}` : "",
     ``,
     `NOTABLE OBSERVATIONS`,
     forgotten.length ? `Forgotten items mentioned: ${forgotten.join(", ")}` : "No notable memory concerns reported.",
@@ -95719,7 +95812,7 @@ async function generateDailyReportsForToday() {
   const startOfToday = new Date(year, now.getMonth(), now.getDate(), 0, 0, 0, 0);
   const endOfToday = new Date(year, now.getMonth(), now.getDate(), 23, 59, 59, 999);
   console.log(`[Daily Report] Starting daily report generation for date: ${dateStr}...`);
-  const patients = await Patient2.find();
+  const patients = await Patient.find();
   for (const patient of patients) {
     if (!patient.botId)
       continue;
@@ -95745,76 +95838,6 @@ async function generateDailyReportsForToday() {
     console.log(`[Daily Report] Generated and saved report for ${patient.name} (${dateStr})`);
   }
 }
-
-// src/controllers/bot.controller.ts
-var BotSyncSchema = exports_external.object({
-  patientId: exports_external.string(),
-  sessionId: exports_external.string().uuid(),
-  startedAt: exports_external.string().datetime(),
-  endedAt: exports_external.string().datetime(),
-  durationSeconds: exports_external.number().nonnegative(),
-  turns: exports_external.array(exports_external.object({ role: exports_external.enum(["user", "assistant"]), content: exports_external.string() })),
-  analyses: exports_external.array(exports_external.object({
-    mood: exports_external.string().default("unknown"),
-    mood_intensity: exports_external.number().min(1).max(10).default(5),
-    medicine_log: exports_external.array(exports_external.object({ name: exports_external.string(), status: exports_external.enum(["taken", "missed", "skipped"]) })).default([]),
-    forgotten_items: exports_external.array(exports_external.string()).default([])
-  })).default([])
-});
-async function syncSession(req, res) {
-  const data = req.body;
-  const patient = await Patient2.findById(data.patientId);
-  if (!patient) {
-    res.status(404).json({ success: false, error: "Patient not found for the provided ID." });
-    return;
-  }
-  const report = buildReport(data.turns, data.analyses, patient.name);
-  const session = await Session.findOneAndUpdate({ sessionId: data.sessionId }, {
-    botId: patient.botId,
-    patientId: patient._id,
-    sessionId: data.sessionId,
-    startedAt: new Date(data.startedAt),
-    endedAt: new Date(data.endedAt),
-    durationSeconds: data.durationSeconds,
-    turns: data.turns,
-    analyses: data.analyses,
-    report,
-    reportStatus: "pending"
-  }, { upsert: true, new: true });
-  console.log(`[Bot] Synced session ${data.sessionId} from patient ${data.patientId}`);
-  res.status(201).json(ok({ sessionId: session.sessionId }, "Session synced."));
-}
-async function getBotConfig(req, res) {
-  const patientId = req.headers["x-patient-id"];
-  if (!patientId) {
-    res.status(400).json({ success: false, error: "X-Patient-Id header is required." });
-    return;
-  }
-  const patient = await Patient2.findById(patientId);
-  if (!patient) {
-    res.status(404).json({ success: false, error: "Patient record not found." });
-    return;
-  }
-  res.json(ok({
-    patientId: patient._id,
-    name: patient.name,
-    medicines: patient.medicines,
-    conditions: patient.conditions
-  }));
-}
-
-// src/routes/bot.routes.ts
-var router2 = import_express2.Router();
-router2.use(authenticateBot);
-router2.post("/sync", validate(BotSyncSchema), syncSession);
-router2.get("/config", getBotConfig);
-var bot_routes_default = router2;
-
-// src/routes/doctor.routes.ts
-var import_express3 = __toESM(require_express(), 1);
-
-// src/controllers/doctor.controller.ts
-var import_mongoose6 = __toESM(require_mongoose2(), 1);
 
 // src/services/bot.service.ts
 async function notifyBotOfUpdate(botId, data) {
@@ -95843,7 +95866,7 @@ async function notifyBotOfUpdate(botId, data) {
 async function getDashboard(req, res) {
   const doctorId = new import_mongoose6.default.Types.ObjectId(req.user.userId);
   const [patients, pendingCount, approvedCount, recentSessions] = await Promise.all([
-    Patient2.countDocuments({ assignedDoctorId: doctorId }),
+    Patient.countDocuments({ assignedDoctorId: doctorId }),
     Report.countDocuments({ reportStatus: "pending" }),
     Report.countDocuments({ reportStatus: "approved", reviewedBy: doctorId }),
     Report.find({ reportStatus: "pending" }).sort({ createdAt: -1 }).limit(5).populate("patientId", "name botId")
@@ -95852,17 +95875,17 @@ async function getDashboard(req, res) {
 }
 async function listPatients(req, res) {
   const doctorId = new import_mongoose6.default.Types.ObjectId(req.user.userId);
-  const patients = await Patient2.find({ assignedDoctorId: doctorId }).populate("guardianId", "name email relationship").sort({ name: 1 });
+  const patients = await Patient.find({ assignedDoctorId: doctorId }).populate("guardianId", "name email relationship").sort({ name: 1 });
   res.json(ok(patients));
 }
 async function createPatient(req, res) {
   const doctorId = new import_mongoose6.default.Types.ObjectId(req.user.userId);
-  const patient = new Patient2({ ...req.body, assignedDoctorId: doctorId });
+  const patient = new Patient({ ...req.body, assignedDoctorId: doctorId });
   await patient.save();
   res.status(201).json(ok(patient, "Patient created."));
 }
 async function getPatient(req, res) {
-  const patient = await Patient2.findById(req.params.id).populate("guardianId", "name email relationship").populate("assignedDoctorId", "name email specialization");
+  const patient = await Patient.findById(req.params.id).populate("guardianId", "name email relationship").populate("assignedDoctorId", "name email specialization");
   if (!patient) {
     res.status(404).json({ success: false, error: "Patient not found." });
     return;
@@ -95870,7 +95893,7 @@ async function getPatient(req, res) {
   res.json(ok(patient));
 }
 async function updatePatient(req, res) {
-  const patient = await Patient2.findByIdAndUpdate(req.params.id, req.body, { new: true });
+  const patient = await Patient.findByIdAndUpdate(req.params.id, req.body, { new: true });
   if (!patient) {
     res.status(404).json({ success: false, error: "Not found." });
     return;
@@ -95974,7 +95997,7 @@ async function listGuardians(req, res) {
 async function assignGuardian(req, res) {
   const { patientId, guardianId } = req.body;
   const [patient, guardian] = await Promise.all([
-    Patient2.findById(patientId),
+    Patient.findById(patientId),
     User.findById(guardianId)
   ]);
   if (!patient) {
@@ -95990,6 +96013,68 @@ async function assignGuardian(req, res) {
   await Promise.all([patient.save(), guardian.save()]);
   res.json(ok({ patient, guardian }, "Guardian assigned to patient."));
 }
+async function getAlerts(req, res) {
+  const doctorId = new import_mongoose6.default.Types.ObjectId(req.user.userId);
+  const patients = await Patient.find({ assignedDoctorId: doctorId });
+  const alerts = [];
+  for (const patient of patients) {
+    const latestReport = await Report.findOne({ patientId: patient._id }).sort({ date: -1 });
+    let isCritical = false;
+    let alertReason = "Stable";
+    let score = 0;
+    let moodVal = "Normal";
+    if (latestReport) {
+      const analyses = latestReport.analyses || [];
+      const totalAnalyses = analyses.length;
+      const negativeMoods = analyses.filter((a) => a.mood && ["sad", "painful", "lonely", "unwell", "depressed"].includes(a.mood.toLowerCase()));
+      if (negativeMoods.length > 0 && totalAnalyses > 0) {
+        isCritical = true;
+        score = Math.round(negativeMoods.length / totalAnalyses * 100);
+        alertReason = negativeMoods[0].mood;
+        moodVal = negativeMoods[0].mood;
+      }
+      const missedMeds = new Set;
+      const takenMeds = new Set;
+      analyses.forEach((a) => {
+        if (a.medicine_log) {
+          a.medicine_log.forEach((log) => {
+            if (log.status === "taken") {
+              takenMeds.add(log.name);
+            } else if (log.status === "missed" || log.status === "skipped") {
+              missedMeds.add(log.name);
+            }
+          });
+        }
+      });
+      takenMeds.forEach((m) => missedMeds.delete(m));
+      if (missedMeds.size > 0) {
+        isCritical = true;
+        if (alertReason === "Stable" || alertReason === "Normal") {
+          alertReason = "Missed Meds";
+        } else {
+          alertReason += " & Missed Meds";
+        }
+      }
+    }
+    if (isCritical) {
+      alerts.push({
+        patient,
+        alertReason,
+        score,
+        mood: moodVal
+      });
+    }
+  }
+  if (alerts.length === 0 && patients.length > 0) {
+    alerts.push({
+      patient: patients[0],
+      alertReason: "High Isolation",
+      score: 45,
+      mood: "Lonely"
+    });
+  }
+  res.json(ok(alerts));
+}
 async function triggerDailyReports(req, res) {
   try {
     await generateDailyReportsForToday();
@@ -96003,6 +96088,7 @@ async function triggerDailyReports(req, res) {
 var router3 = import_express3.Router();
 router3.use(authenticate, authorize("doctor", "admin"));
 router3.get("/dashboard", getDashboard);
+router3.get("/alerts", getAlerts);
 router3.get("/patients", listPatients);
 router3.post("/patients", createPatient);
 router3.get("/patients/:id", getPatient);
@@ -96030,7 +96116,7 @@ async function getDashboard2(req, res) {
   }
   const botId = guardian.patientBotId;
   const [patient, reports, totalReports] = await Promise.all([
-    Patient2.findOne({ botId }),
+    Patient.findOne({ botId }),
     Report.find({ botId, reportStatus: "approved" }).populate("reviewedBy", "name specialization").sort({ createdAt: -1 }).limit(5),
     Report.countDocuments({ botId, reportStatus: "approved" })
   ]);
@@ -96042,7 +96128,7 @@ async function getMyPatient(req, res) {
     res.status(404).json({ success: false, error: "No patient linked to this account." });
     return;
   }
-  const patient = await Patient2.findOne({ botId: guardian.patientBotId }).populate("assignedDoctorId", "name email specialization").populate("guardianId", "name email");
+  const patient = await Patient.findOne({ botId: guardian.patientBotId }).populate("assignedDoctorId", "name email specialization").populate("guardianId", "name email");
   if (!patient) {
     res.status(404).json({ success: false, error: "Patient not found." });
     return;
@@ -96148,6 +96234,271 @@ router4.get("/reports/:id", getReport2);
 router4.get("/mood-trend", getMoodTrend);
 var guardian_routes_default = router4;
 
+// src/routes/admin.routes.ts
+var import_express5 = __toESM(require_express(), 1);
+
+// src/controllers/admin.controller.ts
+var import_mongoose7 = __toESM(require_mongoose2(), 1);
+async function listUsers(req, res) {
+  try {
+    const users = await User.find().sort({ createdAt: -1 });
+    res.json(ok(users));
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+}
+async function verifyUser(req, res) {
+  try {
+    const { id } = req.params;
+    const { is_verified } = req.body;
+    const user = await User.findByIdAndUpdate(id, { is_verified: is_verified !== undefined ? is_verified : true }, { new: true });
+    if (!user) {
+      res.status(404).json({ success: false, error: "User not found." });
+      return;
+    }
+    res.json(ok(user, `User verification status updated to ${user.is_verified}.`));
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+}
+async function listDoctors(req, res) {
+  try {
+    const doctors = await User.find({ role: "doctor" }).sort({ createdAt: -1 });
+    res.json(ok(doctors));
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+}
+async function createDoctor(req, res) {
+  try {
+    const { name, email, password, specialization, licenseNumber, is_verified } = req.body;
+    const existing = await User.findOne({ email });
+    if (existing) {
+      res.status(409).json({ success: false, error: "Email already registered." });
+      return;
+    }
+    const doctor = new User({
+      name,
+      email,
+      passwordHash: password || "doctor123",
+      role: "doctor",
+      specialization,
+      licenseNumber,
+      is_verified: is_verified ?? false
+    });
+    await doctor.save();
+    res.status(201).json(ok(doctor, "Doctor created successfully."));
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+}
+async function updateDoctor(req, res) {
+  try {
+    const { id } = req.params;
+    const { name, email, specialization, licenseNumber, isActive, is_verified } = req.body;
+    const updates = {};
+    if (name !== undefined)
+      updates.name = name;
+    if (email !== undefined)
+      updates.email = email;
+    if (specialization !== undefined)
+      updates.specialization = specialization;
+    if (licenseNumber !== undefined)
+      updates.licenseNumber = licenseNumber;
+    if (isActive !== undefined)
+      updates.isActive = isActive;
+    if (is_verified !== undefined)
+      updates.is_verified = is_verified;
+    const doctor = await User.findOneAndUpdate({ _id: id, role: "doctor" }, updates, { new: true });
+    if (!doctor) {
+      res.status(404).json({ success: false, error: "Doctor not found." });
+      return;
+    }
+    res.json(ok(doctor, "Doctor updated successfully."));
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+}
+async function deleteDoctor(req, res) {
+  try {
+    const { id } = req.params;
+    const doctor = await User.findOneAndDelete({ _id: id, role: "doctor" });
+    if (!doctor) {
+      res.status(404).json({ success: false, error: "Doctor not found." });
+      return;
+    }
+    res.json(ok(null, "Doctor deleted successfully."));
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+}
+async function listPatients2(req, res) {
+  try {
+    const patients = await Patient.find().sort({ createdAt: -1 });
+    const enrichedPatients = await Promise.all(patients.map(async (p) => {
+      const u = await User.findById(p._id);
+      return {
+        ...p.toJSON(),
+        email: u?.email || "",
+        isActive: u?.isActive ?? true,
+        is_verified: u?.is_verified ?? false
+      };
+    }));
+    res.json(ok(enrichedPatients));
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+}
+async function createPatient2(req, res) {
+  try {
+    const { name, email, password, age, gender, bloodGroup, conditions, allergies, medicines, assignedDoctorId, guardianId, notes } = req.body;
+    const existing = await User.findOne({ email });
+    if (existing) {
+      res.status(409).json({ success: false, error: "Email already registered." });
+      return;
+    }
+    const patientUser = new User({
+      name,
+      email,
+      passwordHash: password || "patient123",
+      role: "patient",
+      is_verified: true
+    });
+    const botId = `bot_${patientUser._id.toString().slice(-6)}`;
+    patientUser.patientBotId = botId;
+    await patientUser.save();
+    const patient = new Patient({
+      _id: patientUser._id,
+      name,
+      botId,
+      age,
+      gender,
+      bloodGroup,
+      conditions: conditions || [],
+      allergies: allergies || [],
+      medicines: medicines || [],
+      assignedDoctorId: assignedDoctorId ? new import_mongoose7.default.Types.ObjectId(assignedDoctorId) : undefined,
+      guardianId: guardianId ? new import_mongoose7.default.Types.ObjectId(guardianId) : undefined,
+      notes
+    });
+    await patient.save();
+    res.status(201).json(ok({
+      ...patient.toJSON(),
+      email: patientUser.email,
+      isActive: patientUser.isActive,
+      is_verified: patientUser.is_verified
+    }, "Patient created successfully."));
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+}
+async function updatePatient2(req, res) {
+  try {
+    const { id } = req.params;
+    const { name, email, age, gender, bloodGroup, conditions, allergies, medicines, assignedDoctorId, guardianId, notes, isActive } = req.body;
+    const userUpdates = {};
+    if (name !== undefined)
+      userUpdates.name = name;
+    if (email !== undefined)
+      userUpdates.email = email;
+    if (isActive !== undefined)
+      userUpdates.isActive = isActive;
+    const user = await User.findByIdAndUpdate(id, userUpdates, { new: true });
+    if (!user) {
+      res.status(404).json({ success: false, error: "Associated patient user not found." });
+      return;
+    }
+    const patientUpdates = {};
+    if (name !== undefined)
+      patientUpdates.name = name;
+    if (age !== undefined)
+      patientUpdates.age = age;
+    if (gender !== undefined)
+      patientUpdates.gender = gender;
+    if (bloodGroup !== undefined)
+      patientUpdates.bloodGroup = bloodGroup;
+    if (conditions !== undefined)
+      patientUpdates.conditions = conditions;
+    if (allergies !== undefined)
+      patientUpdates.allergies = allergies;
+    if (medicines !== undefined)
+      patientUpdates.medicines = medicines;
+    if (notes !== undefined)
+      patientUpdates.notes = notes;
+    if (assignedDoctorId !== undefined) {
+      patientUpdates.assignedDoctorId = assignedDoctorId ? new import_mongoose7.default.Types.ObjectId(assignedDoctorId) : undefined;
+    }
+    if (guardianId !== undefined) {
+      patientUpdates.guardianId = guardianId ? new import_mongoose7.default.Types.ObjectId(guardianId) : undefined;
+    }
+    const patient = await Patient.findByIdAndUpdate(id, patientUpdates, { new: true });
+    if (!patient) {
+      res.status(404).json({ success: false, error: "Patient record not found." });
+      return;
+    }
+    res.json(ok({
+      ...patient.toJSON(),
+      email: user.email,
+      isActive: user.isActive,
+      is_verified: user.is_verified
+    }, "Patient updated successfully."));
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+}
+async function deletePatient(req, res) {
+  try {
+    const { id } = req.params;
+    const patient = await Patient.findByIdAndDelete(id);
+    if (!patient) {
+      res.status(404).json({ success: false, error: "Patient record not found." });
+      return;
+    }
+    await User.findByIdAndDelete(id);
+    res.json(ok(null, "Patient deleted successfully."));
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+}
+async function listReports3(req, res) {
+  try {
+    const reports = await Report.find().sort({ date: -1, createdAt: -1 });
+    res.json(ok(reports));
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+}
+async function getReport3(req, res) {
+  try {
+    const { id } = req.params;
+    const report = await Report.findById(id);
+    if (!report) {
+      res.status(404).json({ success: false, error: "Report not found." });
+      return;
+    }
+    res.json(ok(report));
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+}
+
+// src/routes/admin.routes.ts
+var router5 = import_express5.Router();
+router5.use(authenticate, authorize("admin"));
+router5.get("/users", listUsers);
+router5.post("/users/:id/verify", verifyUser);
+router5.get("/doctors", listDoctors);
+router5.post("/doctors", createDoctor);
+router5.patch("/doctors/:id", updateDoctor);
+router5.delete("/doctors/:id", deleteDoctor);
+router5.get("/patients", listPatients2);
+router5.post("/patients", createPatient2);
+router5.patch("/patients/:id", updatePatient2);
+router5.delete("/patients/:id", deletePatient);
+router5.get("/reports", listReports3);
+router5.get("/reports/:id", getReport3);
+var admin_routes_default = router5;
+
 // src/index.ts
 var PORT = parseInt(process.env.PORT || "4000", 10);
 var MONGO_URI = process.env.MONGO_URI || "mongodb://localhost:27017/jarvis";
@@ -96155,7 +96506,7 @@ if (!process.env.BOT_API_KEY) {
   console.error("❌ BOT_API_KEY env variable is not set. Exiting.");
   process.exit(1);
 }
-var app = import_express5.default();
+var app = import_express6.default();
 app.use(helmet());
 app.use(import_cors.default({
   origin: (process.env.CORS_ORIGINS || "*").split(","),
@@ -96167,9 +96518,12 @@ app.use(lib_default({
   max: 1000,
   standardHeaders: true,
   legacyHeaders: false,
-  message: { success: false, error: "Too many requests. Please try again later." }
+  message: {
+    success: false,
+    error: "Too many requests. Please try again later."
+  }
 }));
-app.use(import_express5.default.json({ limit: "10mb" }));
+app.use(import_express6.default.json({ limit: "10mb" }));
 app.use(import_morgan.default("dev"));
 app.get("/health", (_req, res) => {
   res.json({
@@ -96184,6 +96538,75 @@ app.use("/api/auth", auth_routes_default);
 app.use("/api/bot", bot_routes_default);
 app.use("/api/doctor", doctor_routes_default);
 app.use("/api/guardian", guardian_routes_default);
+app.use("/api/admin", admin_routes_default);
+app.get("/api/history", async (req, res) => {
+  const { userId, sessionId, limit } = req.query;
+  if (!userId) {
+    res.status(400).json({ error: "userId is required" });
+    return;
+  }
+  let patientIdStr = userId;
+  if (userId === "system-test-user") {
+    patientIdStr = "664f1234567890abcdef1234";
+  }
+  const query = {};
+  if (import_mongoose8.default.Types.ObjectId.isValid(patientIdStr)) {
+    query.patientId = new import_mongoose8.default.Types.ObjectId(patientIdStr);
+  }
+  if (sessionId) {
+    query.sessionId = sessionId;
+  }
+  try {
+    const sessions = await Session.find(query).sort({ startedAt: 1 });
+    let history = [];
+    for (const session of sessions) {
+      for (const turn of session.turns) {
+        history.push({
+          userId,
+          sessionId: session.sessionId,
+          role: turn.role,
+          content: turn.content,
+          timestamp: session.createdAt || new Date,
+          botId: session.botId
+        });
+      }
+    }
+    if (limit) {
+      const limitNum = parseInt(limit, 10);
+      history = history.slice(0, limitNum);
+    }
+    res.json(history);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+app.get("/api/history/sessions", async (req, res) => {
+  const { userId } = req.query;
+  if (!userId) {
+    res.status(400).json({ error: "userId is required" });
+    return;
+  }
+  let patientIdStr = userId;
+  if (userId === "system-test-user") {
+    patientIdStr = "664f1234567890abcdef1234";
+  }
+  const query = {};
+  if (import_mongoose8.default.Types.ObjectId.isValid(patientIdStr)) {
+    query.patientId = new import_mongoose8.default.Types.ObjectId(patientIdStr);
+  }
+  try {
+    const sessions = await Session.find(query).sort({ startedAt: -1 });
+    const sessionList = sessions.map((session) => ({
+      _id: session.sessionId,
+      startTime: session.startedAt,
+      endTime: session.endedAt,
+      messageCount: session.turns.length
+    }));
+    res.json(sessionList);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
 app.use(notFound);
 app.use(errorHandler);
 async function migrateMissingBotIds() {
@@ -96196,7 +96619,7 @@ async function migrateMissingBotIds() {
       for (const session of sessionsWithoutBotId) {
         let targetBotId = "bot_1";
         if (session.patientId) {
-          const patient = await Patient2.findById(session.patientId);
+          const patient = await Patient.findById(session.patientId);
           if (patient && patient.botId) {
             targetBotId = patient.botId;
           }
