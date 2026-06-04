@@ -104,23 +104,23 @@ export const Home = () => {
           <div className="specs-grid">
             <div className="spec-item">
               <span className="spec-label">Neural Engine</span>
-              <span className="spec-value">Aura-7 Biometric Processor</span>
+              <span className="spec-value">Gemma-4-E2B-it (Local Ollama)</span>
             </div>
             <div className="spec-item">
-              <span className="spec-label">Connectivity</span>
-              <span className="spec-value">6G Ultra-Low Latency</span>
+              <span className="spec-label">Speech Synthesis</span>
+              <span className="spec-value">Piper TTS (Nepali Chitwan Model)</span>
             </div>
             <div className="spec-item">
-              <span className="spec-label">Privacy</span>
-              <span className="spec-value">On-Device Zero-Knowledge Encryption</span>
+              <span className="spec-label">Local Database</span>
+              <span className="spec-value">SQLite (Offline-First Medicine & Object Ledger)</span>
             </div>
             <div className="spec-item">
-              <span className="spec-label">Battery Life</span>
-              <span className="spec-value">14-Day Kinetic Recharge</span>
+              <span className="spec-label">Communication</span>
+              <span className="spec-value">WebSocket Streaming (Real-Time Voice/Chat)</span>
             </div>
             <div className="spec-item">
-              <span className="spec-label">Material</span>
-              <span className="spec-value">Bio-Compatible Aerospace Grade Ceramic</span>
+              <span className="spec-label">Privacy Model</span>
+              <span className="spec-value">100% On-Device Offline Processing</span>
             </div>
           </div>
         </div>
