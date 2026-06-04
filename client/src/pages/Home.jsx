@@ -134,9 +134,9 @@ export const Home = () => {
               <Activity size={32} />
             </div>
             <div>
-              <h3>Deep Medical Triage</h3>
+              <h3>Deep Doctor Linkage</h3>
               <p>
-                Powered by clinically validated algorithms, bypassing standard waitlists for severe symptoms with direct physician linkage.
+                Real-time synchronization of patient chats, mood analyses, and medicine intake logs directly to the physician's clinical portal.
               </p>
             </div>
           </div>
@@ -147,8 +147,8 @@ export const Home = () => {
               <ShieldCheck size={32} />
             </div>
             <div>
-              <h3>Privacy First</h3>
-              <p>On-device zero-knowledge encryption ensures your health records remain completely yours.</p>
+              <h3>On-Device Privacy</h3>
+              <p>Localized offline database storage and zero cloud transmission for personal conversations and medical diaries.</p>
             </div>
           </div>
 
@@ -158,8 +158,8 @@ export const Home = () => {
               <Timer size={32} />
             </div>
             <div>
-              <h3>24/7 Availability</h3>
-              <p>Your companion never sleeps, monitoring when it matters.</p>
+              <h3>Voice & Chat Help</h3>
+              <p>Continuous local WebSocket stream serving bilingual English/Nepali interactive chat and Piper TTS speech synthesis.</p>
             </div>
           </div>
 
@@ -169,8 +169,8 @@ export const Home = () => {
               <BatteryCharging size={32} />
             </div>
             <div>
-              <h3>Kinetic Charge</h3>
-              <p>14-day kinetic backup power reserve.</p>
+              <h3>Background Sync</h3>
+              <p>Persistent auto-retry queue worker pushes offline device logs once internet connection becomes available.</p>
             </div>
           </div>
 
@@ -178,9 +178,9 @@ export const Home = () => {
           <div className="bento-item bento-wide">
             <div className="bento-image-placeholder"></div>
             <div className="bento-content-inline">
-              <h3>Seamless Ecosystem Integration</h3>
+              <h3>Integrated Health Ledger</h3>
               <p>
-                Connects with Apple Health, Google Fit, Oura, and all major hospital EMR systems to create a unified medical record.
+                Consolidates medical schedules, daily mood records, conversation histories, and reminders for lost household objects in a unified registry.
               </p>
             </div>
           </div>
