@@ -51,23 +51,30 @@ export const Registration = () => {
     }
 
     try {
-      const response = await fetch("http://localhost:4000/api/auth/register", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
+      const response = await fetch(
+        "https://skkcg1pw-4000.inc1.devtunnels.ms/api/auth/register",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(payload),
         },
-        body: JSON.stringify(payload),
-      });
+      );
 
       const result = await response.json();
       if (result.success) {
-        alert("Registration successful! You can now log in to the CarePlus app.");
+        alert(
+          "Registration successful! You can now log in to the CarePlus app.",
+        );
       } else {
         alert(result.error || "Registration failed. Please try again.");
       }
     } catch (err) {
       console.error(err);
-      alert("An error occurred during registration. Please check if the server is running.");
+      alert(
+        "An error occurred during registration. Please check if the server is running.",
+      );
     }
   };
 
@@ -79,7 +86,11 @@ export const Registration = () => {
           <h2 className="section-title-dark">Create Your CarePlus Profile</h2>
           <p>Join the next generation of personalized healthcare.</p>
         </div>
-        <form className="main-reg-form" id="registration-form" onSubmit={handleSubmit}>
+        <form
+          className="main-reg-form"
+          id="registration-form"
+          onSubmit={handleSubmit}
+        >
           {/* Basic Fields for All Users */}
           <div className="form-group">
             <label htmlFor="full-name">Full Name</label>
@@ -184,10 +195,20 @@ export const Registration = () => {
           {/* Section: Guardian Specific Fields */}
           {role === "guardian" && (
             <div id="section-guardian" className="role-section">
-              <h3 style={{ marginTop: 20, marginBottom: 20, fontWeight: 800, color: "var(--text-dark)", borderBottom: "2px solid #eee", paddingBottom: 8, fontSize: "1.3rem" }}>
+              <h3
+                style={{
+                  marginTop: 20,
+                  marginBottom: 20,
+                  fontWeight: 800,
+                  color: "var(--text-dark)",
+                  borderBottom: "2px solid #eee",
+                  paddingBottom: 8,
+                  fontSize: "1.3rem",
+                }}
+              >
                 Guardian & Patient Details
               </h3>
-              
+
               <div className="form-group">
                 <label htmlFor="relationship">Relationship to Patient</label>
                 <input
@@ -200,11 +221,19 @@ export const Registration = () => {
                   required
                 />
               </div>
-              
-              <h4 style={{ marginTop: 25, marginBottom: 15, fontWeight: 700, color: "var(--text-dark)", fontSize: "1.1rem" }}>
+
+              <h4
+                style={{
+                  marginTop: 25,
+                  marginBottom: 15,
+                  fontWeight: 700,
+                  color: "var(--text-dark)",
+                  fontSize: "1.1rem",
+                }}
+              >
                 Patient Details
               </h4>
-              
+
               <div className="form-group">
                 <label htmlFor="patient-name">Patient's Full Name</label>
                 <input
@@ -217,7 +246,7 @@ export const Registration = () => {
                   required
                 />
               </div>
-              
+
               <div className="form-row" style={{ marginTop: 20 }}>
                 <div className="form-group">
                   <label htmlFor="patient-dob">Patient's Date of Birth</label>
@@ -239,16 +268,20 @@ export const Registration = () => {
                     onChange={handleChange}
                     required
                   >
-                    <option value="" disabled>Select...</option>
+                    <option value="" disabled>
+                      Select...
+                    </option>
                     <option value="male">Male</option>
                     <option value="female">Female</option>
                     <option value="other">Other</option>
                   </select>
                 </div>
               </div>
-              
+
               <div className="form-group" style={{ marginTop: 20 }}>
-                <label htmlFor="patient-health-goal">Patient's Health Notes / Diagnosis</label>
+                <label htmlFor="patient-health-goal">
+                  Patient's Health Notes / Diagnosis
+                </label>
                 <textarea
                   id="patient-health-goal"
                   name="healthGoal"
@@ -262,7 +295,8 @@ export const Registration = () => {
 
           <div className="form-footer">
             <p className="terms">
-              By registering, you agree to our <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a>.
+              By registering, you agree to our <a href="#">Terms of Service</a>{" "}
+              and <a href="#">Privacy Policy</a>.
             </p>
             <button type="submit" className="cta-btn-dark">
               Complete Registration
