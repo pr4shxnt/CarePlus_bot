@@ -97,7 +97,9 @@ export const Home = () => {
             <div className="step-content">
               <h3>Intake Monitoring</h3>
               <p>
-                The local agent automatically checks scheduled medicine times and prompts the patient for verbal confirmation, logging status directly to the SQLite ledger.
+                The local agent automatically checks scheduled medicine times
+                and prompts the patient for verbal confirmation, logging status
+                directly to the SQLite ledger.
               </p>
             </div>
           </div>
@@ -106,7 +108,9 @@ export const Home = () => {
             <div className="step-content">
               <h3>Wellness Analysis</h3>
               <p>
-                The AI engine parses daily conversations to extract patient mood trends and intensity, reporting fluctuations directly to guardians and physicians.
+                The AI engine parses daily conversations to extract patient mood
+                trends and intensity, reporting fluctuations directly to
+                guardians and physicians.
               </p>
             </div>
           </div>
@@ -115,7 +119,9 @@ export const Home = () => {
             <div className="step-content">
               <h3>Alert Generation</h3>
               <p>
-                The system automatically detects missed doses or negative mood anomalies, immediately triggering visual alerts on the doctor and guardian dashboards.
+                The system automatically detects missed doses or negative mood
+                anomalies, immediately triggering visual alerts on the doctor
+                and guardian dashboards.
               </p>
             </div>
           </div>
@@ -184,7 +190,7 @@ export const Home = () => {
               <ShieldCheck size={32} />
             </div>
             <div>
-              <h3>Privacy First</h3>
+              <h3>Privacy Focused</h3>
               <p>
                 Localized offline database storage and zero cloud transmission
                 for personal conversations and medical diaries.
@@ -198,11 +204,8 @@ export const Home = () => {
               <Timer size={32} />
             </div>
             <div>
-              <h3>Voice & Chat Help</h3>
-              <p>
-                Continuous local WebSocket stream serving bilingual
-                English/Nepali interactive chat and Piper TTS speech synthesis.
-              </p>
+              <h3>Loneliness companion</h3>
+              <p>Continuous local WebSocket streaming.</p>
             </div>
           </div>
 
@@ -212,11 +215,8 @@ export const Home = () => {
               <BatteryCharging size={32} />
             </div>
             <div>
-              <h3>Background Sync</h3>
-              <p>
-                Persistent auto-retry queue worker pushes offline device logs
-                once internet connection becomes available.
-              </p>
+              <h3>Background Syncronization</h3>
+              <p>Application and robot connection through background syncing</p>
             </div>
           </div>
 
@@ -224,7 +224,7 @@ export const Home = () => {
           <div className="bento-item bento-wide">
             <div className="bento-image-placeholder"></div>
             <div className="bento-content-inline">
-              <h3>Integrated Health Ledger</h3>
+              <h3>Health Ledger</h3>
               <p>
                 Consolidates medical schedules, daily mood records, conversation
                 histories, and reminders for lost household objects in a unified
