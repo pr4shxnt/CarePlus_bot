@@ -33,14 +33,16 @@ export async function register(req: Request, res: Response): Promise<void> {
 
   const existing = await User.findOne({ email: body.email });
   if (existing) {
-    res.status(409).json({ success: false, error: "Email already registered." });
+    res
+      .status(409)
+      .json({ success: false, error: "Email already registered." });
     return;
   }
 
   const user = new User({
     name: body.name,
     email: body.email,
-    passwordHash: body.password,  // pre-save hook will hash it
+    passwordHash: body.password, // pre-save hook will hash it
     role: body.role,
     specialization: body.specialization,
     licenseNumber: body.licenseNumber,
@@ -67,18 +69,34 @@ export async function register(req: Request, res: Response): Promise<void> {
     user.patientBotId = patient.botId;
     await user.save();
   } else if (body.role === "guardian") {
+    // 1. Create Patient User (User model)
+    const patientUser = new User({
+      name: body.patientName || `${body.name}'s Patient`,
+      email: `patient_${user._id.toString()}@careplus.local`,
+      passwordHash:
+        body.password ||
+        `${body.patientName?.split(" ")[0].toLocaleLowerCase()}1234`,
+      role: "patient",
+    });
+
+    const botId = `bot_${patientUser._id.toString().slice(-6)}`;
+    patientUser.patientBotId = botId;
+    await patientUser.save();
+
+    // 2. Create Patient Record (Patient model)
     const patient = new Patient({
+      _id: patientUser._id, // Share the same ID as the User record
       name: body.patientName || `${body.name}'s Patient`,
       age: body.age,
       gender: body.gender,
       notes: body.healthGoal,
       guardianId: user._id,
+      botId: botId,
     });
-    patient.botId = `bot_${patient._id.toString().slice(-6)}`;
     await patient.save();
 
-    // Link guardian to the generated patient botId
-    user.patientBotId = patient.botId;
+    // 3. Link guardian to the generated patient botId
+    user.patientBotId = botId;
     await user.save();
   }
 
@@ -118,11 +136,19 @@ export async function me(req: Request, res: Response): Promise<void> {
 }
 
 export async function updateMe(req: Request, res: Response): Promise<void> {
-  const allowed = ["name", "specialization", "licenseNumber", "patientBotId", "relationship"];
+  const allowed = [
+    "name",
+    "specialization",
+    "licenseNumber",
+    "patientBotId",
+    "relationship",
+  ];
   const updates: Record<string, unknown> = {};
   for (const key of allowed) {
     if (req.body[key] !== undefined) updates[key] = req.body[key];
   }
-  const user = await User.findByIdAndUpdate(req.user!.userId, updates, { new: true });
+  const user = await User.findByIdAndUpdate(req.user!.userId, updates, {
+    new: true,
+  });
   res.json(ok(user, "Profile updated."));
 }
