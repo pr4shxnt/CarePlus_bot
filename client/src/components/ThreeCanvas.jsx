@@ -105,11 +105,23 @@ export const ThreeCanvas = () => {
     };
     window.addEventListener("resize", handleResize);
 
+    // Scroll Handler to disable rendering when out of view
+    let isOutOfView = false;
+    const handleScroll = () => {
+      isOutOfView = window.scrollY > window.innerHeight;
+    };
+    window.addEventListener("scroll", handleScroll, { passive: true });
+
     // Render loop
     const clock = new THREE.Clock();
     let animationId = null;
 
     const tick = () => {
+      if (isOutOfView) {
+        animationId = requestAnimationFrame(tick);
+        return;
+      }
+
       const elapsedTime = clock.getElapsedTime();
 
       if (robotModel) {
@@ -130,6 +142,7 @@ export const ThreeCanvas = () => {
     return () => {
       document.removeEventListener("mousemove", handleMouseMove);
       window.removeEventListener("resize", handleResize);
+      window.removeEventListener("scroll", handleScroll);
       if (animationId) {
         cancelAnimationFrame(animationId);
       }
