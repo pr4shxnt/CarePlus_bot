@@ -135,7 +135,7 @@ export const Registration = () => {
               <input
                 type="password"
                 id="confirm-password"
-                name="confirm-password"
+                name="confirmPassword"
                 value={formData.confirmPassword}
                 onChange={handleChange}
                 placeholder="********"
