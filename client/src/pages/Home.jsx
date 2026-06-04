@@ -36,9 +36,8 @@ export const Home = () => {
 
   return (
     <>
-      <ThreeCanvas />
-
       <section className="hero" id="hero">
+        <ThreeCanvas />
         <div className="hero-content">
           <h1 className="hero-title" id="mega-title">CAREPLUS</h1>
           <p className="hero-subtitle">YOUR INTELLIGENT HEALTH COMPANION</p>
