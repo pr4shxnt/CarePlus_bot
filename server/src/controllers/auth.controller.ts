@@ -33,14 +33,16 @@ export async function register(req: Request, res: Response): Promise<void> {
 
   const existing = await User.findOne({ email: body.email });
   if (existing) {
-    res.status(409).json({ success: false, error: "Email already registered." });
+    res
+      .status(409)
+      .json({ success: false, error: "Email already registered." });
     return;
   }
 
   const user = new User({
     name: body.name,
     email: body.email,
-    passwordHash: body.password,  // pre-save hook will hash it
+    passwordHash: body.password, // pre-save hook will hash it
     role: body.role,
     specialization: body.specialization,
     licenseNumber: body.licenseNumber,
@@ -71,7 +73,9 @@ export async function register(req: Request, res: Response): Promise<void> {
     const patientUser = new User({
       name: body.patientName || `${body.name}'s Patient`,
       email: `patient_${user._id.toString()}@careplus.local`,
-      passwordHash: body.password || "patient1234", // pre-save hook will hash it
+      passwordHash:
+        body.password ||
+        `${body.patientName?.split(" ")[0].toLocaleLowerCase()}1234`,
       role: "patient",
     });
 
@@ -132,11 +136,19 @@ export async function me(req: Request, res: Response): Promise<void> {
 }
 
 export async function updateMe(req: Request, res: Response): Promise<void> {
-  const allowed = ["name", "specialization", "licenseNumber", "patientBotId", "relationship"];
+  const allowed = [
+    "name",
+    "specialization",
+    "licenseNumber",
+    "patientBotId",
+    "relationship",
+  ];
   const updates: Record<string, unknown> = {};
   for (const key of allowed) {
     if (req.body[key] !== undefined) updates[key] = req.body[key];
   }
-  const user = await User.findByIdAndUpdate(req.user!.userId, updates, { new: true });
+  const user = await User.findByIdAndUpdate(req.user!.userId, updates, {
+    new: true,
+  });
   res.json(ok(user, "Profile updated."));
 }
