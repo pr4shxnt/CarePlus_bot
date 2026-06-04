@@ -110,3 +110,832 @@ Natural first aid: Immobilize the area using a splint (stick/board) and bandage.
 
 This information is for guidance only. In case of serious emergency, contact local medical services immediately.
 (Disclaimer: I am an AI, not a doctor.)
+
+
+Infectious Diseases (Continued)
+════════════════════════════════════
+
+Q: What is typhoid fever?
+A: A bacterial infection (Salmonella typhi) spread via contaminated water/food, causing sustained high fever, headache, and abdominal pain. The bacteria colonize intestines and bloodstream. Untreated: intestinal perforation, sepsis, or death. Natural first aid: Stay hydrated with boiled water + ORS; eat soft, easily digestible foods like khichdi or rice porridge.
+
+────────────────────────────────────
+
+Q: What is cholera?
+A: Cholera is a severe bacterial diarrheal illness from Vibrio cholerae in contaminated water, causing rice-water stools and rapid dehydration. It can kill within hours if untreated. Natural first aid: Aggressive ORS (homemade: 1L water + 6 tsp sugar + ½ tsp salt); avoid solid food initially; get medical help fast.
+
+────────────────────────────────────
+
+Q: What is tuberculosis (TB)?
+A: A bacterial lung infection (Mycobacterium tuberculosis) spread by air droplets, causing persistent cough (3+ weeks), night sweats, and weight loss. Untreated: lung destruction and spread to other organs. Natural first aid: Rest, eat nutritious food high in protein and vitamin D; this requires antibiotics — see a doctor immediately.
+
+────────────────────────────────────
+
+Q: What is hepatitis A?
+A: A viral liver infection from contaminated food/water causing jaundice (yellow skin/eyes), fatigue, and nausea. The immune system usually clears it, but liver stress can be serious. Natural first aid: Rest completely, avoid alcohol and fatty foods, drink plenty of fluids and eat light meals.
+
+────────────────────────────────────
+
+Q: What is hepatitis B?
+A: A bloodborne viral infection attacking the liver, spread through unprotected sex or shared needles. Chronic infection causes cirrhosis or liver cancer. Natural first aid: Rest, avoid alcohol, eat high-antioxidant foods (turmeric, leafy greens); requires medical antiviral treatment.
+
+────────────────────────────────────
+
+Q: What is chickenpox?
+A: A highly contagious varicella-zoster virus causing itchy blisters, fever, and fatigue. It spreads by air and direct contact. Untreated complications: bacterial skin infection or pneumonia. Natural first aid: Apply calamine lotion or neem paste to blisters, trim nails to prevent scratching, sip cool fluids.
+
+────────────────────────────────────
+
+Q: What is measles?
+A: A viral infection causing high fever, cough, runny nose, and a full-body rash. It spreads through respiratory droplets. Complications: pneumonia, encephalitis, or blindness. Natural first aid: Rest in a dim room, stay hydrated, sip warm ginger-honey tea; get medical supervision.
+
+────────────────────────────────────
+
+Q: What is whooping cough (pertussis)?
+A: A bacterial infection causing severe whooping cough fits that can crack ribs or cause breathing failure, especially in infants. Spreads by droplets. Natural first aid: Steam inhalation to ease airways, honey in warm water to soothe throat; requires antibiotics urgently.
+
+────────────────────────────────────
+
+Q: What is meningitis?
+A: Inflammation of membranes surrounding the brain, caused by bacteria or viruses. Warning signs: stiff neck, severe headache, fever, light sensitivity, and a non-fading rash. Untreated: brain damage, deafness, or death within 24 hours. Natural first aid: Keep the person calm and still; this is a medical emergency — call emergency services immediately.
+
+────────────────────────────────────
+
+Q: What is food poisoning?
+A: Eating bacteria/toxin-contaminated food causes cramps, vomiting, and diarrhea within hours. Most resolve in 1–3 days, but dehydration is the risk. Natural first aid: Sip ORS or coconut water frequently, rest, avoid solid food for a few hours, then try bland foods (banana, toast, rice).
+
+────────────────────────────────────
+
+Q: What is a urinary tract infection (UTI)?
+A: Bacteria entering the urethra infect the bladder (cystitis) or kidneys, causing burning urination, frequency, and lower abdominal pain. Untreated: kidney damage. Natural first aid: Drink 8–10 glasses of water daily to flush bacteria; unsweetened cranberry juice may help; avoid caffeine; see a doctor for antibiotics.
+
+────────────────────────────────────
+
+Q: What is ringworm?
+A: Despite the name, ringworm is a fungal skin infection causing circular, scaly, itchy patches. It spreads by contact. Natural first aid: Apply fresh aloe vera gel, coconut oil, or diluted tea tree oil to the area; keep it dry and clean; avoid sharing towels.
+
+────────────────────────────────────
+
+Q: What is athlete's foot?
+A: A fungal infection (tinea pedis) between toes causing itching, cracking, and burning skin, fueled by moisture. Natural first aid: Wash feet with antifungal soap, keep them dry, apply tea tree oil or garlic paste, wear breathable cotton socks.
+
+────────────────────────────────────
+
+Q: What are intestinal worms?
+A: Parasites like roundworms or tapeworms enter via contaminated food/water, living in the intestines and causing malnutrition, abdominal pain, and fatigue. Natural first aid: Raw papaya seeds blended in milk act as a natural antiparasitic; eat pumpkin seeds; maintain strict hygiene; get deworming medication.
+
+────────────────────────────────────
+
+Q: What is scabies?
+A: A skin infestation by mites that burrow under skin, causing intense itching (worse at night) and a pimply rash. Spreads by skin contact. Natural first aid: Apply neem oil or diluted tea tree oil; wash all bedding in hot water; requires prescription permethrin cream for full cure.
+
+────────────────────────────────────
+
+════════════════════════════════════
+Respiratory Issues (Continued)
+════════════════════════════════════
+
+Q: What is pneumonia?
+A: A lung infection from bacteria, viruses, or fungi causing air sacs to fill with fluid, leading to fever, cough, and breathing difficulty. Untreated: respiratory failure. Natural first aid: Rest fully upright, drink warm ginger-honey tea, steam inhale with eucalyptus oil; requires antibiotics.
+
+────────────────────────────────────
+
+Q: What is bronchitis?
+A: Inflammation of the bronchial tubes causing a persistent productive cough with mucus, wheezing, and chest tightness. Acute bronchitis is usually viral. Natural first aid: Steam inhalation with eucalyptus or peppermint oil, honey in warm water, stay well-hydrated; avoid cold air.
+
+────────────────────────────────────
+
+Q: What is sinusitis?
+A: Inflammation of sinus cavities (often post-cold) causing facial pressure, blocked nose, headache, and thick nasal discharge. Natural first aid: Saline nasal rinse (neti pot with boiled salted water), steam inhalation, warm compress on forehead/cheeks.
+
+────────────────────────────────────
+
+Q: What is tonsillitis?
+A: Bacterial or viral infection of the tonsils causing severe sore throat, difficulty swallowing, and fever. Natural first aid: Gargle with warm salt water, drink warm honey-ginger tea, suck on ice chips to reduce swelling; see a doctor if symptoms last over 5 days.
+
+────────────────────────────────────
+
+Q: What is laryngitis?
+A: Inflammation of the voice box (larynx) from overuse or infection, causing hoarseness or loss of voice. Natural first aid: Complete voice rest, sip warm honey-lemon water, breathe steam; avoid whispering (strains vocal cords more than normal speech).
+
+────────────────────────────────────
+
+Q: What is a pulmonary embolism (PE)?
+A: A blood clot in the lungs causing sudden sharp chest pain, rapid breathing, and coughing blood. Untreated: fatal. Natural first aid: Keep the person calm, seated upright, do NOT give anything by mouth — call emergency services immediately.
+
+────────────────────────────────────
+
+Q: What is COPD?
+A: Chronic Obstructive Pulmonary Disease is progressive airflow obstruction (from smoking/pollution) causing breathlessness, chronic cough, and mucus. Natural first aid: Pursed-lip breathing to slow exhale; avoid triggers like smoke and dust; steam inhalation for acute flare-ups.
+
+────────────────────────────────────
+
+Q: What is a nosebleed (epistaxis)?
+A: Rupture of small blood vessels in the nose from dryness, pressure, or trauma. Rarely dangerous. Natural first aid: Pinch the soft part of nose (not the bony bridge) and lean slightly forward for 10 minutes; apply a cold compress to the nose bridge; breathe through the mouth.
+
+────────────────────────────────────
+
+════════════════════════════════════
+Digestive Emergencies
+════════════════════════════════════
+
+Q: What is appendicitis?
+A: Inflammation of the appendix causing severe pain starting near the navel then shifting to the lower right abdomen, with nausea and fever. Untreated: rupture and life-threatening peritonitis. Natural first aid: Do NOT apply heat, eat, or drink — this is a surgical emergency; go to hospital immediately.
+
+────────────────────────────────────
+
+Q: What is gastritis?
+A: Inflammation of the stomach lining from Helicobacter pylori, NSAIDs, or stress, causing burning upper abdominal pain and nausea. Natural first aid: Sip cold coconut milk or chilled aloe vera juice to coat stomach; eat small frequent bland meals; avoid spicy/acidic foods and alcohol.
+
+────────────────────────────────────
+
+Q: What is constipation?
+A: Infrequent, hard, dry stools caused by low fiber, dehydration, or inactivity. Straining can cause hemorrhoids. Natural first aid: Drink warm water with lemon in the morning, eat papaya or prunes, walk for 20–30 minutes, increase dietary fiber.
+
+────────────────────────────────────
+
+Q: What is acid reflux (GERD)?
+A: Stomach acid flowing back into the esophagus due to a weak lower sphincter, causing heartburn, regurgitation, and chest discomfort. Natural first aid: Sip warm ginger tea; eat smaller meals; avoid lying down for 2 hours after eating; elevate head of bed.
+
+────────────────────────────────────
+
+Q: What is vomiting and how do I manage it?
+A: Forceful expulsion of stomach contents triggered by infection, food intolerance, or motion sickness, driven by the brain's vomiting center. Risk: aspiration and dehydration. Natural first aid: Sip small amounts of cold water or ginger ale; chew dry ginger; wait 30 minutes before eating; lie on your side.
+
+────────────────────────────────────
+
+Q: What are hemorrhoids?
+A: Swollen veins in the rectum/anus from straining, causing itching, pain, and bleeding. Natural first aid: Apply cool aloe vera gel or a cold compress; soak in a warm sitz bath; increase fiber and water intake; avoid prolonged sitting on the toilet.
+
+────────────────────────────────────
+
+Q: What is bloating?
+A: Gas buildup in the digestive tract from swallowed air, food intolerances, or gut bacteria imbalance. Natural first aid: Sip warm peppermint or fennel seed tea; gently massage the abdomen clockwise; walk after meals; avoid carbonated drinks.
+
+────────────────────────────────────
+
+════════════════════════════════════
+Metabolic & Endocrine Issues
+════════════════════════════════════
+
+Q: What is hyperglycemia (high blood sugar)?
+A: Excess glucose in the bloodstream in diabetics from missed insulin, overeating, or illness, causing excessive thirst, frequent urination, and blurred vision. Untreated: diabetic coma. Natural first aid: Drink water to dilute blood sugar; gentle walking helps; avoid sugary drinks; check insulin if prescribed — seek medical help.
+
+────────────────────────────────────
+
+Q: What is dehydration?
+A: Insufficient body fluid from sweating, vomiting, or diarrhea, causing dizziness, dark urine, dry mouth, and confusion. Natural first aid: Sip ORS or coconut water slowly; eat water-rich foods (cucumber, watermelon); avoid caffeine and alcohol; rest in a cool place.
+
+────────────────────────────────────
+
+Q: What is a thyroid storm?
+A: A rare life-threatening surge of thyroid hormones causing extreme fever, rapid heart rate, and confusion — often triggered by surgery or illness in hyperthyroid patients. Natural first aid: Apply cool cloths to reduce fever, keep the person calm — call emergency services immediately.
+
+────────────────────────────────────
+
+Q: What is gout?
+A: Uric acid crystal deposits in joints (often big toe) causing sudden, intense burning pain, swelling, and redness. Natural first aid: Apply ice wrapped in cloth for 20 minutes; rest the joint elevated; drink plenty of water; avoid red meat, alcohol, and high-purine foods.
+
+────────────────────────────────────
+
+Q: What is anemia?
+A: Low red blood cell count or hemoglobin from iron/vitamin B12 deficiency, blood loss, or disease, causing fatigue, paleness, and shortness of breath. Natural first aid: Eat iron-rich foods (spinach, lentils, jaggery, dates); pair with vitamin C for absorption; reduce tea/coffee which block iron.
+
+────────────────────────────────────
+
+════════════════════════════════════
+Neurological Emergencies
+════════════════════════════════════
+
+Q: What is a stroke?
+A: A blocked or burst blood vessel in the brain depriving neurons of oxygen, causing sudden face drooping, arm weakness, or slurred speech. Remember: F.A.S.T. (Face, Arms, Speech, Time). Untreated: permanent disability or death. Natural first aid: Keep the person calm and still; do NOT give food or water (swallowing reflex may be impaired) — call emergency services immediately.
+
+────────────────────────────────────
+
+Q: What is a seizure?
+A: Abnormal electrical brain activity causing uncontrolled body shaking, blank staring, or loss of consciousness. Untreated repetitive seizures damage the brain. Natural first aid: Clear the area of hard objects, gently turn them on their side, do NOT restrain or put anything in their mouth, time the seizure; call emergency if it lasts over 5 minutes.
+
+────────────────────────────────────
+
+Q: What is a concussion?
+A: A brain injury from a blow to the head disrupting normal brain function, causing headache, confusion, dizziness, and memory gaps. Untreated: second-impact syndrome. Natural first aid: Physical and mental rest (no screens); apply ice pack to head for 20 minutes; monitor for worsening symptoms; see a doctor even if symptoms seem mild.
+
+────────────────────────────────────
+
+Q: What is a migraine?
+A: Intense throbbing headache (often one-sided) triggered by hormones, stress, or light, accompanied by nausea and light sensitivity. Caused by changes in brain chemistry and blood vessel dilation. Natural first aid: Rest in a quiet, dark room; apply lavender or peppermint oil to temples; cold or warm compress on the neck; drink water.
+
+────────────────────────────────────
+
+Q: What is vertigo?
+A: A spinning sensation caused by inner ear crystal displacement (BPPV) or inner ear infection, causing dizziness and nausea with movement. Natural first aid: Sit or lie down slowly; try the Epley maneuver (head repositioning exercises); avoid sudden head movements; ginger tea helps nausea.
+
+────────────────────────────────────
+
+Q: What is fainting (syncope)?
+A: Brief loss of consciousness from reduced blood flow to the brain due to low blood pressure, dehydration, or emotional shock. Natural first aid: Lay the person flat and elevate their legs above heart level; loosen tight clothing; if unconscious over 1 minute, call emergency services.
+
+────────────────────────────────────
+
+Q: What is a panic attack?
+A: A sudden episode of intense fear triggering physical symptoms — racing heart, chest pain, shortness of breath — despite no real danger. Caused by adrenaline surge. Natural first aid: Box breathing (inhale 4s, hold 4s, exhale 4s, hold 4s); ground yourself with 5-4-3-2-1 senses technique; splash cold water on your face.
+
+────────────────────────────────────
+
+════════════════════════════════════
+Musculoskeletal Injuries
+════════════════════════════════════
+
+Q: What is a sprain?
+A: Stretching or tearing of ligaments from a sudden twist, causing swelling, bruising, and pain. Use R.I.C.E.: Rest, Ice (20 min on/off), Compression (bandage), Elevation above heart level. Natural first aid: Arnica cream reduces bruising; turmeric paste may reduce inflammation.
+
+────────────────────────────────────
+
+Q: What is a muscle cramp?
+A: Sudden involuntary muscle contraction from dehydration, overexertion, or electrolyte imbalance, causing sharp pain and hardened muscle. Natural first aid: Gently stretch and massage the muscle; drink electrolyte water or banana-and-ORS combo; apply warm compress after stretching.
+
+────────────────────────────────────
+
+Q: What is back pain?
+A: Muscle strain, poor posture, or disc issues causing pain ranging from dull ache to sharp shooting pain down the leg (sciatica). Natural first aid: Alternate ice (first 48 hrs) then heat; gentle yoga stretches like child's pose; sleep on your back with a pillow under knees; avoid bed rest beyond 1–2 days.
+
+────────────────────────────────────
+
+Q: What is a dislocated joint?
+A: A bone forced out of its socket (shoulder and knee most common) from trauma, causing visible deformity and excruciating pain. Natural first aid: Immobilize the joint as-is with a sling or bandage — do NOT try to pop it back; apply ice; get to emergency care immediately.
+
+────────────────────────────────────
+
+Q: What is tendinitis?
+A: Inflammation of a tendon from repetitive motion (common in wrists, elbows, and knees of frequent typists and athletes), causing sharp pain with movement. Natural first aid: Rest the area, apply ice for 20 minutes, elevate, use a compression bandage; turmeric-ginger anti-inflammatory tea helps internally.
+
+────────────────────────────────────
+
+════════════════════════════════════
+Eye & Ear Emergencies
+════════════════════════════════════
+
+Q: What is conjunctivitis (pink eye)?
+A: Bacterial, viral, or allergic inflammation of the eye's outer membrane causing redness, discharge, and itching. Very contagious. Natural first aid: Rinse eye with clean cool water; apply cooled chamomile tea bags as compress; wash hands constantly; avoid touching eyes.
+
+────────────────────────────────────
+
+Q: What do I do if something is in my eye?
+A: A foreign object (dust, eyelash) on the eye's surface causes tearing and pain. Do NOT rub. Natural first aid: Blink rapidly to trigger tears; flush eye with clean water from inner to outer corner; pull upper eyelid over lower to sweep the object out; if stuck after flushing, see a doctor.
+
+────────────────────────────────────
+
+Q: What is an ear infection (otitis media)?
+A: Bacterial or viral infection of the middle ear (common in children post-cold) causing sharp ear pain, fever, and temporary hearing loss. Natural first aid: Warm compress or warm garlic oil drops on the outer ear canal; avoid inserting objects; see a doctor as antibiotics may be needed.
+
+────────────────────────────────────
+
+Q: What causes sudden hearing loss?
+A: Sudden blockage from wax buildup, loud noise, or viral infection can cause one-sided hearing loss or ringing (tinnitus). Natural first aid: Soften wax with warm coconut oil drops (2–3 drops); tilt head to help drain; if from noise/unknown cause — see a doctor within 24–48 hours.
+
+────────────────────────────────────
+
+Q: What is a stye (hordeolum)?
+A: A bacterial infection of the eyelid oil gland forming a painful red lump at the eyelid edge. Natural first aid: Apply a warm wet cloth compress for 10–15 minutes 3–4 times a day to bring it to a head; never squeeze it; it usually resolves within 1–2 weeks.
+
+────────────────────────────────────
+
+════════════════════════════════════
+Skin & Wounds
+════════════════════════════════════
+
+Q: How do I treat a deep cut (laceration)?
+A: Cuts through deeper skin layers cause significant bleeding and risk infection. Natural first aid: Apply direct pressure with clean cloth for 10–15 minutes; once bleeding stops, clean with clean water and cover with sterile bandage; if bleeding doesn't stop or wound gapes, go to emergency care for stitches.
+
+────────────────────────────────────
+
+Q: What is cellulitis?
+A: A bacterial skin infection spreading under the skin, causing red, warm, swollen, and painful skin (usually on legs). If a red line tracks upward, it signals septicemia — a medical emergency. Natural first aid: Elevate the limb, apply clean bandage; requires antibiotics — see a doctor.
+
+────────────────────────────────────
+
+Q: What is an insect sting reaction?
+A: Bee/wasp venom triggers local pain, redness, and swelling; rarely triggers anaphylaxis. Natural first aid: Remove the stinger by scraping sideways (not pinching); apply ice pack for 20 minutes; soothing paste of baking soda + water or raw honey reduces sting pain.
+
+────────────────────────────────────
+
+Q: What are hives (urticaria)?
+A: Raised, itchy welts on skin from allergic reactions to food, medication, or stress. Usually resolve within 24 hours. Natural first aid: Cool shower or cold compress; apply aloe vera gel; take an antihistamine if available; avoid the trigger.
+
+────────────────────────────────────
+
+Q: What is eczema?
+A: Chronic inflammatory skin condition causing dry, itchy, and cracked skin triggered by allergens or irritants. Natural first aid: Moisturize with pure coconut oil or unscented shea butter immediately after bathing; use lukewarm (not hot) water; avoid harsh soaps and synthetic fabrics.
+
+────────────────────────────────────
+
+Q: What is a blister?
+A: Fluid-filled skin pocket formed by friction, heat, or chemical irritation as a protective response. Natural first aid: Do NOT pop it if intact; cover with a bandage to reduce friction; if it bursts, clean with soap and water and apply aloe vera; keep dry.
+
+────────────────────────────────────
+
+Q: What is frostbite?
+A: Freezing of skin and tissues (ears, fingers, toes) from prolonged cold exposure causing numbness, white/gray skin, and waxy texture. Untreated: tissue death and amputation. Natural first aid: Move to warm area; rewarm in warm water (37–40°C) — NOT hot; do NOT rub or walk on frostbitten tissue; seek emergency care.
+
+────────────────────────────────────
+
+════════════════════════════════════
+Cardiovascular Issues
+════════════════════════════════════
+
+Q: What is hypertension (high blood pressure)?
+A: Chronic elevated force of blood against artery walls, often symptomless, but damaging to heart, kidneys, and brain over time. Natural first aid (acute spike): Sit calmly, practice slow deep breathing for 5–10 minutes, drink a small amount of water; long-term: reduce salt, exercise, and manage stress.
+
+────────────────────────────────────
+
+Q: What is cardiac arrest vs. heart attack?
+A: A heart attack is a circulation problem (blocked artery); cardiac arrest is an electrical problem (heart stops beating). In cardiac arrest, the person is unconscious and not breathing. Natural first aid: Begin CPR immediately (30 chest compressions + 2 rescue breaths); use AED if available; call emergency services.
+
+────────────────────────────────────
+
+Q: How do I perform CPR?
+A: CPR (Cardiopulmonary Resuscitation) manually pumps blood when the heart stops. Natural first aid: Place heel of hand on the center of the chest; push hard and fast (100–120 compressions/min, about 5–6 cm deep); allow full chest recoil; give 2 rescue breaths every 30 compressions; continue until help arrives.
+
+────────────────────────────────────
+
+Q: What is angina?
+A: Chest tightness or pressure from reduced blood flow to the heart during exertion, easing with rest. It's a warning sign of coronary artery disease. Natural first aid: Rest immediately; sit or lie down; if prescribed, use nitroglycerine spray; if pain lasts over 15 minutes or doesn't ease — treat as a heart attack.
+
+────────────────────────────────────
+
+════════════════════════════════════
+Mental Health Emergencies
+════════════════════════════════════
+
+Q: What is a mental health crisis?
+A: A state of extreme distress where someone may harm themselves or others, triggered by trauma, psychosis, or severe depression. Natural first aid: Stay calm, speak slowly and gently, listen without judgment, remove access to dangerous objects, stay with the person; call a mental health crisis line or emergency services.
+
+────────────────────────────────────
+
+Q: What are signs of severe depression?
+A: Persistent hopelessness, loss of interest in all activities, sleep/appetite changes, and withdrawal from others that lasts weeks. Natural first aid: Encourage gentle sunlight exposure, physical movement, and social connection; speak openly; do NOT leave someone alone if they mention suicide — contact a crisis line.
+
+────────────────────────────────────
+
+Q: What is hyperventilation?
+A: Rapid over-breathing lowers blood CO₂, causing tingling, dizziness, and muscle spasms — often triggered by anxiety. Natural first aid: Breathe slowly through pursed lips; breathe into cupped hands (not a bag, which can cause CO₂ buildup danger); ground the person with calm reassurance.
+
+────────────────────────────────────
+
+════════════════════════════════════
+Bites & Toxins
+════════════════════════════════════
+
+Q: What do I do about a jellyfish sting?
+A: Jellyfish tentacles inject venom on contact, causing burning pain and redness. Natural first aid: Rinse with seawater (NOT fresh water, which activates more nematocysts); remove visible tentacles with a card (never bare hands); soak in hot water (as hot as tolerable) for 20 minutes to neutralize venom.
+
+────────────────────────────────────
+
+Q: What about a dog bite?
+A: Dog bites carry rabies and bacterial infection risks. Natural first aid: Wash wound vigorously with soap and running water for 5–10 minutes; apply antiseptic (neem or diluted turmeric paste); cover with clean bandage; seek medical care for rabies vaccination within 24 hours.
+
+────────────────────────────────────
+
+Q: What is food or plant poisoning?
+A: Ingesting toxic plants or mushrooms causes nausea, vomiting, abdominal pain, and in severe cases, organ failure. Natural first aid: Do NOT induce vomiting unless instructed by poison control; keep the person awake; bring a sample of what was eaten to the hospital — call poison control or emergency immediately.
+
+────────────────────────────────────
+
+Q: What is carbon monoxide poisoning?
+A: Colorless, odorless CO gas from faulty heaters/generators displaces oxygen in the blood causing headache, confusion, and loss of consciousness. Natural first aid: Get everyone outside to fresh air immediately; do NOT re-enter; call emergency services; perform CPR if unconscious.
+
+────────────────────────────────────
+
+Q: What if someone swallows a chemical?
+A: Household chemicals (bleach, detergents) burn the throat and esophagus. Do NOT induce vomiting (chemicals burn again on the way up). Natural first aid: Rinse mouth with water; if conscious, give small sips of water or milk to dilute; call poison control or emergency services immediately.
+
+────────────────────────────────────
+
+════════════════════════════════════
+Children-Specific Emergencies
+════════════════════════════════════
+
+Q: What is febrile convulsion in children?
+A: A seizure triggered by a rapid fever spike in children aged 6 months–5 years. Frightening but usually harmless and brief. Natural first aid: Lay the child on their side on a soft surface; loosen clothing; do NOT hold them down or put anything in their mouth; cool with a damp cloth after seizure ends; call a doctor.
+
+────────────────────────────────────
+
+Q: How do I handle a child's high fever?
+A: Fever above 38.5°C signals the immune system fighting infection. Natural first aid: Sponge with lukewarm water (not cold); apply cool damp cloth to forehead and armpits; dress lightly; push fluids; give paracetamol per weight dosing; seek medical care if fever exceeds 40°C or lasts 3+ days.
+
+────────────────────────────────────
+
+Q: What is croup in children?
+A: A viral airway inflammation in young children causing a distinctive barking cough and stridor (high-pitched breathing). Natural first aid: Take the child into cool night air or sit in a steamy bathroom for 10–15 minutes; keep the child calm (crying worsens airway tightness); see a doctor.
+
+────────────────────────────────────
+
+Q: What if a child swallows a small object?
+A: Small objects usually pass harmlessly, but button batteries, magnets, and sharp objects are dangerous. Natural first aid: If the child is breathing normally, do NOT try to remove it yourself; go to emergency care immediately for X-ray; watch for drooling, pain, or difficulty swallowing.
+
+────────────────────────────────────
+
+════════════════════════════════════
+Obstetric & Reproductive
+════════════════════════════════════
+
+Q: What are signs of a miscarriage in early pregnancy?
+A: Heavy vaginal bleeding, cramping, and tissue passing in the first trimester may signal miscarriage. Natural first aid: Rest, stay calm, use a sanitary pad (not tampon); do NOT take NSAIDs; save any tissue in a clean container for the doctor; go to the hospital immediately.
+
+────────────────────────────────────
+
+Q: What is preeclampsia?
+A: A dangerous pregnancy complication involving high blood pressure and protein in urine after 20 weeks, causing headache, swollen hands/face, and vision changes. Natural first aid: Lie on your left side to improve blood flow to the baby; stay calm — this is a medical emergency; go to hospital immediately.
+
+────────────────────────────────────
+
+════════════════════════════════════
+Environmental Emergencies
+════════════════════════════════════
+
+Q: What is drowning/near drowning?
+A: Water entering the lungs blocks oxygen exchange, causing loss of consciousness and cardiac arrest. Natural first aid: Remove the person from water; if not breathing, begin CPR immediately; even if they seem fine after, all near-drowning victims need hospital evaluation (secondary drowning risk within 24 hours).
+
+────────────────────────────────────
+
+Q: What is altitude sickness?
+A: Ascending too fast to high altitudes causes headache, dizziness, nausea, and breathlessness from reduced oxygen. Untreated: life-threatening pulmonary/cerebral edema. Natural first aid: Stop ascending, rest for 24 hours; drink plenty of water; ginger tea for nausea; if symptoms worsen, descend immediately.
+
+────────────────────────────────────
+
+Q: What is heat exhaustion?
+A: Heavy sweating, cold/pale/clammy skin, and weakness from heat exposure — a step before dangerous heatstroke. Natural first aid: Move to a cool area, remove excess clothing, apply cold damp cloths, sip water/electrolyte drinks slowly; if confusion or hot dry skin develops, treat as heatstroke.
+
+────────────────────────────────────
+
+Q: What is hypothermia?
+A: Core body temperature dropping dangerously low from cold exposure, causing shivering, confusion, slurred speech, and drowsiness. Untreated: heart failure. Natural first aid: Move to warmth; remove wet clothing; wrap in blankets (warm the torso first, not extremities); give warm sweet drinks if conscious; call emergency services.
+
+────────────────────────────────────
+
+Q: What is sunstroke vs. sunburn?
+A: Sunburn is UV damage to skin cells (red, painful skin); sunstroke is systemic overheating with confusion. Natural first aid for sunburn: Cool shower, apply aloe vera gel, drink water; do NOT use butter or ice directly. For sunstroke: shade, cool water on body, electrolyte drinks — seek emergency care.
+
+────────────────────────────────────
+
+════════════════════════════════════
+Dental & Mouth Emergencies
+════════════════════════════════════
+
+Q: What is a toothache?
+A: Pulp nerve irritation from decay, abscess, or fracture causing throbbing pain, sensitivity to hot/cold, and swelling. Natural first aid: Rinse with warm salt water; press a clove or dab clove oil on the area (eugenol numbs pain naturally); apply cold compress outside the jaw; see a dentist within 1–2 days.
+
+────────────────────────────────────
+
+Q: What if a tooth is knocked out?
+A: Trauma can dislodge a permanent tooth — act within 30 minutes for best chance of saving it. Natural first aid: Pick up by the crown (not root); rinse gently with milk or saline (not water); place it back in the socket or keep in cold milk; get to a dentist within 30 minutes.
+
+────────────────────────────────────
+
+Q: What is a mouth ulcer (canker sore)?
+A: Small painful lesions on the mouth's inner lining from stress, nutritional deficiency, or injury. Natural first aid: Apply honey or coconut oil directly; rinse with diluted hydrogen peroxide or salt water; eat soft cool foods; usually heals in 7–10 days.
+
+────────────────────────────────────
+
+════════════════════════════════════
+Kidney & Urinary
+════════════════════════════════════
+
+Q: What is kidney stone pain?
+A: Mineral deposits in the kidney causing waves of excruciating flank pain radiating to the groin, bloody urine, and nausea. Natural first aid: Drink large amounts of water to help flush the stone; apply warm compress to the lower back; lemon juice in water (citrate may help dissolve small stones); seek medical evaluation.
+
+────────────────────────────────────
+
+Q: What is urine retention?
+A: Inability to empty the bladder (from prostate enlargement, nerve damage, or obstruction) causing painful lower abdominal distension. Natural first aid: Warm compress on lower abdomen; try urinating in a warm bath; this is urgent — if no relief within an hour, go to emergency care for catheterization.
+
+────────────────────────────────────
+
+════════════════════════════════════
+Blood & Bleeding
+════════════════════════════════════
+
+Q: How do I stop severe bleeding?
+A: Major vessel damage causes rapid blood loss. Apply firm, direct pressure with clean cloth for 15+ minutes without lifting to check. Natural first aid: Do NOT remove embedded objects; if bleeding doesn't slow, pack the wound tightly and maintain pressure; if on a limb, a tourniquet 5–7 cm above the wound is a last resort — mark the time applied.
+
+────────────────────────────────────
+
+Q: What is internal bleeding?
+A: Bleeding inside body cavities from trauma or ruptured organs, causing bruising, abdominal rigidity, dizziness, and shock without visible blood. Natural first aid: Lay the person flat with legs elevated (shock position); keep them warm; do NOT give food/water — call emergency services immediately.
+
+────────────────────────────────────
+
+Q: What is shock?
+A: A life-threatening state of critically reduced blood/oxygen flow to organs, causing pale clammy skin, rapid weak pulse, and confusion. Natural first aid: Lay the person flat, elevate legs 30 cm unless head/spinal injury is suspected; keep warm; loosen tight clothing; call emergency services; do NOT give anything by mouth.
+
+────────────────────────────────────
+
+════════════════════════════════════
+Miscellaneous Medical Situations
+════════════════════════════════════
+
+Q: What is sunstroke in elderly people?
+A: Older adults lose the ability to regulate temperature efficiently, making them highly vulnerable to fatal heat overload with subtle early symptoms. Natural first aid: Move to cool environment, apply ice packs to neck/armpits/groin, offer chilled fluids if fully conscious; seek emergency care immediately as their condition can deteriorate fast.
+
+────────────────────────────────────
+
+Q: What is insomnia and its immediate impact?
+A: Chronic inability to fall or stay asleep caused by stress, caffeine, or anxiety, impairing memory, immune function, and mental health. Natural first aid: Drink warm chamomile or ashwagandha tea 30 minutes before bed; practice 4-7-8 breathing; use dim lighting; avoid screens 1 hour before sleep.
+
+────────────────────────────────────
+
+Q: What is an eye chemical splash?
+A: Chemicals (acids, alkalis) splashing into the eye cause rapid corneal damage. Every second counts. Natural first aid: Immediately flush the eye with clean running water for 15–20 minutes continuously, holding eyelids open; remove contact lenses during flushing; go to emergency immediately even if pain subsides.
+
+────────────────────────────────────
+
+Q: What is numbness or tingling in hands/feet?
+A: Paresthesia from nerve compression (sitting position, carpal tunnel), vitamin B12 deficiency, or poor circulation. Natural first aid: Shake out the limb and change position; massage the area; eat B12-rich foods (eggs, dairy, or supplements); if persistent without clear cause — see a doctor to rule out diabetes or neurological issues.
+
+────────────────────────────────────
+
+Q: What is hyperventilation syndrome?
+A: Anxiety-driven over-breathing blows off too much CO₂, causing muscle spasms, tingling, and feeling of suffocation — ironically worsening panic. Natural first aid: Reassure the person they are not dying; coach them to breathe in for 4 counts and out for 6 counts; breathe through the nose; sitting cross-legged and grounding helps.
+
+────────────────────────────────────
+
+Q: How do I handle an unconscious person?
+A: Loss of consciousness can result from fainting, poisoning, head trauma, or cardiac arrest. Natural first aid: Check responsiveness (shout and tap shoulders); open airway (head tilt, chin lift); check for normal breathing for 10 seconds; if breathing — recovery position (on their side); if not breathing — begin CPR; call emergency services.
+
+────────────────────────────────────
+
+Q: What is rhabdomyolysis?
+A: Severe muscle breakdown from extreme exercise, crush injury, or heat releasing myoglobin into blood, which can clog and destroy the kidneys. Warning sign: dark brown "cola-colored" urine after intense activity. Natural first aid: Drink large amounts of water immediately; rest; go to emergency care — IV fluids are needed urgently.
+
+────────────────────────────────────
+
+Q: What is an allergic reaction to medication?
+A: Drug hypersensitivity causes hives, facial swelling, or breathing difficulty within hours of taking medicine. Natural first aid: Stop the medication immediately; if mild (hives only), antihistamines help; apply cool compress; if throat swelling or breathing difficulty — treat as anaphylaxis and call emergency services.
+
+────────────────────────────────────
+
+Q: What is a panic-induced hyperglycemia?
+A: Acute stress releases cortisol and adrenaline, spiking blood sugar even in non-diabetics, causing headache and foggy thinking. Natural first aid: Sit and breathe slowly; drink water; do light stretching; practice mindfulness; if diabetic, test blood sugar and adjust medication plan per doctor's guidance.
+
+────────────────────────────────────
+
+Q: What is pericarditis?
+A: Inflammation of the sac surrounding the heart (often viral) causing sharp chest pain that worsens lying down and improves leaning forward. Untreated: fluid buildup compressing the heart. Natural first aid: Sit upright or lean forward; apply cool compress; this requires urgent medical evaluation — seek emergency care.
+
+────────────────────────────────────
+
+⚠️ Disclaimer: This guide is for educational awareness only. These natural first aid tips are supportive measures — not substitutes for professional medical care. Always call emergency services for serious conditions.
+
+
+FIRST AID KNOWLEDGE BASE — ENGLISH
+SECTION 1: CORE PRINCIPLES
+
+Q1: What is first aid?
+A: Immediate help given to a sick or injured person before professional medical help arrives. Goals: preserve life, prevent worsening, promote recovery.
+
+Q2: What is CHECK-CALL-CARE?
+A: CHECK the scene and victim. CALL emergency services. CARE for the person based on their condition.
+
+Q3: What is DR ABC?
+A: D - Danger. R - Response. A - Airway. B - Breathing. C - Circulation. Check each in order before treating.
+
+Q4: What is the recovery position?
+A: Roll an unconscious but breathing person onto their side, tilt head back slightly. Prevents choking on vomit.
+
+Q5: What personal protection should a first aider use?
+A: Wear gloves. Use a face shield for rescue breaths. Wash hands before and after. Never put yourself in danger.
+
+SECTION 2: CARDIAC EMERGENCIES
+
+Q6: How do you perform CPR on an adult?
+A: Place both hands on center of chest. Push hard and fast, at least 5 cm deep, 100-120 times per minute. After 30 compressions give 2 rescue breaths. Repeat until help arrives.
+
+Q7: How do you use an AED?
+A: Turn it on. Attach pads to upper right chest and lower left side. Ensure no one is touching the patient. Press SHOCK when prompted. Resume CPR immediately after.
+
+Q8: What is the difference between heart attack and cardiac arrest?
+A: Heart attack — blocked artery, person is conscious, breathing present. Call emergency and rest. Cardiac arrest — heart stops, person unconscious, no breathing. Start CPR and use AED immediately.
+
+Q9: How do you stop severe bleeding?
+A: Press firmly with a clean cloth. Do not lift to check. Add more cloth if soaked through. Elevate the limb. Apply tourniquet 5-7 cm above wound if bleeding does not stop. Write the time it was applied.
+
+Q10: What is shock and how do you treat it?
+A: Shock is when organs do not get enough blood. Signs: pale clammy skin, weak fast pulse, confusion. Lay flat, raise legs, keep warm, do not give food or drink, call emergency.
+
+SECTION 3: AIRWAY AND BREATHING EMERGENCIES
+
+Q11: How do you perform the Heimlich maneuver?
+A: Stand behind the choking person. Make a fist above the navel below the breastbone. Pull inward and upward firmly. Repeat until object comes out. If they become unconscious, start CPR.
+
+Q12: How do you treat a choking infant?
+A: Lay face down on your forearm. Give 5 firm back blows between shoulder blades. Turn face up, give 5 chest thrusts with 2 fingers. Alternate until clear. If unresponsive, start infant CPR.
+
+Q13: How do you manage asthma without an inhaler?
+A: Sit upright. Stay calm. Breathe through pursed lips. Try steam with ginger. Drink warm honey-lemon water. Move away from dust or smoke. Call emergency if no improvement in 15 minutes.
+
+Q14: How do you treat a nosebleed?
+A: Lean forward. Pinch the soft part of the nose. Hold for 10 minutes. Apply cold compress to the bridge. Breathe through the mouth. Seek help if bleeding continues past 20 minutes.
+
+Q15: What is rescue breathing?
+A: Give one breath every 5-6 seconds for adults when person has a pulse but is not breathing. Each breath should make the chest rise. If pulse stops, start full CPR.
+
+SECTION 4: TRAUMA AND INJURIES
+
+Q16: What is RICE treatment?
+A: Rest the injured area. Ice wrapped in cloth for 20 minutes every 2 hours. Compression with elastic bandage. Elevation above heart level. Use within first 48 hours.
+
+Q17: How do you splint a broken bone?
+A: Do not try to straighten it. Splint it as you find it using a firm board or rolled magazine. Pad around it. Tie above and below the break. Check circulation every 15 minutes.
+
+Q18: How do you treat a dislocated joint?
+A: Do not try to put it back. Support with a sling. Apply ice. Do not give food or water. Go to the emergency room for X-ray.
+
+Q19: How do you manage a spinal injury?
+A: Do not move the person unless there is immediate danger. Hold head and neck still. Do not remove a helmet. Use jaw thrust if CPR is needed. Wait for emergency services.
+
+Q20: How do you assess a head injury?
+A: Use AVPU: Alert, Voice, Pain, Unresponsive. Call emergency if response is below Alert. Watch for unequal pupils, repeated vomiting, fluid from nose or ears, worsening headache, or seizures.
+
+SECTION 5: BURNS AND WOUND CARE
+
+Q21: What are the three degrees of burns?
+A: First degree - red, dry, no blisters. Cool with water 10-20 minutes, apply aloe vera. Second degree - blisters and wet. Cool with water, sterile bandage, do not pop blisters. Third degree - white or charred, no pain. Cover loosely and go to hospital immediately, do not cool with water.
+
+Q22: What should you never do for a burn?
+A: Never use butter, oil, or toothpaste. Never use ice directly on skin. Never pop blisters. Never remove clothing stuck to a burn. Never put fluffy cotton directly on the burn.
+
+Q23: How do you treat a chemical burn?
+A: Brush off dry chemicals first. Flush with running water for 20-30 minutes. Remove contaminated clothing. Do not try to neutralize with acid or base. Cover loosely and go to hospital.
+
+Q24: How do you clean a wound?
+A: Wash hands. Rinse wound under clean water for 5-10 minutes. Clean around it with soap. Remove visible debris with clean tweezers. Pat dry. Apply antiseptic. Cover with sterile dressing. Change daily.
+
+Q25: When does a wound need stitches?
+A: If deeper than 6 mm, edges cannot stay together, on face or hands or over a joint, bleeding after 15 minutes of pressure, or caused by animal bite or rusty object.
+
+SECTION 6: NEUROLOGICAL EMERGENCIES
+
+Q26: What is the FAST test for stroke?
+A: F - Face drooping on one side. A - Arm drifts down when both raised. S - Speech slurred or strange. T - Time to call emergency immediately if any sign is present.
+
+Q27: What is first aid for a seizure?
+A: Do not restrain. Do not put anything in the mouth. Clear the area. Cushion the head. Turn to recovery position after convulsions stop. Time it. Call emergency if over 5 minutes.
+
+Q28: What is first aid for a migraine?
+A: Rest in a dark quiet room. Apply peppermint oil to temples. Use cold or warm compress on neck or forehead. Drink water. Avoid screens and bright lights.
+
+Q29: How do you help someone having a panic attack?
+A: Box breathing: breathe in 4 seconds, hold 4, out 4, hold 4. Use 5-4-3-2-1 grounding. Splash cold water on face. Reassure the person they are safe. Loosen tight clothing.
+
+Q30: What is first aid for fainting?
+A: Lay flat and raise legs above heart level. Loosen clothing. Give fresh air. Offer small sips of water if conscious. Call emergency if unconscious for more than 1 minute.
+
+SECTION 7: ENVIRONMENTAL EMERGENCIES
+
+Q31: What is the difference between heat exhaustion and heatstroke?
+A: Heat exhaustion: cold clammy skin, heavy sweating, alert but weak, below 40 degrees C. Move to cool area, give fluids, rest. Heatstroke: hot skin, may stop sweating, confused or unconscious, above 40 degrees C. Call emergency immediately, cool with wet cloths and ice packs to neck and armpits.
+
+Q32: How do you treat hypothermia?
+A: Move to warm shelter. Remove wet clothes. Warm the core first, chest and neck and groin, not hands or feet. Wrap in dry blankets. Give warm sweet drinks if fully conscious. Do not give alcohol. Call emergency for severe cases.
+
+Q33: What is first aid for near drowning?
+A: Remove from water safely. Check breathing. Start CPR with 5 rescue breaths if not breathing. Take to hospital even if they seem fine. Risk of secondary drowning within 24 hours.
+
+Q34: How do you treat altitude sickness?
+A: Stop going higher. Rest for 24 hours. Drink plenty of water. Take ginger tea for nausea and paracetamol for headache. Descend immediately if symptoms worsen. Call emergency for confusion or pink frothy cough.
+
+Q35: How do you treat frostbite?
+A: Move to warm area. Rewarm in warm water 37-40 degrees C, not hot. Do not rub or massage. Do not walk on frostbitten feet. Cover with loose sterile bandage. Seek emergency care.
+
+SECTION 8: POISONING AND TOXIC EMERGENCIES
+
+Q36: What are the four routes of poisoning?
+A: Ingested - do not induce vomiting, give small sips of water, call poison control. Inhaled - move to fresh air, give rescue breaths if needed. Absorbed on skin - remove clothes, flush with water 20 or more minutes. Injected - keep still, monitor, go to emergency.
+
+Q37: What is carbon monoxide poisoning?
+A: Colorless odorless gas causing headache, dizziness, confusion, nausea. Move everyone outside immediately. Do not re-enter. Call emergency. Start CPR if unconscious and not breathing. Never run engines or generators indoors.
+
+Q38: What is first aid for a snake bite?
+A: Keep calm and still. Remove watches and tight clothing near bite. Keep bitten limb below heart level. Do not cut, suck, apply tourniquet, or use ice. Wash gently. Get to hospital with anti-venom within 2-4 hours.
+
+Q39: What is first aid for severe allergic reaction?
+A: Signs are throat swelling, difficulty breathing, hives, fast heartbeat, unconsciousness. Use EpiPen on outer thigh if available. Call emergency immediately. Lay flat with legs raised if breathing is fine. Go to hospital even after EpiPen.
+
+Q40: What is first aid for food poisoning?
+A: Sip ORS or coconut water. Rest. Avoid solid food briefly then eat bland foods like banana and rice. Avoid dairy and spicy food for 24-48 hours. Seek medical help if blood in stool, high fever, or symptoms last over 48 hours.
+
+SECTION 9: INFECTIOUS DISEASES
+
+Q41: What is diarrhea and how is it treated?
+A: Loose watery stools from infection causing dehydration. Give ORS: 1 liter water, 6 teaspoons sugar, half teaspoon salt, lemon juice. Sip slowly. Rest. Avoid heavy meals. Seek medical help if blood in stool or lasting more than 2 days.
+
+Q42: What is malaria and its first aid?
+A: Fever and chills from a parasite spread by mosquitoes. Give tulsi or ginger tea for fever. Stay hydrated. Use mosquito nets. Seek medical care immediately for antimalarial drugs.
+
+Q43: What is dengue fever?
+A: High fever, severe joint pain, and rash from Aedes mosquito bite. Give coconut water or papaya leaf juice. Rest in cool area. Do not give aspirin or ibuprofen as they worsen bleeding. Go to hospital.
+
+Q44: What is typhoid fever?
+A: Sustained high fever and abdominal pain from contaminated water or food. Give boiled water and ORS. Feed soft foods like khichdi. See a doctor for antibiotics.
+
+Q45: What is cholera?
+A: Severe watery diarrhea from contaminated water that can kill within hours. Start aggressive ORS immediately. Avoid solid food. Go to emergency care right away.
+
+Q46: What is tuberculosis?
+A: Airborne lung infection causing cough lasting 3 or more weeks, night sweats, and weight loss. Eat protein and Vitamin D rich foods. Requires long-course antibiotics from a doctor.
+
+Q47: What is chickenpox?
+A: Itchy blisters and fever from a contagious virus. Apply calamine lotion or neem paste. Trim nails to prevent scratching. Drink cool fluids. Keep skin clean.
+
+Q48: What is a urinary tract infection?
+A: Burning urination and abdominal pain from bacteria. Drink 8-10 glasses of water daily. Unsweetened cranberry juice may help. Avoid caffeine. See a doctor for antibiotics.
+
+Q49: What is first aid for plant or food poisoning?
+A: Do not induce vomiting unless told by poison control. Keep the person awake. Bring a sample of what was eaten to the hospital. Call emergency immediately.
+
+Q50: What is scabies?
+A: Intense itching especially at night from mites under skin. Apply neem oil or diluted tea tree oil. Wash all bedding in hot water. See a doctor for permethrin cream.
+
+SECTION 10: METABOLIC AND CHRONIC EMERGENCIES
+
+Q51: What is hypoglycemia?
+A: Blood sugar crash causing tremors, sweating, and confusion. If conscious, give jaggery, honey, dates, or glucose drink. Wait 15 minutes. Repeat if needed. Follow with a solid snack. If unconscious, recovery position and call emergency.
+
+Q52: What is hyperglycemia?
+A: Excess glucose causing excessive thirst, frequent urination, and blurred vision. Drink water. Gentle walking helps. Avoid sugary drinks. See a doctor.
+
+Q53: What is heatstroke?
+A: Body overheats and stops sweating. Signs are confusion and hot dry skin. Move to shade. Sponge with cool water. Apply ice packs to neck and armpits. Give electrolyte drinks. Call emergency.
+
+Q54: What is dehydration?
+A: Low body fluid from sweating, vomiting, or diarrhea causing dizziness and dry mouth. Sip ORS or coconut water slowly. Eat water-rich foods. Rest in a cool place.
+
+Q55: What is anemia?
+A: Low red blood cells causing fatigue and paleness. Eat iron-rich foods: spinach, lentils, jaggery, dates. Pair with Vitamin C for better absorption. Reduce tea and coffee.
+
+SECTION 11: PEDIATRIC FIRST AID
+
+Q56: How does infant CPR differ from adult CPR?
+A: Infant: 2 fingers on center chest, 4 cm deep. Child: 1 or 2 hands, 5 cm deep. Adult: 2 hands, 5-6 cm deep. All use a 30:2 ratio.
+
+Q57: How do you manage a febrile seizure in a child?
+A: Stay calm. Clear the area. Do not restrain. Do not put anything in the mouth. Turn on side after seizure ends. Sponge with lukewarm water and give paracetamol. Call emergency if lasts over 5 minutes or child is under 6 months.
+
+Q58: How do you treat a child's high fever?
+A: Sponge with lukewarm water. Cool damp cloth on forehead. Dress lightly. Push fluids. Give paracetamol by weight. Seek help if fever exceeds 40 degrees C or lasts more than 3 days.
+
+Q59: How do you treat dehydration in a child?
+A: Mild: small sips of ORS. Moderate: continue ORS and see a doctor. Severe with sunken eyes and no urination: emergency care with IV fluids. Never use sports drinks or juice.
+
+Q60: What if a child swallows a small object?
+A: If breathing normally do not try to remove it yourself. Go to emergency immediately for X-ray. Watch for drooling or difficulty swallowing. Button batteries and magnets are emergencies.
+
+SECTION 12: EMERGENCY MECHANISMS
+
+Q61: How does CPR pump blood?
+A: Chest compression squeezes the heart between the breastbone and spine, forcing blood out. It can provide 25-30% of normal blood flow, enough to keep the brain alive temporarily.
+
+Q62: Why is epinephrine the only treatment for anaphylaxis?
+A: Anaphylaxis causes massive histamine release which crashes blood pressure, causes swelling, and closes the airway. Epinephrine is the only substance that reverses all three effects fast enough to save life.
+
+Q63: How does ORS work?
+A: Glucose carries sodium across the intestinal wall via the SGLT1 transporter. Water follows. This works even during severe diarrhea when plain water alone cannot rehydrate effectively.
+
+Q64: How does the Heimlich maneuver work?
+A: The upward thrust compresses the diaphragm, forces air out of the lungs, and creates pressure up to 300 mmHg in the airway, far more than a normal cough, enough to push out the blockage.
+
+Q65: What is the chain of survival?
+A: Recognize and call for help. Start CPR. Use AED early. Paramedic advanced care. Hospital recovery. Each step doubles survival chances. 70% of cardiac arrests happen at home so bystander CPR is critical.
+
+SECTION 13: NATURAL REMEDY MECHANISMS
+
+Q66: How does honey work as a natural treatment?
+A: High sugar draws water from bacteria killing them. Enzyme produces hydrogen peroxide as natural antiseptic. Low pH prevents bacterial growth. Anti-inflammatory effect soothes swollen throat. Use raw unprocessed honey.
+
+Q67: How does turmeric reduce inflammation?
+A: Curcumin blocks COX-2 enzymes like ibuprofen does. Inhibits NF-kB inflammatory genes. Works best with black pepper which increases absorption by 2000%.
+
+Q68: How does ginger reduce nausea?
+A: Gingerols block nausea receptors in the gut. Reduces prostaglandins. Speeds up stomach emptying. Effective for pregnancy nausea, motion sickness, and food poisoning.
+
+Q69: How does steam inhalation work?
+A: Warm moist air thins mucus. Dilates nasal blood vessels. Helps cilia sweep mucus out. Adding eucalyptus oil further loosens mucus and mildly opens airways.
+
+Q70: How does cold compress work?
+A: Narrows blood vessels to reduce bleeding and swelling. Slows nerve signals to reduce pain. Lowers cell metabolism to protect damaged tissue. Apply 20 minutes on, 20 minutes off. Always wrap ice in cloth.
+
+SECTION 14: COMMON MISTAKES AND PREPAREDNESS
+
+Q71: What are dangerous first aid myths?
+A: Never tilt head back for nosebleed, lean forward. Never use butter on burns. Never induce vomiting unless told by poison control. Never remove a helmet after head injury. Never suck snake venom. Never give liquids to an unconscious person. Never rub frostbitten skin. Never put anything in a seizure victim's mouth. Scrape bee stinger sideways, never squeeze.
+
+Q72: When should you not move an injured person?
+A: Do not move if you suspect head, neck, or spine injury, if moving would worsen a fracture, if they are impaled, or if they are in cardiac arrest. Exception: move immediately if there is fire, flooding, or toxic gas.
+
+Q73: What emergency numbers should everyone know in Nepal?
+A: Ambulance: 102. Fire: 101. Police: 100. Nepal Telecom helpline: 198. Memorize the nearest hospital address.
+
+Q74: What should a first aid kit contain?
+A: Sterile gauze, adhesive bandages, elastic bandage, triangular bandage, medical tape, antiseptic wipes, betadine, blunt scissors, tweezers, gloves, face shield, thermometer, paracetamol, antihistamine, ORS sachets, eye wash, emergency contacts list.
+
+Q75: What is triage?
+A: Sorting multiple victims by urgency. Red: life-threatening but survivable, treat first. Yellow: serious but stable, can wait. Green: minor injuries, treat last. Black: unsurvivable or dead. Assess each victim in under 60 seconds.
