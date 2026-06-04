@@ -33,7 +33,7 @@ app.use(
   cors({
     origin: (process.env.CORS_ORIGINS || "*").split(","),
     credentials: true,
-  })
+  }),
 );
 
 // Trust first proxy hop so express-rate-limit can read X-Forwarded-For correctly
@@ -46,8 +46,11 @@ app.use(
     max: 1000,
     standardHeaders: true,
     legacyHeaders: false,
-    message: { success: false, error: "Too many requests. Please try again later." },
-  })
+    message: {
+      success: false,
+      error: "Too many requests. Please try again later.",
+    },
+  }),
 );
 
 // ── Parsing ───────────────────────────────────────────────────────────────
@@ -138,7 +141,7 @@ app.get("/api/history/sessions", async (req, res) => {
 
   try {
     const sessions = await Session.find(query).sort({ startedAt: -1 });
-    const sessionList = sessions.map(session => ({
+    const sessionList = sessions.map((session) => ({
       _id: session.sessionId,
       startTime: session.startedAt,
       endTime: session.endedAt,
@@ -165,7 +168,9 @@ async function migrateMissingBotIds() {
       $or: [{ botId: { $exists: false } }, { botId: "" }, { botId: null }],
     });
     if (sessionsWithoutBotId.length > 0) {
-      console.log(`[Migration] Found ${sessionsWithoutBotId.length} sessions missing botId. Migrating...`);
+      console.log(
+        `[Migration] Found ${sessionsWithoutBotId.length} sessions missing botId. Migrating...`,
+      );
       for (const session of sessionsWithoutBotId) {
         let targetBotId = "bot_1";
         if (session.patientId) {
@@ -174,8 +179,13 @@ async function migrateMissingBotIds() {
             targetBotId = patient.botId;
           }
         }
-        await Session.updateOne({ _id: session._id }, { $set: { botId: targetBotId } });
-        console.log(`[Migration] Updated session ${session.sessionId} with botId ${targetBotId}`);
+        await Session.updateOne(
+          { _id: session._id },
+          { $set: { botId: targetBotId } },
+        );
+        console.log(
+          `[Migration] Updated session ${session.sessionId} with botId ${targetBotId}`,
+        );
       }
       console.log("[Migration] BotId migration complete.");
     }
@@ -197,10 +207,15 @@ function startScheduler() {
       if (lastRunDate !== todayStr) {
         lastRunDate = todayStr;
         try {
-          console.log("[Scheduler] Triggering daily report generation at 10:00 PM...");
+          console.log(
+            "[Scheduler] Triggering daily report generation at 10:00 PM...",
+          );
           await generateDailyReportsForToday();
         } catch (err) {
-          console.error("[Scheduler] Error in automated daily report generation:", err);
+          console.error(
+            "[Scheduler] Error in automated daily report generation:",
+            err,
+          );
         }
       }
     }
