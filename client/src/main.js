@@ -186,6 +186,33 @@ const initViewInteractions = () => {
 
     document.querySelectorAll('.spec-item, .testimonial-card').forEach(el => observer.observe(el));
 
+    // Role selection dynamic visibility logic
+    const roleSelect = document.getElementById("role-select");
+    if (roleSelect) {
+        const toggleRoleSections = () => {
+            const role = roleSelect.value;
+            document.querySelectorAll(".role-section").forEach(sec => {
+                sec.style.display = "none";
+                sec.querySelectorAll("input, select, textarea").forEach(input => {
+                    input.disabled = true;
+                    input.required = false;
+                });
+            });
+            const activeSection = document.getElementById(`section-${role}`);
+            if (activeSection) {
+                activeSection.style.display = "block";
+                activeSection.querySelectorAll("input, select, textarea").forEach(input => {
+                    input.disabled = false;
+                    if (input.hasAttribute("data-required")) {
+                        input.required = true;
+                    }
+                });
+            }
+        };
+        roleSelect.addEventListener("change", toggleRoleSections);
+        toggleRoleSections();
+    }
+
     // Form Submission logic
     const regForm = document.getElementById("registration-form");
     if (regForm) {
@@ -199,7 +226,7 @@ const initViewInteractions = () => {
                 return;
             }
 
-            // Calculate age from DOB
+            // Calculate age from DOB if patient or guardian registration of patient
             if (data.dob) {
                 const birthDate = new Date(data.dob);
                 const age = new Date().getFullYear() - birthDate.getFullYear();

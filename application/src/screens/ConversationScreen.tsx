@@ -97,34 +97,6 @@ const ConversationScreen = ({ route, navigation }: any) => {
             <View style={styles.metaBadge}>
               <Text style={styles.metaBadgeText}>⏱ {durationMins} min</Text>
             </View>
-            <View
-              style={[
-                styles.metaBadge,
-                {
-                  backgroundColor:
-                    session.reportStatus === 'approved'
-                      ? Colors.success + '20'
-                      : Colors.gold + '30',
-                },
-              ]}
-            >
-              {session.reportStatus === 'approved' ? (
-                <CheckCircle color={Colors.success} size={13} />
-              ) : (
-                <Clock color={Colors.gold} size={13} />
-              )}
-              <Text
-                style={[
-                  styles.metaBadgeText,
-                  {
-                    color:
-                      session.reportStatus === 'approved' ? Colors.success : Colors.gold,
-                  },
-                ]}
-              >
-                {session.reportStatus === 'approved' ? 'Approved' : 'Pending'}
-              </Text>
-            </View>
           </View>
         </View>
 
@@ -165,7 +137,7 @@ const ConversationScreen = ({ route, navigation }: any) => {
                     },
                   ]}
                 >
-                  {m.name} • {m.status}
+                  {m.name} • {m.status === 'taken' ? 'Taken' : m.status === 'missed' ? 'Missed' : 'Skipped'}
                 </Text>
               </View>
             ))}
@@ -175,14 +147,14 @@ const ConversationScreen = ({ route, navigation }: any) => {
         {/* Divider label */}
         <View style={styles.sectionLabel}>
           <View style={styles.labelLine} />
-          <Text style={styles.labelText}>CHAT LOG</Text>
+          <Text style={styles.labelText}>Conversation</Text>
           <View style={styles.labelLine} />
         </View>
 
         {/* Chat Bubbles */}
         {turns.length === 0 ? (
           <View style={styles.emptyTurns}>
-            <Text style={styles.emptyTurnsText}>No conversation recorded for this session.</Text>
+            <Text style={styles.emptyTurnsText}>No conversation recorded in this session.</Text>
           </View>
         ) : (
           turns.map((turn, idx) => {
@@ -225,38 +197,7 @@ const ConversationScreen = ({ route, navigation }: any) => {
           })
         )}
 
-        {/* AI Report Summary */}
-        {session.report && (
-          <>
-            <View style={styles.sectionLabel}>
-              <View style={styles.labelLine} />
-              <Text style={styles.labelText}>AI SUMMARY</Text>
-              <View style={styles.labelLine} />
-            </View>
-            <View style={styles.summaryCard}>
-              <FileText color={Colors.primary} size={18} style={{ marginBottom: 8 }} />
-              <Text style={styles.summaryText}>{session.report}</Text>
-            </View>
-          </>
-        )}
-
-        {/* Doctor Notes */}
-        {session.doctorNotes && (
-          <>
-            <View style={styles.sectionLabel}>
-              <View style={styles.labelLine} />
-              <Text style={styles.labelText}>DOCTOR NOTES</Text>
-              <View style={styles.labelLine} />
-            </View>
-            <View style={[styles.summaryCard, { backgroundColor: Colors.softGold }]}>
-              <Text style={styles.summaryText}>{session.doctorNotes}</Text>
-              {session.reviewedBy?.name && (
-                <Text style={styles.reviewedBy}>— {session.reviewedBy.name}</Text>
-              )}
-            </View>
-          </>
-        )}
-      </ScrollView>
+       </ScrollView>
     </SafeAreaView>
   );
 };

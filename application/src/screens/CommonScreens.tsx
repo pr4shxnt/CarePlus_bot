@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, ScrollView, Dimensions, ActivityIndicator, Alert, RefreshControl } from 'react-native';
+import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, ScrollView, Dimensions, ActivityIndicator, Alert, RefreshControl, TextInput, Modal, Pressable } from 'react-native';
 import { Colors } from '../theme/colors';
 import { ArrowLeft, User, FileText, Smartphone, Activity, Pill, Smile, MessageSquare, CheckCircle, Clock } from 'lucide-react-native';
 import { request } from '../services/api';
@@ -9,7 +9,122 @@ const FULL_WIDTH = width - 40;
 const HALF_WIDTH = (width - 55) / 2;
 
 export const PatientDetail = ({ route, navigation }: any) => {
-  const { patient } = route.params;
+  const { patient: initialPatient } = route.params;
+  const [patient, setPatient] = useState<any>(initialPatient);
+  const [loading, setLoading] = useState(true);
+  const [modalVisible, setModalVisible] = useState(false);
+
+  // Form state
+  const [medName, setMedName] = useState('');
+  const [medDosage, setMedDosage] = useState('');
+  const [medTimes, setMedTimes] = useState('');
+  const [medFreq, setMedFreq] = useState('daily');
+  const [medNotes, setMedNotes] = useState('');
+  const [saving, setSaving] = useState(false);
+
+  const fetchPatientDetails = useCallback(async () => {
+    try {
+      const res = await request(`/doctor/patients/${initialPatient._id || initialPatient.id}`);
+      if (res.success) {
+        setPatient(res.data);
+      }
+    } catch (err) {
+      console.error('Error fetching patient details:', err);
+    } finally {
+      setLoading(false);
+    }
+  }, [initialPatient]);
+
+  useEffect(() => {
+    fetchPatientDetails();
+  }, [fetchPatientDetails]);
+
+  const handleAddMedicine = async () => {
+    if (!medName.trim()) {
+      Alert.alert('Error', 'Medication name is required');
+      return;
+    }
+
+    const timesArray = medTimes
+      .split(',')
+      .map(t => t.trim())
+      .filter(t => t.length > 0);
+
+    if (timesArray.length === 0) {
+      Alert.alert('Error', 'Please specify at least one time (e.g., 8:00 AM)');
+      return;
+    }
+
+    setSaving(true);
+    try {
+      const newMed = {
+        name: medName.trim(),
+        dosage: medDosage.trim(),
+        frequency: medFreq,
+        times: timesArray,
+        notes: medNotes.trim()
+      };
+
+      const updatedMedicines = [...(patient.medicines || []), newMed];
+      const res = await request(`/doctor/patients/${patient._id || patient.id}`, {
+        method: 'PATCH',
+        body: { medicines: updatedMedicines }
+      });
+
+      if (res.success) {
+        setPatient(res.data);
+        setModalVisible(false);
+        // Clear form
+        setMedName('');
+        setMedDosage('');
+        setMedTimes('');
+        setMedFreq('daily');
+        setMedNotes('');
+        Alert.alert('Success', 'Medication added successfully.');
+      } else {
+        Alert.alert('Error', res.error || 'Failed to add medication.');
+      }
+    } catch (err: any) {
+      Alert.alert('Error', err.message || 'An error occurred while saving.');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleDeleteMedicine = async (indexToDelete: number) => {
+    Alert.alert(
+      'Confirm Delete',
+      'Are you sure you want to remove this medication?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              const updatedMedicines = (patient.medicines || []).filter(
+                (_: any, idx: number) => idx !== indexToDelete
+              );
+              const res = await request(`/doctor/patients/${patient._id || patient.id}`, {
+                method: 'PATCH',
+                body: { medicines: updatedMedicines }
+              });
+
+              if (res.success) {
+                setPatient(res.data);
+                Alert.alert('Deleted', 'Medication removed successfully.');
+              } else {
+                Alert.alert('Error', res.error || 'Failed to remove medication.');
+              }
+            } catch (err: any) {
+              Alert.alert('Error', err.message || 'An error occurred.');
+            }
+          }
+        }
+      ]
+    );
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
@@ -20,112 +135,280 @@ export const PatientDetail = ({ route, navigation }: any) => {
         <View style={styles.headerSpacer} />
       </View>
       
-      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-        <View style={styles.bentoGrid}>
-          {/* Profile Bento Block */}
-          <View style={[styles.bentoCard, styles.profileCard]}>
-            <View style={styles.avatarLarge}>
-              <User color={Colors.white} size={40} />
-            </View>
-            <View style={styles.profileInfo}>
-              <Text style={styles.name}>{patient.name}</Text>
-              <Text style={styles.meta}>Psych-Monitoring • Age: {patient.age}</Text>
-              <View style={[styles.conditionTag, { backgroundColor: Colors.softGold }]}>
-                <Text style={[styles.conditionText, { color: Colors.secondary }]}>
-                  {patient.mood || 'Stable'} Mood
-                </Text>
+      {loading ? (
+        <ActivityIndicator size="large" color={Colors.primary} style={{ marginTop: 40 }} />
+      ) : (
+        <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+          <View style={styles.bentoGrid}>
+            {/* Profile Bento Block */}
+            <View style={[styles.bentoCard, styles.profileCard]}>
+              <View style={styles.avatarLarge}>
+                <User color={Colors.white} size={40} />
+              </View>
+              <View style={styles.profileInfo}>
+                <Text style={styles.name}>{patient.name}</Text>
+                <Text style={styles.meta}>Psych-Monitoring • Age: {patient.age || 'N/A'}</Text>
+                {patient.conditions && patient.conditions.length > 0 && (
+                  <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 5, marginTop: 8 }}>
+                    {patient.conditions.map((cond: string, idx: number) => (
+                      <View key={idx} style={[styles.conditionTag, { backgroundColor: Colors.softGold }]}>
+                        <Text style={[styles.conditionText, { color: Colors.secondary }]}>
+                          {cond}
+                        </Text>
+                      </View>
+                    ))}
+                  </View>
+                )}
               </View>
             </View>
+
+            {/* Vitals Summary Row */}
+            <View style={styles.row}>
+              <View style={[styles.bentoCard, styles.vitalSmall, { width: HALF_WIDTH }]}>
+                <Smile color={Colors.secondary} size={20} />
+                <Text style={styles.vitalVal}>{patient.mood || 'Stable'}</Text>
+                <Text style={styles.vitalLab}>Current Mood</Text>
+              </View>
+              <View style={[styles.bentoCard, styles.vitalSmall, { width: HALF_WIDTH, backgroundColor: Colors.gold }]}>
+                <MessageSquare color={Colors.secondary} size={20} />
+                <Text style={styles.vitalVal}>Active</Text>
+                <Text style={styles.vitalLab}>Monitoring Status</Text>
+              </View>
+            </View>
+
+            {/* Psychology Analysis Wide Block */}
+            <TouchableOpacity 
+              style={[styles.bentoCard, styles.reportWide]}
+              onPress={() => navigation.navigate('ReportScreen', { patientId: patient._id || patient.id, role: 'doctor' })}
+            >
+              <View style={styles.reportIconBox}>
+                <Activity color={Colors.secondary} size={24} />
+              </View>
+              <View style={styles.reportMain}>
+                <Text style={styles.reportTitle}>Psych-Sentiment Analysis</Text>
+                <Text style={styles.reportSub}>View reports for {patient.name}</Text>
+              </View>
+              <Text style={styles.reviewBtn}>View</Text>
+            </TouchableOpacity>
+
+            {/* Prescriptions Section */}
+            <View style={[styles.bentoCard, { width: FULL_WIDTH }]}>
+              <View style={styles.sectionHead}>
+                <Text style={styles.sectionTitle}>Medication Schedule</Text>
+                <Pill color={Colors.primary} size={20} />
+              </View>
+              
+              {patient.medicines && patient.medicines.length > 0 ? (
+                patient.medicines.map((med: any, idx: number) => (
+                  <View key={idx} style={styles.medItem}>
+                    <View style={styles.medBullet} />
+                    <View style={{ flex: 1, marginLeft: 12 }}>
+                      <Text style={styles.medNameText}>
+                        {med.name} <Text style={styles.medDose}>{med.dosage}</Text>
+                      </Text>
+                      <Text style={styles.medFreq}>{med.times.join(', ')} ({med.frequency})</Text>
+                      {med.notes ? <Text style={{ fontSize: 12, color: Colors.gray, marginTop: 2 }}>{med.notes}</Text> : null}
+                    </View>
+                    <TouchableOpacity onPress={() => handleDeleteMedicine(idx)} style={{ padding: 5 }}>
+                      <Text style={{ color: Colors.danger, fontWeight: '700', fontSize: 13 }}>Remove</Text>
+                    </TouchableOpacity>
+                  </View>
+                ))
+              ) : (
+                <Text style={{ color: Colors.gray, marginVertical: 10 }}>No medications scheduled.</Text>
+              )}
+
+              {/* Add Medication Button */}
+              <TouchableOpacity 
+                style={{
+                  backgroundColor: Colors.primary,
+                  paddingVertical: 12,
+                  borderRadius: 12,
+                  alignItems: 'center',
+                  marginTop: 15
+                }}
+                onPress={() => setModalVisible(true)}
+              >
+                <Text style={{ color: Colors.white, fontWeight: '700' }}>+ Add Medication</Text>
+              </TouchableOpacity>
+            </View>
           </View>
+        </ScrollView>
+      )}
 
-          {/* Vitals Summary Row - Mood, Med, Lonely */}
-          <View style={styles.row}>
-            <View style={[styles.bentoCard, styles.vitalSmall, { width: HALF_WIDTH }]}>
-              <Smile color={Colors.secondary} size={20} />
-              <Text style={styles.vitalVal}>Good</Text>
-              <Text style={styles.vitalLab}>Current Mood</Text>
-            </View>
-            <View style={[styles.bentoCard, styles.vitalSmall, { width: HALF_WIDTH, backgroundColor: Colors.gold }]}>
-              <MessageSquare color={Colors.secondary} size={20} />
-              <Text style={styles.vitalVal}>12%</Text>
-              <Text style={styles.vitalLab}>% Lonely</Text>
-            </View>
-          </View>
+      {/* Add Medication Modal */}
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={modalVisible}
+        onRequestClose={() => setModalVisible(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContainer}>
+            <Text style={styles.modalTitle}>New Medication</Text>
+            
+            <Text style={styles.inputLabel}>Medicine Name</Text>
+            <TextInput
+              style={styles.modalInput}
+              placeholder="e.g. Vitamin D"
+              value={medName}
+              onChangeText={setMedName}
+              placeholderTextColor={Colors.gray}
+            />
 
-          {/* Psychology Analysis Wide Block */}
-          <TouchableOpacity 
-            style={[styles.bentoCard, styles.reportWide]}
-            onPress={() => navigation.navigate('ReportScreen', { patient, role: 'doctor' })}
-          >
-            <View style={styles.reportIconBox}>
-              <Activity color={Colors.secondary} size={24} />
-            </View>
-            <View style={styles.reportMain}>
-              <Text style={styles.reportTitle}>Psych-Sentiment Analysis</Text>
-              <Text style={styles.reportSub}>Last interaction: Today, 8:45 AM</Text>
-            </View>
-            <Text style={styles.reviewBtn}>View</Text>
-          </TouchableOpacity>
+            <Text style={styles.inputLabel}>Dosage</Text>
+            <TextInput
+              style={styles.modalInput}
+              placeholder="e.g. 1000 IU or 500mg"
+              value={medDosage}
+              onChangeText={setMedDosage}
+              placeholderTextColor={Colors.gray}
+            />
 
-          {/* Prescriptions Section */}
-          <View style={[styles.bentoCard, { width: FULL_WIDTH }]}>
-            <View style={styles.sectionHead}>
-              <Text style={styles.sectionTitle}>Medication Schedule</Text>
-              <Pill color={Colors.primary} size={20} />
-            </View>
-            <View style={styles.medItem}>
-              <View style={styles.medBullet} />
-              <Text style={styles.medName}>Metformin <Text style={styles.medDose}>500mg</Text></Text>
-              <Text style={styles.medFreq}>8:00 AM</Text>
-            </View>
-            <View style={styles.medItem}>
-              <View style={[styles.medBullet, { backgroundColor: Colors.gold }]} />
-              <Text style={styles.medName}>Atorvastatin <Text style={styles.medDose}>20mg</Text></Text>
-              <Text style={styles.medFreq}>10:00 PM</Text>
+            <Text style={styles.inputLabel}>Schedule Times (comma separated)</Text>
+            <TextInput
+              style={styles.modalInput}
+              placeholder="e.g. 8:00 AM, 9:00 PM"
+              value={medTimes}
+              onChangeText={setMedTimes}
+              placeholderTextColor={Colors.gray}
+            />
+
+            <Text style={styles.inputLabel}>Frequency</Text>
+            <TextInput
+              style={styles.modalInput}
+              placeholder="e.g. daily"
+              value={medFreq}
+              onChangeText={setMedFreq}
+              placeholderTextColor={Colors.gray}
+            />
+
+            <Text style={styles.inputLabel}>Notes</Text>
+            <TextInput
+              style={[styles.modalInput, { height: 60 }]}
+              placeholder="e.g. Take after breakfast"
+              value={medNotes}
+              onChangeText={setMedNotes}
+              multiline={true}
+              placeholderTextColor={Colors.gray}
+            />
+
+            <View style={styles.modalButtons}>
+              <TouchableOpacity 
+                style={[styles.modalBtn, { backgroundColor: Colors.lightGray }]} 
+                onPress={() => setModalVisible(false)}
+              >
+                <Text style={{ color: Colors.secondary, fontWeight: '700' }}>Cancel</Text>
+              </TouchableOpacity>
+              
+              <TouchableOpacity 
+                style={[styles.modalBtn, { backgroundColor: Colors.primary }]} 
+                onPress={handleAddMedicine}
+                disabled={saving}
+              >
+                {saving ? (
+                  <ActivityIndicator size="small" color={Colors.white} />
+                ) : (
+                  <Text style={{ color: Colors.white, fontWeight: '700' }}>Save</Text>
+                )}
+              </TouchableOpacity>
             </View>
           </View>
         </View>
-      </ScrollView>
+      </Modal>
     </SafeAreaView>
   );
 };
 
-export const CriticalScreen = ({ navigation }: any) => (
-  <SafeAreaView style={styles.container}>
-    <View style={styles.header}>
-      <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
-        <ArrowLeft color={Colors.secondary} size={24} />
-      </TouchableOpacity>
-      <Text style={styles.title}>High Isolation</Text>
-      <View style={styles.headerSpacer} />
-    </View>
-    <ScrollView contentContainerStyle={styles.scrollContent}>
-      <View style={styles.bentoGrid}>
-        <TouchableOpacity 
-          style={[styles.bentoCard, styles.criticalItem]}
-          onPress={() => navigation.navigate('PatientDetail', { patient: { id: '2', name: 'Shyam Thapa', age: 65, condition: 'Critical', mood: 'Lonely' } })}
-        >
-          <View style={styles.criticalHeader}>
-            <Text style={styles.criticalName}>Shyam Thapa</Text>
-            <View style={styles.criticalBadge}>
-              <Text style={styles.criticalBadgeText}>High Lonely %</Text>
-            </View>
-          </View>
-          <View style={styles.criticalMetrics}>
-            <View style={styles.critMetric}>
-              <MessageSquare color={Colors.danger} size={18} />
-              <Text style={styles.critVal}>45% Lonely</Text>
-            </View>
-            <View style={styles.critMetric}>
-              <Smile color={Colors.gray} size={18} />
-              <Text style={styles.critVal}>Mood: Low</Text>
-            </View>
-          </View>
+export const CriticalScreen = ({ navigation }: any) => {
+  const [alerts, setAlerts] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+
+  const fetchAlerts = useCallback(async () => {
+    try {
+      const res = await request('/doctor/alerts');
+      if (res.success) {
+        setAlerts(res.data || []);
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchAlerts();
+  }, [fetchAlerts]);
+
+  const onRefresh = () => {
+    setRefreshing(true);
+    fetchAlerts();
+  };
+
+  return (
+    <SafeAreaView style={styles.container}>
+      <View style={styles.header}>
+        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
+          <ArrowLeft color={Colors.secondary} size={24} />
         </TouchableOpacity>
+        <Text style={styles.title}>High Isolation</Text>
+        <View style={styles.headerSpacer} />
       </View>
-    </ScrollView>
-  </SafeAreaView>
-);
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+      >
+        {loading ? (
+          <ActivityIndicator size="large" color={Colors.primary} style={{ marginTop: 40 }} />
+        ) : alerts.length === 0 ? (
+          <Text style={{ textAlign: 'center', color: Colors.gray, marginTop: 40 }}>No high-risk alerts found.</Text>
+        ) : (
+          <View style={styles.bentoGrid}>
+            {alerts.map((alert: any, idx: number) => (
+              <TouchableOpacity
+                key={idx}
+                style={[styles.bentoCard, styles.criticalItem]}
+                onPress={() =>
+                  navigation.navigate('PatientDetail', {
+                    patient: {
+                      _id: alert.patient._id,
+                      name: alert.patient.name,
+                      age: alert.patient.age || 65,
+                      condition: alert.alertReason,
+                      mood: alert.mood,
+                    },
+                  })
+                }
+              >
+                <View style={styles.criticalHeader}>
+                  <Text style={styles.criticalName}>{alert.patient.name}</Text>
+                  <View style={styles.criticalBadge}>
+                    <Text style={styles.criticalBadgeText}>{alert.alertReason}</Text>
+                  </View>
+                </View>
+                <View style={styles.criticalMetrics}>
+                  {alert.score > 0 && (
+                    <View style={styles.critMetric}>
+                      <MessageSquare color={Colors.danger} size={18} />
+                      <Text style={styles.critVal}>{alert.score}% Lonely</Text>
+                    </View>
+                  )}
+                  <View style={styles.critMetric}>
+                    <Smile color={Colors.gray} size={18} />
+                    <Text style={styles.critVal}>Mood: {alert.mood}</Text>
+                  </View>
+                </View>
+              </TouchableOpacity>
+            ))}
+          </View>
+        )}
+      </ScrollView>
+    </SafeAreaView>
+  );
+};
 
 export const ReportScreen = ({ route, navigation, role: propRole }: any) => {
   const role = propRole || route?.params?.role || 'guardian';
@@ -206,20 +489,55 @@ export const ReportScreen = ({ route, navigation, role: propRole }: any) => {
                 <Text style={styles.emptyReportText}>No reports yet</Text>
               </View>
             ) : (
-              reports.map((session: any, idx: number) => {
-                const date = new Date(session.startedAt || session.createdAt);
+              reports.map((reportItem: any, idx: number) => {
+                const date = new Date(reportItem.createdAt || reportItem.date);
                 const dayName = date.toLocaleDateString('en-US', { weekday: 'long' });
                 const dateStr = date.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
-                const analysis = session.analyses?.[0] ?? {};
-                const mood = analysis.mood || 'Unknown';
-                const intensity = analysis.mood_intensity ?? 5;
-                const meds = analysis.medicine_log ?? [];
-                const takenCount = meds.filter((m: any) => m.status === 'taken').length;
-                const adherence = meds.length > 0 ? Math.round((takenCount / meds.length) * 100) : null;
-                const approved = session.reportStatus === 'approved';
+                
+                const analyses = reportItem.analyses || [];
+                
+                // Aggregate unique moods
+                const uniqueMoods = Array.from(
+                  new Set(
+                    analyses
+                      .map((a: any) => a.mood)
+                      .filter((m: any) => m && m.toLowerCase() !== 'unknown')
+                  )
+                );
+                const mood = uniqueMoods.length > 0 ? uniqueMoods.join(', ') : 'Unknown';
+                
+                // Average mood intensity
+                const intensities = analyses
+                  .map((a: any) => a.mood_intensity)
+                  .filter((i: any) => typeof i === 'number');
+                const intensity = intensities.length > 0
+                  ? Math.round(intensities.reduce((a: any, b: any) => a + b, 0) / intensities.length)
+                  : 5;
+
+                // Aggregate medication logs uniquely
+                const takenMeds = new Set<string>();
+                const missedMeds = new Set<string>();
+
+                analyses.forEach((a: any) => {
+                  if (a.medicine_log) {
+                    a.medicine_log.forEach((log: any) => {
+                      if (log.status === 'taken') {
+                        takenMeds.add(log.name);
+                      } else if (log.status === 'missed' || log.status === 'skipped') {
+                        missedMeds.add(log.name);
+                      }
+                    });
+                  }
+                });
+                // Filter taken meds from missed list
+                takenMeds.forEach((m) => missedMeds.delete(m));
+
+                const totalMedsCount = takenMeds.size + missedMeds.size;
+                const adherence = totalMedsCount > 0 ? Math.round((takenMeds.size / totalMedsCount) * 100) : null;
+                const approved = reportItem.reportStatus === 'approved';
 
                 return (
-                  <View key={session._id || idx} style={styles.reportCard}>
+                  <View key={reportItem._id || idx} style={styles.reportCard}>
                     <View style={styles.reportHeaderBlock}>
                       <Text style={styles.reportDay}>{dayName}</Text>
                       <Text style={styles.reportDate}>{dateStr}</Text>
@@ -229,7 +547,7 @@ export const ReportScreen = ({ route, navigation, role: propRole }: any) => {
                       <View style={[styles.bentoCard, { width: HALF_WIDTH, height: 160 }]}>
                         <Smile color={Colors.primary} size={28} />
                         <Text style={styles.insightTitle}>Mood</Text>
-                        <Text style={styles.insightVal}>{mood}</Text>
+                        <Text style={styles.insightVal} numberOfLines={1} adjustsFontSizeToFit>{mood}</Text>
                         <Text style={styles.insightDesc}>Intensity: {intensity}/10</Text>
                       </View>
                       <View style={[styles.bentoCard, { width: HALF_WIDTH, height: 160, backgroundColor: Colors.gold }]}>
@@ -239,22 +557,22 @@ export const ReportScreen = ({ route, navigation, role: propRole }: any) => {
                           {adherence !== null ? `${adherence}%` : 'N/A'}
                         </Text>
                         <Text style={[styles.insightDesc, { color: 'rgba(25,52,61,0.6)' }]}>
-                          {takenCount}/{meds.length} taken
+                          {takenMeds.size} taken, {missedMeds.size} missed
                         </Text>
                       </View>
                     </View>
 
-                    {session.report ? (
+                    {reportItem.summary ? (
                       <View style={[styles.bentoCard, { width: FULL_WIDTH }]}>
                         <Text style={styles.sectionTitle}>AI Summary</Text>
-                        <Text style={styles.reportBodyText}>{session.report}</Text>
+                        <Text style={styles.reportBodyText}>{reportItem.summary}</Text>
                       </View>
                     ) : null}
 
-                    {session.doctorNotes ? (
+                    {reportItem.doctorNotes ? (
                       <View style={[styles.bentoCard, { width: FULL_WIDTH, backgroundColor: Colors.softGold }]}>
                         <Text style={styles.sectionTitle}>Doctor Notes</Text>
-                        <Text style={styles.reportBodyText}>{session.doctorNotes}</Text>
+                        <Text style={styles.reportBodyText}>{reportItem.doctorNotes}</Text>
                       </View>
                     ) : null}
 
@@ -270,7 +588,7 @@ export const ReportScreen = ({ route, navigation, role: propRole }: any) => {
                       <TouchableOpacity
                         style={styles.chatBtn}
                         onPress={() => {
-                          const pid = session.patientId?._id || session.patientId;
+                          const pid = reportItem.patientId?._id || reportItem.patientId;
                           navigation.navigate('SessionHistoryScreen', { role, patientId: pid });
                         }}
                       >
@@ -279,7 +597,7 @@ export const ReportScreen = ({ route, navigation, role: propRole }: any) => {
                     </View>
 
                     {role === 'doctor' && !approved && (
-                      <TouchableOpacity style={styles.actionBtn} onPress={() => handleApprove(session._id)}>
+                      <TouchableOpacity style={styles.actionBtn} onPress={() => handleApprove(reportItem._id)}>
                         <Text style={styles.actionBtnText}>Approve Report</Text>
                       </TouchableOpacity>
                     )}
@@ -296,8 +614,8 @@ export const ReportScreen = ({ route, navigation, role: propRole }: any) => {
   );
 };
 
-export const SessionHistoryScreen = ({ route, navigation }: any) => {
-  const role = route?.params?.role || 'guardian';
+export const SessionHistoryScreen = ({ route, navigation, role: propRole }: any) => {
+  const role = propRole || route?.params?.role || 'guardian';
   const patientId: string | undefined = route?.params?.patientId;
   const [sessions, setSessions] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -370,7 +688,6 @@ export const SessionHistoryScreen = ({ route, navigation }: any) => {
               const durationMins = Math.round((session.durationSeconds || 0) / 60);
               const turnCount = session.turns?.length ?? 0;
               const mood = session.analyses?.[0]?.mood;
-              const approved = session.reportStatus === 'approved';
 
               return (
                 <TouchableOpacity
@@ -379,7 +696,7 @@ export const SessionHistoryScreen = ({ route, navigation }: any) => {
                   activeOpacity={0.75}
                   onPress={() => navigation.navigate('ConversationScreen', { sessionId: session._id, role })}
                 >
-                  <View style={[styles.sessionAccent, { backgroundColor: approved ? Colors.success : Colors.gold }]} />
+                  <View style={[styles.sessionAccent, { backgroundColor: Colors.primary }]} />
                   <View style={styles.sessionBody}>
                     <View style={styles.sessionTopRow}>
                       <Text style={styles.sessionDate}>{dateLabel}</Text>
@@ -404,14 +721,6 @@ export const SessionHistoryScreen = ({ route, navigation }: any) => {
                       )}
                     </View>
                     <View style={styles.sessionBottomRow}>
-                      <View style={[styles.statusPill, approved ? styles.approvedPill : styles.pendingPill]}>
-                        {approved
-                          ? <CheckCircle color={Colors.success} size={11} />
-                          : <Clock color={Colors.gold} size={11} />}
-                        <Text style={[styles.statusPillText, { color: approved ? Colors.success : Colors.gold }]}>
-                          {approved ? 'Approved' : 'Pending'}
-                        </Text>
-                      </View>
                       <Text style={styles.viewChatArrow}>View Chat →</Text>
                     </View>
                   </View>
@@ -448,32 +757,295 @@ export const ConnectDevice = ({ navigation }: any) => (
   </SafeAreaView>
 );
 
-export const ProfileScreen = ({ navigation, role }: any) => (
-  <SafeAreaView style={styles.container}>
-    <View style={styles.header}>
-      <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
-        <ArrowLeft color={Colors.secondary} size={24} />
-      </TouchableOpacity>
-      <Text style={styles.title}>Account</Text>
-      <View style={styles.headerSpacer} />
-    </View>
-    <ScrollView contentContainerStyle={styles.scrollContent}>
-      <View style={styles.bentoGrid}>
-        <View style={[styles.bentoCard, styles.profileHeader]}>
-          <View style={styles.largeAvatarBox}>
-            <User color={Colors.white} size={50} />
-          </View>
-          <Text style={styles.profileName}>{role === 'doctor' ? 'Dr. Smith' : 'Careplus Guardian'}</Text>
-          <Text style={styles.profileRole}>{role === 'doctor' ? 'Chief Psychologist' : 'Verified Caregiver'}</Text>
-        </View>
+export const ProfileScreen = ({ navigation, role: propRole }: any) => {
+  const [profile, setProfile] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [isEditing, setIsEditing] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
 
-        <TouchableOpacity style={styles.logoutBento} onPress={() => navigation.replace('Login')}>
-          <Text style={styles.logoutBentoText}>Sign Out</Text>
+  // Edit states
+  const [name, setName] = useState('');
+  const [specialization, setSpecialization] = useState('');
+  const [licenseNumber, setLicenseNumber] = useState('');
+  const [relationship, setRelationship] = useState('');
+  const [patientBotId, setPatientBotId] = useState('');
+  const [saving, setSaving] = useState(false);
+
+  const fetchProfile = useCallback(async () => {
+    try {
+      const res = await request('/auth/me');
+      if (res.success && res.data) {
+        setProfile(res.data);
+        setName(res.data.name || '');
+        setSpecialization(res.data.specialization || '');
+        setLicenseNumber(res.data.licenseNumber || '');
+        setRelationship(res.data.relationship || '');
+        setPatientBotId(res.data.patientBotId || '');
+      }
+    } catch (err: any) {
+      Alert.alert('Error', err.message || 'Failed to load profile details.');
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchProfile();
+  }, [fetchProfile]);
+
+  const onRefresh = () => {
+    setRefreshing(true);
+    fetchProfile();
+  };
+
+  const handleSave = async () => {
+    if (!name.trim()) {
+      Alert.alert('Validation Error', 'Name cannot be empty.');
+      return;
+    }
+    setSaving(true);
+    try {
+      const body: any = { name };
+      if (profile?.role === 'doctor') {
+        body.specialization = specialization;
+        body.licenseNumber = licenseNumber;
+      } else if (profile?.role === 'guardian') {
+        body.relationship = relationship;
+        body.patientBotId = patientBotId;
+      }
+      const res = await request('/auth/me', {
+        method: 'PATCH',
+        body: JSON.stringify(body),
+      });
+      if (res.success) {
+        Alert.alert('Success', 'Profile updated successfully.');
+        setProfile(res.data);
+        setIsEditing(false);
+      }
+    } catch (err: any) {
+      Alert.alert('Update Failed', err.message || 'Unable to update profile.');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <SafeAreaView style={[styles.container, styles.centerContent, { flex: 1 }]}>
+        <ActivityIndicator size="large" color={Colors.primary} />
+      </SafeAreaView>
+    );
+  }
+
+  const userRole = profile?.role || propRole || 'guardian';
+
+  return (
+    <SafeAreaView style={styles.container}>
+      <View style={styles.header}>
+        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
+          <ArrowLeft color={Colors.secondary} size={24} />
+        </TouchableOpacity>
+        <Text style={styles.title}>My Profile</Text>
+        <TouchableOpacity 
+          style={[styles.historyBtn, { backgroundColor: isEditing ? Colors.danger + '15' : Colors.primary + '15' }]} 
+          onPress={() => {
+            if (isEditing) {
+              setName(profile?.name || '');
+              setSpecialization(profile?.specialization || '');
+              setLicenseNumber(profile?.licenseNumber || '');
+              setRelationship(profile?.relationship || '');
+              setPatientBotId(profile?.patientBotId || '');
+              setIsEditing(false);
+            } else {
+              setIsEditing(true);
+            }
+          }}
+        >
+          <Text style={[styles.historyBtnText, { color: isEditing ? Colors.danger || '#FF3B30' : Colors.primary }]}>
+            {isEditing ? 'Cancel' : 'Edit'}
+          </Text>
         </TouchableOpacity>
       </View>
-    </ScrollView>
-  </SafeAreaView>
-);
+
+      <ScrollView 
+        contentContainerStyle={styles.scrollContent}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[Colors.primary]} />}
+      >
+        <View style={styles.bentoGrid}>
+          {/* Header Card */}
+          <View style={[styles.bentoCard, styles.profileHeader]}>
+            <View style={styles.largeAvatarBox}>
+              <User color={Colors.white} size={50} />
+            </View>
+            <Text style={styles.profileName}>{profile?.name || 'CarePlus User'}</Text>
+            <Text style={styles.profileRole}>
+              {userRole === 'doctor' 
+                ? (profile?.specialization || 'Clinical Doctor') 
+                : (profile?.relationship ? `${profile.relationship} / Caregiver` : 'Guardian')}
+            </Text>
+          </View>
+
+          {/* Edit Mode inputs or Display Info Cards */}
+          {isEditing ? (
+            <View style={[styles.bentoCard, { gap: 15 }]}>
+              <Text style={styles.sectionTitle}>Update Information</Text>
+              
+              <View>
+                <Text style={styles.inputLabel}>Full Name</Text>
+                <TextInput 
+                  style={styles.modalInput} 
+                  value={name} 
+                  onChangeText={setName} 
+                  placeholder="Enter full name"
+                />
+              </View>
+
+              {userRole === 'doctor' && (
+                <>
+                  <View>
+                    <Text style={styles.inputLabel}>Specialization</Text>
+                    <TextInput 
+                      style={styles.modalInput} 
+                      value={specialization} 
+                      onChangeText={setSpecialization} 
+                      placeholder="e.g. Cardiologist, Neurologist"
+                    />
+                  </View>
+                  <View>
+                    <Text style={styles.inputLabel}>Medical License Number</Text>
+                    <TextInput 
+                      style={styles.modalInput} 
+                      value={licenseNumber} 
+                      onChangeText={setLicenseNumber} 
+                      placeholder="e.g. NMC-12345"
+                    />
+                  </View>
+                </>
+              )}
+
+              {userRole === 'guardian' && (
+                <>
+                  <View>
+                    <Text style={styles.inputLabel}>Relationship to Patient</Text>
+                    <TextInput 
+                      style={styles.modalInput} 
+                      value={relationship} 
+                      onChangeText={setRelationship} 
+                      placeholder="e.g. Son, Daughter, Spouse"
+                    />
+                  </View>
+                  <View>
+                    <Text style={styles.inputLabel}>Linked Bot ID</Text>
+                    <TextInput 
+                      style={styles.modalInput} 
+                      value={patientBotId} 
+                      onChangeText={setPatientBotId} 
+                      placeholder="e.g. bot_1"
+                    />
+                  </View>
+                </>
+              )}
+
+              <TouchableOpacity 
+                style={[styles.actionBtn, { marginTop: 10 }]} 
+                onPress={handleSave}
+                disabled={saving}
+              >
+                {saving ? (
+                  <ActivityIndicator color={Colors.white} />
+                ) : (
+                  <Text style={styles.actionBtnText}>Save Changes</Text>
+                )}
+              </TouchableOpacity>
+            </View>
+          ) : (
+            <>
+              {/* Display Mode */}
+              <View style={styles.row}>
+                {/* Account Status Card */}
+                <View style={[styles.bentoCard, { flex: 1, paddingVertical: 20 }]}>
+                  <CheckCircle color={Colors.success} size={28} />
+                  <Text style={styles.vitalLab}>Status</Text>
+                  <Text style={[styles.vitalVal, { color: Colors.success, fontSize: 18 }]}>Active</Text>
+                </View>
+
+                {/* Role Card */}
+                <View style={[styles.bentoCard, { flex: 1, paddingVertical: 20, backgroundColor: Colors.gold }]}>
+                  <Smartphone color={Colors.secondary} size={28} />
+                  <Text style={[styles.vitalLab, { color: Colors.secondary }]}>Platform</Text>
+                  <Text style={[styles.vitalVal, { color: Colors.secondary, fontSize: 18, textTransform: 'capitalize' }]}>
+                    {userRole}
+                  </Text>
+                </View>
+              </View>
+
+              {/* Account Details Bento Card */}
+              <View style={styles.bentoCard}>
+                <Text style={styles.sectionTitle}>Account Details</Text>
+                
+                <View style={styles.medItem}>
+                  <View style={[styles.medBullet, { backgroundColor: Colors.primary }]} />
+                  <Text style={styles.medName}>Email Address</Text>
+                  <Text style={styles.medDose}>{profile?.email || 'N/A'}</Text>
+                </View>
+
+                {userRole === 'doctor' && (
+                  <>
+                    <View style={styles.medItem}>
+                      <View style={[styles.medBullet, { backgroundColor: Colors.gold }]} />
+                      <Text style={styles.medName}>Specialization</Text>
+                      <Text style={styles.medDose}>{profile?.specialization || 'Clinical Doctor'}</Text>
+                    </View>
+                    <View style={styles.medItem}>
+                      <View style={[styles.medBullet, { backgroundColor: Colors.primary }]} />
+                      <Text style={styles.medName}>License Number</Text>
+                      <Text style={styles.medDose}>{profile?.licenseNumber || 'Not provided'}</Text>
+                    </View>
+                  </>
+                )}
+
+                {userRole === 'guardian' && (
+                  <>
+                    <View style={styles.medItem}>
+                      <View style={[styles.medBullet, { backgroundColor: Colors.gold }]} />
+                      <Text style={styles.medName}>Relationship</Text>
+                      <Text style={styles.medDose}>{profile?.relationship || 'Verified Caregiver'}</Text>
+                    </View>
+                    <View style={styles.medItem}>
+                      <View style={[styles.medBullet, { backgroundColor: Colors.primary }]} />
+                      <Text style={styles.medName}>Linked Bot ID</Text>
+                      <Text style={styles.medDose}>{profile?.patientBotId || 'Not connected'}</Text>
+                    </View>
+                  </>
+                )}
+
+                <View style={[styles.medItem, { borderBottomWidth: 0 }]}>
+                  <View style={[styles.medBullet, { backgroundColor: Colors.success }]} />
+                  <Text style={styles.medName}>Security Level</Text>
+                  <Text style={[styles.medDose, { color: Colors.success, fontWeight: '700' }]}>Enforced</Text>
+                </View>
+              </View>
+
+              {/* Extra Dynamic Rich Content to avoid looking plain */}
+              <View style={[styles.bentoCard, { backgroundColor: '#F8FAFC' }]}>
+                <Text style={styles.sectionTitle}>CarePlus Protection</Text>
+                <Text style={{ fontSize: 13, color: Colors.gray, marginTop: 5, lineHeight: 18 }}>
+                  Your profile and configuration sync in real-time with the CarePlus Patient Companion hardware devices. Keep your contact details up to date to receive SMS and voice call alert triggers.
+                </Text>
+              </View>
+            </>
+          )}
+
+          {/* Sign Out Button */}
+          <TouchableOpacity style={styles.logoutBento} onPress={() => navigation.replace('Login')}>
+            <Text style={styles.logoutBentoText}>Sign Out</Text>
+          </TouchableOpacity>
+        </View>
+      </ScrollView>
+    </SafeAreaView>
+  );
+};
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.background },
@@ -579,4 +1151,12 @@ const styles = StyleSheet.create({
   approveBtn: { backgroundColor: Colors.secondary, paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8 },
   approveBtnText: { fontSize: 11, fontWeight: '800', color: Colors.white },
   viewChatArrow: { fontSize: 13, fontWeight: '800', color: Colors.primary },
+  medNameText: { fontSize: 15, fontWeight: '700', color: Colors.secondary },
+  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', alignItems: 'center' },
+  modalContainer: { width: '85%', backgroundColor: Colors.white, borderRadius: 30, padding: 25, shadowColor: Colors.black, shadowOffset: { width: 0, height: 10 }, shadowOpacity: 0.1, shadowRadius: 20, elevation: 10 },
+  modalTitle: { fontSize: 20, fontWeight: '900', color: Colors.secondary, marginBottom: 15, textAlign: 'center' },
+  inputLabel: { fontSize: 13, fontWeight: '700', color: Colors.secondary, marginTop: 10, marginBottom: 5 },
+  modalInput: { borderWidth: 1, borderColor: '#E2E8F0', borderRadius: 12, paddingHorizontal: 12, paddingVertical: 10, fontSize: 15, color: Colors.secondary, backgroundColor: '#F8FAFC', marginBottom: 10 },
+  modalButtons: { flexDirection: 'row', justifyContent: 'space-between', gap: 15, marginTop: 25 },
+  modalBtn: { flex: 1, height: 48, borderRadius: 15, justifyContent: 'center', alignItems: 'center' },
 });

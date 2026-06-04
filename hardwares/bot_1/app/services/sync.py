@@ -85,11 +85,11 @@ async def sync_history():
                 response = await client.post(f"{SERVER_URL}/api/bot/sync", json=payload, headers=headers)
                 
                 if response.status_code in [200, 201]:
-                    cursor.execute("DELETE FROM chat_history WHERE session_id = ?", (session_id,))
-                    cursor.execute("DELETE FROM mood_logs WHERE session_id = ?", (session_id,))
-                    cursor.execute("DELETE FROM medicine_logs WHERE session_id = ?", (session_id,))
+                    cursor.execute("UPDATE chat_history SET is_synced = 1 WHERE session_id = ?", (session_id,))
+                    cursor.execute("UPDATE mood_logs SET is_synced = 1 WHERE session_id = ?", (session_id,))
+                    cursor.execute("UPDATE medicine_logs SET is_synced = 1 WHERE session_id = ?", (session_id,))
                     conn.commit()
-                    logger.info(f"Fully synced and deleted local data for session {session_id} ({len(full_history)} turns) for patient {PATIENT_ID}")
+                    logger.info(f"Fully synced local data for session {session_id} ({len(full_history)} turns) for patient {PATIENT_ID}")
                 else:
                     logger.error(f"Failed to sync session {session_id}: {response.text}")
                 
@@ -98,6 +98,20 @@ async def sync_history():
         conn.close()
     except Exception as e:
         logger.error(f"History sync error: {e}")
+
+
+def prune_local_data():
+    """Prunes local chat history, mood logs, and medicine logs older than 7 days to prevent unbounded DB growth."""
+    try:
+        conn = get_db()
+        conn.execute("DELETE FROM chat_history WHERE timestamp < datetime('now', '-7 days')")
+        conn.execute("DELETE FROM mood_logs WHERE timestamp < datetime('now', '-7 days')")
+        conn.execute("DELETE FROM medicine_logs WHERE timestamp < datetime('now', '-7 days')")
+        conn.commit()
+        conn.close()
+        logger.info("Pruned local database records older than 7 days.")
+    except Exception as e:
+        logger.error(f"Error pruning local data: {e}")
 
 
 async def sync_medicine_logs():
@@ -130,17 +144,16 @@ async def sync_medicine_logs():
         async with httpx.AsyncClient() as client:
             for user_id, logs in user_logs.items():
                 payload = {"userId": user_id, "logs": logs}
-                # Note: Legacy endpoint might not handle session_id yet, but we sync via sync_history anyway
                 response = await client.post(f"{SERVER_URL}/api/medicine/log", json=payload)
 
                 if response.status_code == 200:
                     ids = [item["id"] for item in logs]
                     cursor.execute(
-                        f"DELETE FROM medicine_logs WHERE id IN ({','.join(['?'] * len(ids))})",
+                        f"UPDATE medicine_logs SET is_synced = 1 WHERE id IN ({','.join(['?'] * len(ids))})",
                         ids,
                     )
                     conn.commit()
-                    logger.info(f"Synced and deleted {len(ids)} medicine logs for user {user_id}")
+                    logger.info(f"Synced {len(ids)} medicine logs for user {user_id}")
                 else:
                     logger.error(f"Failed to sync medicine logs for user {user_id}: {response.text}")
 
@@ -276,6 +289,7 @@ async def sync_scheduler():
             if not swastha_agent.is_active(threshold=10):
                 await sync_history()
                 await sync_medicine_logs()
+                prune_local_data()
             
             # 2. Every Hour: Pull Configuration
             if (now - last_config_pull).total_seconds() >= 3600:

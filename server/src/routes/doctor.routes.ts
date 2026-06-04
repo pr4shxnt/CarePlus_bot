@@ -9,6 +9,7 @@ router.use(authenticate, authorize("doctor", "admin"));
 
 // Dashboard
 router.get("/dashboard", doctor.getDashboard);
+router.get("/alerts", doctor.getAlerts);
 
 // Patients
 router.get("/patients", doctor.listPatients);

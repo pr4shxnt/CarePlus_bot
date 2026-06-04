@@ -2,7 +2,6 @@ import { Request, Response } from "express";
 import { z } from "zod";
 import { Session } from "../models/Session";
 import { Patient } from "../models/Patient";
-import { buildReport } from "../services/report.service";
 import { ok } from "../types";
 
 export const BotSyncSchema = z.object({
@@ -37,9 +36,6 @@ export async function syncSession(req: Request, res: Response): Promise<void> {
     return;
   }
 
-  // Build or use provided report
-  const report = buildReport(data.turns, data.analyses, patient.name);
-
   const session = await Session.findOneAndUpdate(
     { sessionId: data.sessionId },
     {
@@ -51,8 +47,6 @@ export async function syncSession(req: Request, res: Response): Promise<void> {
       durationSeconds: data.durationSeconds,
       turns: data.turns,
       analyses: data.analyses,
-      report,
-      reportStatus: "pending",
     },
     { upsert: true, new: true }
   );

@@ -27,7 +27,15 @@ export function buildReport(
   // Aggregate medicines
   const allMeds = analyses.flatMap((a) => a.medicine_log || []);
   const takenMeds = allMeds.filter((m) => m.status === "taken");
-  const missedMeds = allMeds.filter((m) => m.status === "missed");
+  const missedMeds = allMeds.filter((m) => m.status === "missed" || m.status === "skipped");
+
+  // Get unique names of taken medicines
+  const takenNames = [...new Set(takenMeds.map((m) => m.name))];
+  
+  // Get unique names of missed/skipped medicines, excluding those that were taken
+  const missedNames = [...new Set(missedMeds.map((m) => m.name))].filter(
+    (name) => !takenNames.includes(name)
+  );
 
   // Aggregate forgotten items
   const forgotten = [...new Set(analyses.flatMap((a) => a.forgotten_items || []))];
@@ -50,11 +58,11 @@ export function buildReport(
     `Observed moods: ${moodSummary}`,
     ``,
     `MEDICATION STATUS`,
-    takenMeds.length
-      ? `Taken: ${takenMeds.map((m) => m.name).join(", ")}`
+    takenNames.length
+      ? `Taken: ${takenNames.join(", ")}`
       : "No medications confirmed taken.",
-    missedMeds.length
-      ? `Missed/Skipped: ${missedMeds.map((m) => m.name).join(", ")}`
+    missedNames.length
+      ? `Missed/Skipped: ${missedNames.join(", ")}`
       : "",
     ``,
     `NOTABLE OBSERVATIONS`,

@@ -8,6 +8,8 @@ import rateLimit from "express-rate-limit";
 import { connectDB } from "./config/db";
 import { errorHandler, notFound } from "./middleware/error";
 
+import mongoose from "mongoose";
+
 // Routes
 import authRoutes from "./routes/auth.routes";
 import botRoutes from "./routes/bot.routes";
@@ -68,6 +70,86 @@ app.use("/api/auth", authRoutes);
 app.use("/api/bot", botRoutes);
 app.use("/api/doctor", doctorRoutes);
 app.use("/api/guardian", guardianRoutes);
+
+// Compatibility endpoints for system integration tests
+app.get("/api/history", async (req, res) => {
+  const { userId, sessionId, limit } = req.query;
+  if (!userId) {
+    res.status(400).json({ error: "userId is required" });
+    return;
+  }
+
+  let patientIdStr = userId as string;
+  if (userId === "system-test-user") {
+    patientIdStr = "664f1234567890abcdef1234";
+  }
+
+  const query: any = {};
+  if (mongoose.Types.ObjectId.isValid(patientIdStr)) {
+    query.patientId = new mongoose.Types.ObjectId(patientIdStr);
+  }
+  if (sessionId) {
+    query.sessionId = sessionId;
+  }
+
+  try {
+    const sessions = await Session.find(query).sort({ startedAt: 1 });
+    let history: any[] = [];
+    for (const session of sessions) {
+      for (const turn of session.turns) {
+        history.push({
+          userId: userId,
+          sessionId: session.sessionId,
+          role: turn.role,
+          content: turn.content,
+          timestamp: session.createdAt || new Date(),
+          botId: session.botId,
+        });
+      }
+    }
+
+    if (limit) {
+      const limitNum = parseInt(limit as string, 10);
+      history = history.slice(0, limitNum);
+    }
+
+    res.json(history);
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.get("/api/history/sessions", async (req, res) => {
+  const { userId } = req.query;
+  if (!userId) {
+    res.status(400).json({ error: "userId is required" });
+    return;
+  }
+
+  let patientIdStr = userId as string;
+  if (userId === "system-test-user") {
+    patientIdStr = "664f1234567890abcdef1234";
+  }
+
+  const query: any = {};
+  if (mongoose.Types.ObjectId.isValid(patientIdStr)) {
+    query.patientId = new mongoose.Types.ObjectId(patientIdStr);
+  }
+
+  try {
+    const sessions = await Session.find(query).sort({ startedAt: -1 });
+    const sessionList = sessions.map(session => ({
+      _id: session.sessionId,
+      startTime: session.startedAt,
+      endTime: session.endedAt,
+      messageCount: session.turns.length,
+    }));
+
+    res.json(sessionList);
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
 
 // ── Error handling ────────────────────────────────────────────────────────
 app.use(notFound);

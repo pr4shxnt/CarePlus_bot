@@ -74,7 +74,7 @@ const GuardianHomeScreen = ({ navigation }: any) => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="dark-content" />
+      <StatusBar barStyle="light-content" />
       <ScrollView
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
@@ -83,7 +83,7 @@ const GuardianHomeScreen = ({ navigation }: any) => {
         {/* Header */}
         <View style={styles.header}>
           <View>
-            <Text style={styles.welcome}>Overview</Text>
+            <Text style={styles.welcome}>OVERVIEW</Text>
             <Text style={styles.userName}>Guardian Dashboard</Text>
           </View>
           <TouchableOpacity style={styles.profileBtn} onPress={handleLogout}>
@@ -99,7 +99,7 @@ const GuardianHomeScreen = ({ navigation }: any) => {
           <View style={[styles.bentoCard, styles.mainCard]}>
             <View style={styles.patientTop}>
               <View>
-                <Text style={styles.patientLabel}>PSYCH-MONITORING</Text>
+                <Text style={styles.patientLabel}>Patient Monitoring</Text>
                 <Text style={styles.patientName}>{patient?.name ?? 'No patient linked'}</Text>
               </View>
               <View style={styles.statusBadge}>
@@ -117,7 +117,7 @@ const GuardianHomeScreen = ({ navigation }: any) => {
               <View style={styles.metricItem}>
                 <Pill color={Colors.primary} size={20} />
                 <Text style={styles.metricVal}>{patient?.medicines?.length ?? 0}</Text>
-                <Text style={styles.metricLab}>Meds</Text>
+                <Text style={styles.metricLab}>Medication</Text>
               </View>
               <View style={styles.divider} />
               <View style={styles.metricItem}>
@@ -134,7 +134,7 @@ const GuardianHomeScreen = ({ navigation }: any) => {
               <View style={styles.whiteIconBox}>
                 <Pill color={Colors.gold} size={24} />
               </View>
-              <Text style={styles.cardTitleGold}>Medication</Text>
+              <Text style={styles.cardTitleGold}>Medications</Text>
               <Text style={styles.cardValGold}>{patient?.medicines?.[0]?.name ?? 'None'}</Text>
               <Text style={styles.cardSubGold}>{patient?.medicines?.[0]?.dosage ?? '—'}</Text>
             </View>
@@ -163,12 +163,12 @@ const GuardianHomeScreen = ({ navigation }: any) => {
               <Smartphone color={Colors.white} size={28} />
             </View>
             <View style={styles.botTextWrapper}>
-              <Text style={styles.botLabel}>DEVICE STATUS</Text>
+              <Text style={styles.botLabel}>Device Status</Text>
               <Text style={styles.botTitle}>
-                {patient?.botId ? `Bot ID: ${patient.botId}` : 'No Bot Linked'}
+                {patient?.botId ? `Bot ID: ${patient.botId}` : 'No device linked'}
               </Text>
               <Text style={styles.botSub}>
-                {patient?.botId ? 'Real-time synchronization enabled' : 'Tap to connect a device'}
+                {patient?.botId ? 'Real-time synchronization enabled.' : 'Tap to link device'}
               </Text>
             </View>
           </TouchableOpacity>
@@ -186,8 +186,8 @@ const GuardianHomeScreen = ({ navigation }: any) => {
 
             <View style={[styles.bentoCard, { width: HALF_WIDTH, backgroundColor: Colors.white }]}>
               <Coffee color={Colors.gold} size={24} />
-              <Text style={styles.smallTitle}>Conditions</Text>
-              <Text style={styles.smallVal}>{patient?.conditions?.[0] ?? 'None recorded'}</Text>
+              <Text style={styles.smallTitle}>Health Condition</Text>
+              <Text style={styles.smallVal}>{patient?.conditions?.[0] ?? 'No record'}</Text>
             </View>
           </View>
 

@@ -28,7 +28,7 @@ const ReportSchema = new Schema<IReport>(
     patientId: { type: Schema.Types.ObjectId, ref: "Patient", required: true, index: true },
     date: { type: String, required: true, index: true }, // Format: YYYY-MM-DD
     summary: { type: String, required: true },
-    analyses: { type: [AnalysisSchema], default: [] },
+    analyses: [],
     reportStatus: {
       type: String,
       enum: ["pending", "approved", "rejected"],

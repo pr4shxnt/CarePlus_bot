@@ -1,9 +1,9 @@
 import json
+import re
 import httpx
-import asyncio
 
 class LLMService:
-    def __init__(self, model="gemma3:4b", base_url="http://localhost:11434"):
+    def __init__(self, model="e2b-it", base_url="http://localhost:11434"):
         self.model = model
         self.base_url = f"{base_url}/api"
         # Persistent client for connection pooling
@@ -17,11 +17,17 @@ class LLMService:
             await self.client.post(f"{self.base_url}/generate", json={"model": self.model, "prompt": "", "keep_alive": -1})
         except: pass
 
+    @staticmethod
+    def _strip_thinking(text: str) -> str:
+        """Remove <think>...</think> blocks that Gemma-E2B may emit."""
+        return re.sub(r'<think>.*?</think>', '', text, flags=re.DOTALL).strip()
+
     async def generate_response(self, prompt, system_prompt=None, model=None, num_predict=512, temperature=0.7):
         payload = {
             "model": model or self.model,
             "prompt": prompt,
             "stream": False,
+            "think": False,
             "options": {"temperature": temperature, "num_predict": num_predict}
         }
         if system_prompt: payload["system"] = system_prompt
@@ -30,7 +36,7 @@ class LLMService:
             if response.status_code != 200:
                 print(f"Ollama Error ({response.status_code}): {response.text}")
                 return f"Error: {response.status_code}"
-            return response.json().get("response", "")
+            return self._strip_thinking(response.json().get("response", ""))
         except Exception as e:
             return f"Error: {str(e)}"
 
@@ -39,6 +45,7 @@ class LLMService:
             "model": model or self.model,
             "messages": messages,
             "stream": True,
+            "think": False,
             "options": {"temperature": temperature, "num_predict": num_predict}
         }
         if system_prompt:
@@ -53,11 +60,33 @@ class LLMService:
                     yield f"Error: LLM server returned {response.status_code}"
                     return
 
+                buffer = ""
+                in_think = False
                 async for line in response.aiter_lines():
                     if not line: continue
                     chunk = json.loads(line)
-                    if "message" in chunk and "content" in chunk["message"]:
-                        yield chunk["message"]["content"]
+                    content = chunk.get("message", {}).get("content", "")
+                    if content:
+                        buffer += content
+                        # Strip any <think>...</think> that spans chunks
+                        while True:
+                            if in_think:
+                                end = buffer.find("</think>")
+                                if end == -1:
+                                    buffer = ""  # still inside think block
+                                    break
+                                buffer = buffer[end + len("</think>"):]
+                                in_think = False
+                            else:
+                                start = buffer.find("<think>")
+                                if start == -1:
+                                    yield buffer
+                                    buffer = ""
+                                    break
+                                if start > 0:
+                                    yield buffer[:start]
+                                buffer = buffer[start + len("<think>"):]
+                                in_think = True
                     if chunk.get("done"): break
         except Exception as e:
             print(f"Chat Stream Exception: {e}")

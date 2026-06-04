@@ -2,10 +2,17 @@ import sqlite3
 import os
 from pathlib import Path
 
-DB_PATH = Path("data/swastha_sathi.db")
+DB_PATH = Path("data/care_plus.db")
+OLD_DB_PATH = Path("data/swastha_sathi.db")
 
 def get_db():
     os.makedirs(DB_PATH.parent, exist_ok=True)
+    if OLD_DB_PATH.exists() and not DB_PATH.exists():
+        try:
+            OLD_DB_PATH.rename(DB_PATH)
+            print("Renamed old db file swastha_sathi.db to care_plus.db")
+        except Exception as e:
+            print(f"Failed to rename old database: {e}")
     conn = sqlite3.connect(DB_PATH)
     conn.row_factory = sqlite3.Row
     return conn
