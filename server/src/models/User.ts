@@ -9,6 +9,7 @@ export interface IUser extends Document {
   passwordHash: string;
   role: UserRole;
   isActive: boolean;
+  is_verified: boolean;
   // Doctor-specific
   specialization?: string;
   licenseNumber?: string;
@@ -27,6 +28,7 @@ const UserSchema = new Schema<IUser>(
     passwordHash: { type: String, required: true, select: false },
     role: { type: String, enum: ["doctor", "guardian", "patient", "admin"], required: true },
     isActive: { type: Boolean, default: true },
+    is_verified: { type: Boolean, default: false },
     specialization: String,
     licenseNumber: String,
     patientBotId: { type: String, index: true },

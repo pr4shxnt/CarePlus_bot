@@ -36,6 +36,15 @@ async function seed() {
     licenseNumber: "NMC-12345",
   }).save();
 
+  // 1.b Create Admin
+  const admin = await new User({
+    name: "System Admin",
+    email: "admin@jarvis.dev",
+    passwordHash: "admin1234",
+    role: "admin",
+    is_verified: true,
+  }).save();
+
   // 2. Create Guardian
   const guardian = await new User({
     name: "Ram Adhikari",
@@ -146,6 +155,7 @@ async function seed() {
   }).save();
 
   console.log("\n✅ Comprehensive Seed complete!\n");
+  console.log("  Admin:    admin@jarvis.dev    / admin1234");
   console.log("  Doctor:   doctor@jarvis.dev   / doctor1234");
   console.log("  Guardian: guardian@jarvis.dev / guardian1234");
   console.log("  Patient:  prashant@careplus.com / patient1234");

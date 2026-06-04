@@ -15,6 +15,7 @@ import authRoutes from "./routes/auth.routes";
 import botRoutes from "./routes/bot.routes";
 import doctorRoutes from "./routes/doctor.routes";
 import guardianRoutes from "./routes/guardian.routes";
+import adminRoutes from "./routes/admin.routes";
 
 const PORT = parseInt(process.env.PORT || "4000", 10);
 const MONGO_URI = process.env.MONGO_URI || "mongodb://localhost:27017/jarvis";
@@ -73,6 +74,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/bot", botRoutes);
 app.use("/api/doctor", doctorRoutes);
 app.use("/api/guardian", guardianRoutes);
+app.use("/api/admin", adminRoutes);
 
 // Compatibility endpoints for system integration tests
 app.get("/api/history", async (req, res) => {
