@@ -129,9 +129,9 @@ export const Home = () => {
       <section className="bento-features">
         <div className="bento-grid">
           {/* Item 1: Large (2x2) */}
-          <div className="bento-item bento-large bento-dark-gradient">
+          <div className="bento-item bento-large bento-dark">
             <div className="bento-icon">
-              <Activity size={32} style={{ color: "#4dd0e1" }} />
+              <Activity size={32} />
             </div>
             <div>
               <h3>Deep Medical Triage</h3>
@@ -142,7 +142,7 @@ export const Home = () => {
           </div>
 
           {/* Item 2: Medium (2x1) */}
-          <div className="bento-item bento-medium bento-accent-blue">
+          <div className="bento-item bento-medium bento-accent">
             <div className="bento-icon">
               <ShieldCheck size={32} />
             </div>
@@ -153,9 +153,9 @@ export const Home = () => {
           </div>
 
           {/* Item 3: Small (1x1) */}
-          <div className="bento-item bento-light-glass">
+          <div className="bento-item bento-light">
             <div className="bento-icon">
-              <Timer size={32} style={{ color: "#1e3a47" }} />
+              <Timer size={32} />
             </div>
             <div>
               <h3>24/7 Availability</h3>
@@ -164,7 +164,7 @@ export const Home = () => {
           </div>
 
           {/* Item 4: Small (1x1) */}
-          <div className="bento-item bento-accent-gold">
+          <div className="bento-item bento-accent">
             <div className="bento-icon">
               <BatteryCharging size={32} />
             </div>
@@ -175,29 +175,13 @@ export const Home = () => {
           </div>
 
           {/* Item 5: Wide (4x1) */}
-          <div className="bento-item bento-wide bento-wide-gradient">
+          <div className="bento-item bento-wide">
+            <div className="bento-image-placeholder"></div>
             <div className="bento-content-inline">
               <h3>Seamless Ecosystem Integration</h3>
               <p>
                 Connects with Apple Health, Google Fit, Oura, and all major hospital EMR systems to create a unified medical record.
               </p>
-            </div>
-            <div className="bento-image-placeholder">
-              <div style={{
-                height: "100%",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                padding: "20px",
-                color: "#1e3a47",
-                fontWeight: "700",
-                fontSize: "1.2rem",
-                textAlign: "center",
-                borderLeft: "1px solid rgba(30,58,71,0.1)"
-              }}>
-                <Cpu size={48} style={{ marginRight: 15, opacity: 0.8 }} />
-                <span>Unified API Sync</span>
-              </div>
             </div>
           </div>
         </div>
