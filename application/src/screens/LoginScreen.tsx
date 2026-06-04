@@ -102,7 +102,7 @@ const LoginScreen = ({ navigation }: any) => {
   return (
     <View style={styles.container}>
       <StatusBar
-        barStyle="dark-content"
+        barStyle="light-content"
         translucent
         backgroundColor="transparent"
       />

@@ -4,7 +4,7 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
-import { Home, User, BarChart2, Smartphone, ClipboardList } from 'lucide-react-native';
+import { Home, User, BarChart2, Smartphone, ClipboardList, MessageSquare } from 'lucide-react-native';
 
 import { Colors } from './src/theme/colors';
 import LoginScreen from './src/screens/LoginScreen';
@@ -81,6 +81,16 @@ const DoctorTabs = () => (
       options={{ tabBarIcon: (props) => <TabBarIcon Icon={Home} label="Home" {...props} /> }}
     />
     <Tab.Screen 
+      name="DoctorReportsTab" 
+      children={(props) => <ReportScreen {...props} role="doctor" />} 
+      options={{ tabBarIcon: (props) => <TabBarIcon Icon={BarChart2} label="Reports" {...props} /> }}
+    />
+    <Tab.Screen 
+      name="DoctorSessionsTab" 
+      children={(props) => <SessionHistoryScreen {...props} role="doctor" />} 
+      options={{ tabBarIcon: (props) => <TabBarIcon Icon={MessageSquare} label="Sessions" {...props} /> }}
+    />
+    <Tab.Screen 
       name="CriticalTab" 
       component={CriticalScreen} 
       options={{ tabBarIcon: (props) => <TabBarIcon Icon={ClipboardList} label="Alerts" {...props} /> }}
@@ -107,6 +117,11 @@ const GuardianTabs = () => (
       name="ReportTab" 
       children={(props) => <ReportScreen {...props} role="guardian" />} 
       options={{ tabBarIcon: (props) => <TabBarIcon Icon={BarChart2} label="Reports" {...props} /> }}
+    />
+    <Tab.Screen 
+      name="GuardianSessionsTab" 
+      children={(props) => <SessionHistoryScreen {...props} role="guardian" />} 
+      options={{ tabBarIcon: (props) => <TabBarIcon Icon={MessageSquare} label="Sessions" {...props} /> }}
     />
     <Tab.Screen 
       name="ConnectTab" 

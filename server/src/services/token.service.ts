@@ -5,7 +5,7 @@ export function signToken(userId: string, email: string, role: UserRole): string
   return jwt.sign(
     { userId, email, role } as JwtPayload,
     process.env.JWT_SECRET!,
-    { expiresIn: process.env.JWT_EXPIRES_IN || "7d" }
+    { expiresIn: (process.env.JWT_EXPIRES_IN || "7d") as any }
   );
 }
 

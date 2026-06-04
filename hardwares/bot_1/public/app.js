@@ -425,7 +425,7 @@ const setupRecognition = () => {
     appendTranscript(finalText.trim(), interimText.trim());
 
     const combinedText = (finalText + interimText).toLowerCase();
-    const hasWakeWord = /careplus|care plus|केयर प्लस/i.test(combinedText);
+    const hasWakeWord = /careplus|care plus|care\+|केयर प्लस/i.test(combinedText);
     
     if (wakeWordToggle.checked && hasWakeWord) {
       // Check for voice commands right after the wake word
@@ -475,7 +475,7 @@ const setupRecognition = () => {
         if (shouldReply) {
           // Strip wake word for the query
           const query = isWakeWordEnabled 
-            ? lastFinalTranscript.replace(/careplus|care plus|केयर प्लस/gi, "").trim()
+            ? lastFinalTranscript.replace(/careplus|care plus|care\+|केयर प्लस/gi, "").trim()
             : lastFinalTranscript;
           
           if (query) {

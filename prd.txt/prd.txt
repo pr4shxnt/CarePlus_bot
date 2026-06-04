@@ -1,0 +1,22 @@
+Careplus is a Robot designed for dementia patients that takes the medicinal inquiry from patients, reminds them of the medicines, tracks medicinal intakes. It also works as a loneliness companion for the dementia patients. 
+
+
+Tech Stacks:
+
+React-Native
+MongoDB
+Bun
+Ollama
+FastAPI
+RAG
+Knowledge base
+
+Features:
+
+- Conversation between the AI agent and the patient. 
+- Conversation tracking by the doctor -> approval of the report -> viewing in the Guardian's.
+- Mood tracking
+
+
+Core MVP feature:
+- If the AI asks if I have taken medicine. and I say that I have not taken medicine this morning, the AI asks which medicine from the morning using timestamp, i.e. "Which time's medicine have you forgotten to take?", and then the AI keeps the record of the medicinal intakes.

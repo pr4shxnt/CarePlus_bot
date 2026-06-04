@@ -22,12 +22,6 @@ export interface ISession extends Document {
   durationSeconds: number;
   turns: ITurn[];
   analyses: IAnalysisEvent[];
-  report?: string;
-  reportStatus: "pending" | "approved" | "rejected";
-  isDailyReport: boolean;
-  reviewedBy?: mongoose.Types.ObjectId;   // Doctor user ID
-  reviewedAt?: Date;
-  doctorNotes?: string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -54,24 +48,8 @@ const SessionSchema = new Schema<ISession>(
     durationSeconds: { type: Number, default: 0 },
     turns: { type: [TurnSchema], default: [] },
     analyses: { type: [AnalysisSchema], default: [] },
-    report: String,
-    reportStatus: {
-      type: String,
-      enum: ["pending", "approved", "rejected"],
-      default: "pending",
-      index: true,
-    },
-    isDailyReport: { type: Boolean, default: false, index: true },
-    reviewedBy: { type: Schema.Types.ObjectId, ref: "User" },
-    reviewedAt: Date,
-    doctorNotes: String,
   },
   { timestamps: true }
 );
-
-// Compound index for guardian queries
-SessionSchema.index({ botId: 1, reportStatus: 1 });
-// For doctor dashboard — pending first
-SessionSchema.index({ reportStatus: 1, createdAt: -1 });
 
 export const Session = mongoose.model<ISession>("Session", SessionSchema);

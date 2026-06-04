@@ -14,7 +14,7 @@ class SwasthaAgent:
     def __init__(self):
         # --- Session Management ---
         self.sessions = {} # {user_id: {"id": uuid, "last_active": timestamp}}
-        self.SESSION_TIMEOUT = 1800 # 30 minutes in seconds
+        self.SESSION_TIMEOUT = 43200 # 12 hours in seconds
 
         # --- System Prompts (Multi-Language Intelligence) ---
         self.PROMPT_QA_NE = (
@@ -203,17 +203,14 @@ class SwasthaAgent:
                     "times": [s.get("time", "") for s in schedule]
                 })
             
-            # Rule-based heuristic check
             intake_records = None
             msg = user_message.strip().lower()
             
             nepali_negs = ["खाइन", "खाइनँ", "खाएको छैन", "खाएकोछैन", "लिन पाइन", "लिन पाइनँ", "लिन सकिन", "लिन सकिनँ", "छैन", "पाइन", "पाइनँ", "सकिन", "सकिनँ", "खाइँन", "नखाने", "नखाएको"]
             english_negs = ["no", "didn't", "did not", "haven't", "have not", "missed", "skipped", "not yet", "forgot"]
-            is_negation = any(neg in msg for neg in nepali_negs + english_negs)
             
             nepali_pos = ["खाएँ", "खाइसकेँ", "खाए", "खाइसके", "लिनुभयो", "हो"]
             english_pos = ["yes", "yep", "yeah", "done", "taken", "took", "did"]
-            is_confirmation = any(pos in msg for pos in nepali_pos + english_pos)
             
             morning_meds = []
             evening_meds = []
@@ -236,39 +233,80 @@ class SwasthaAgent:
                 if is_evening:
                     evening_meds.append(m["name"])
             
-            has_morning_ref = any(w in msg for w in ["बिहान", "bihan", "morning"])
-            has_evening_ref = any(w in msg for w in ["बेलुका", "राति", "beluka", "rati", "evening", "night"])
+            # 1. Clause-based heuristic (for specific mentions like "Vitamin D took, Magnesium didn't")
+            clause_records = {}
+            # Split user message by punctuation/conjunctions to evaluate clauses
+            clauses = re.split(r'[,.\u0964\n]|\band\b|\bbut\b|\bर\b|\bतर\b', msg)
+            for clause in clauses:
+                c_clean = clause.strip()
+                if not c_clean:
+                    continue
+                c_neg = any(neg in c_clean for neg in nepali_negs + english_negs)
+                c_pos = any(pos in c_clean for pos in nepali_pos + english_pos)
+                
+                for m in meds_list:
+                    name_lower = m["name"].lower()
+                    patterns = [name_lower]
+                    if "vitamin d" in name_lower:
+                        patterns.extend(["विटामिन डी", "विटामिन", "भिटामिन डी", "भिटामिन", "vitamin", "vit d", "विटमिन"])
+                    elif "magnesium" in name_lower:
+                        patterns.extend(["म्याग्नेसियम", "म्याग्नेसिया", "magnesium", "mag"])
+                    
+                    patterns.extend([w for w in name_lower.split() if len(w) > 2])
+                    
+                    if any(pat in c_clean for pat in patterns):
+                        if c_neg:
+                            clause_records[m["name"]] = "missed"
+                        elif c_pos:
+                            clause_records[m["name"]] = "taken"
             
-            if has_morning_ref and is_negation and not is_confirmation:
+            if clause_records:
                 intake_records = []
-                for name in morning_meds:
-                    intake_records.append({"name": name, "status": "missed"})
-                for name in evening_meds:
-                    if name not in morning_meds:
+                for m in meds_list:
+                    name = m["name"]
+                    if name in clause_records:
+                        intake_records.append({"name": name, "status": clause_records[name]})
+                    else:
                         intake_records.append({"name": name, "status": "missed"})
-            elif has_morning_ref and is_confirmation and not is_negation:
-                intake_records = []
-                for name in morning_meds:
-                    intake_records.append({"name": name, "status": "taken"})
-                for name in evening_meds:
-                    if name not in morning_meds:
-                        intake_records.append({"name": name, "status": "missed"})
-            elif has_evening_ref and is_negation and not is_confirmation:
-                intake_records = []
-                for name in evening_meds:
-                    intake_records.append({"name": name, "status": "missed"})
-                for name in morning_meds:
-                    if name not in evening_meds:
-                        intake_records.append({"name": name, "status": "missed"})
-            elif is_negation and not is_confirmation and not has_morning_ref and not has_evening_ref:
-                intake_records = []
-                for name in all_meds:
-                    intake_records.append({"name": name, "status": "missed"})
-            elif is_confirmation and not is_negation and not has_morning_ref and not has_evening_ref:
-                intake_records = []
-                for name in all_meds:
-                    intake_records.append({"name": name, "status": "taken"})
             
+            # 2. General heuristic (if no specific medicine name was matched in clauses)
+            if intake_records is None:
+                is_negation = any(neg in msg for neg in nepali_negs + english_negs)
+                is_confirmation = any(pos in msg for pos in nepali_pos + english_pos)
+                has_morning_ref = any(w in msg for w in ["बिहान", "bihan", "morning"])
+                has_evening_ref = any(w in msg for w in ["बेलुका", "राति", "beluka", "rati", "evening", "night"])
+                
+                if has_morning_ref and is_negation and not is_confirmation:
+                    intake_records = []
+                    for name in morning_meds:
+                        intake_records.append({"name": name, "status": "missed"})
+                    for name in evening_meds:
+                        if name not in morning_meds:
+                            intake_records.append({"name": name, "status": "missed"})
+                elif has_morning_ref and is_confirmation and not is_negation:
+                    intake_records = []
+                    for name in morning_meds:
+                        intake_records.append({"name": name, "status": "taken"})
+                    for name in evening_meds:
+                        if name not in morning_meds:
+                            intake_records.append({"name": name, "status": "missed"})
+                elif has_evening_ref and is_negation and not is_confirmation:
+                    intake_records = []
+                    for name in evening_meds:
+                        intake_records.append({"name": name, "status": "missed"})
+                    for name in morning_meds:
+                        if name not in evening_meds:
+                            intake_records.append({"name": name, "status": "missed"})
+                elif is_negation and not is_confirmation and not has_morning_ref and not has_evening_ref:
+                    intake_records = []
+                    for name in all_meds:
+                        intake_records.append({"name": name, "status": "missed"})
+                elif is_confirmation and not is_negation and not has_morning_ref and not has_evening_ref:
+                    intake_records = []
+                    for name in all_meds:
+                        intake_records.append({"name": name, "status": "taken"})
+            
+            # 3. LLM Fallback (if still unresolved)
             if intake_records is None:
                 prompt = (
                     f"You are a clinical tracking assistant.\n"
@@ -295,9 +333,37 @@ class SwasthaAgent:
                 )
                 
                 response = await llm_service.generate_response(prompt, num_predict=150, temperature=0.0)
-                response_clean = response.strip().replace("```json", "").replace("```", "").strip()
-                intake_records = json.loads(response_clean)
+                response_clean = response.strip()
                 
+                # Robust extraction of JSON array
+                start = response_clean.find('[')
+                end = response_clean.rfind(']')
+                if start != -1 and end != -1 and end > start:
+                    json_str = response_clean[start:end+1]
+                else:
+                    json_str = response_clean
+                
+                try:
+                    intake_records = json.loads(json_str)
+                except Exception as e:
+                    print(f"Error parsing LLM response as JSON: {e}. Raw response: {response}")
+                    # Fallback heuristic: parse manually from substrings
+                    intake_records = []
+                    for m in meds_list:
+                        name = m["name"]
+                        name_lower = name.lower()
+                        if name_lower in response_clean.lower():
+                            idx = response_clean.lower().find(name_lower)
+                            sub = response_clean[idx:idx+100].lower()
+                            if "taken" in sub:
+                                intake_records.append({"name": name, "status": "taken"})
+                            elif "skipped" in sub:
+                                intake_records.append({"name": name, "status": "skipped"})
+                            else:
+                                intake_records.append({"name": name, "status": "missed"})
+                        else:
+                            intake_records.append({"name": name, "status": "missed"})
+            
             if not isinstance(intake_records, list):
                 print(f"DEBUG: Intake response was not a list: {intake_records}")
                 return None
@@ -310,9 +376,31 @@ class SwasthaAgent:
                 if not name or status not in ['taken', 'missed', 'skipped']:
                     continue
                 
-                # Retrieve matching dosage/times from db row
-                matched_row = next((r for r in rows if r["name"].lower() == name.lower()), None)
-                dosage = matched_row["dosage"] if matched_row else ""
+                # Retrieve matching dosage/times from db row using robust match
+                matched_row = None
+                for r in rows:
+                    db_name = r["name"].lower()
+                    record_name = name.lower()
+                    if db_name == record_name:
+                        matched_row = r
+                        break
+                    if "vitamin d" in db_name and any(x in record_name for x in ["vitamin", "vit d", "विटामिन", "भिटामिन"]):
+                        matched_row = r
+                        break
+                    if "magnesium" in db_name and any(x in record_name for x in ["magnesium", "mag", "म्याग्नेसियम"]):
+                        matched_row = r
+                        break
+                    db_words = set(db_name.split())
+                    record_words = set(record_name.split())
+                    if db_words.intersection(record_words):
+                        matched_row = r
+                        break
+                
+                if matched_row:
+                    name = matched_row["name"] # Always use canonical English name from db
+                    dosage = matched_row["dosage"] or ""
+                else:
+                    dosage = ""
                 
                 scheduled_time = ""
                 if matched_row and matched_row["schedule"]:
@@ -535,6 +623,12 @@ class SwasthaAgent:
                         "have not taken", "haven't taken", "not taken", "what did i miss", "what have i missed"
                     ])
 
+                    # --- Detect "what have I taken" type queries ---
+                    is_taken_query = any(kw in message for kw in [
+                        "खाएको", "खाइसकेको", "खाइसकेँ", "खाएँ", "खाए", "लिएको", "लिएँ",
+                        "have taken", "what did i take", "what i took", "what medicines did i take", "which medicines did i take"
+                    ]) and not is_not_taken_query
+
                     filtered_meds = meds
                     if is_not_taken_query:
                         # Filter to only meds NOT logged as taken today
@@ -552,6 +646,22 @@ class SwasthaAgent:
                             filtered_meds = [m for m in meds if m["name"].lower() not in taken_names]
                         except Exception as e:
                             print(f"Error querying taken meds for filter: {e}")
+                    elif is_taken_query:
+                        # Filter to only meds logged as taken today
+                        try:
+                            today_str = datetime.now().strftime("%Y-%m-%d")
+                            conn2 = get_db()
+                            cursor2 = conn2.cursor()
+                            cursor2.execute(
+                                "SELECT DISTINCT medicine_name FROM medicine_logs WHERE user_id = ? AND status = 'taken' AND timestamp >= ?",
+                                (target_user_id, f"{today_str} 00:00:00")
+                            )
+                            taken_rows = cursor2.fetchall()
+                            conn2.close()
+                            taken_names = {r["medicine_name"].lower() for r in taken_rows}
+                            filtered_meds = [m for m in meds if m["name"].lower() in taken_names]
+                        except Exception as e:
+                            print(f"Error querying taken meds for filter: {e}")
                     elif target_time:
                         filtered_meds = [m for m in meds if any(
                             s.get('time', '').startswith(f"{target_hour:02d}:")
@@ -562,6 +672,8 @@ class SwasthaAgent:
                     if not filtered_meds:
                         if is_not_taken_query:
                             res = "तपाईंले आजका सबै औषधिहरू खाइसक्नुभएको छ। राम्रो काम!" if lang == "ne" else "You have taken all your medicines for today. Great job!"
+                        elif is_taken_query:
+                            res = "तपाईंले आज कुनै पनि औषधि खानुभएको छैन।" if lang == "ne" else "You haven't taken any medicines today."
                         else:
                             res = f"माफ गर्नुहोस्, {target_hour} बजे खाने कुनै औषधिको रेकर्ड छैन।" if lang == "ne" else f"Sorry, I don't have any records for medicine at {target_hour} o'clock."
                         yield res
@@ -585,6 +697,9 @@ class SwasthaAgent:
                         if is_not_taken_query:
                             intro = f"नमस्ते {user_name or 'हजुर'}, यहाँ तपाईंले आज अझै नखाएका औषधिहरू छन्:"
                             final_res = f"{intro}\n{translated_meds.strip()}"
+                        elif is_taken_query:
+                            intro = f"नमस्ते {user_name or 'हजुर'}, तपाईंले आज यी औषधिहरू खाइसक्नुभयो:"
+                            final_res = f"{intro}\n{translated_meds.strip()}"
                         elif target_time:
                             time_desc = f"{target_hour} बजे"
                             if target_hour < 12: time_desc = f"बिहानको {target_hour} बजे"
@@ -598,6 +713,9 @@ class SwasthaAgent:
                         med_lines = "\n".join([f"- {m['name']} ({m['dosage']}) - {', '.join([s.get('time', '') for s in m['schedule']])}" for m in filtered_meds])
                         if is_not_taken_query:
                             intro = f"Hello {user_name or ''}, here are the medicines you haven't taken today:"
+                            final_res = f"{intro}\n{med_lines}"
+                        elif is_taken_query:
+                            intro = f"Hello {user_name or ''}, here are the medicines you have taken today:"
                             final_res = f"{intro}\n{med_lines}"
                         else:
                             intro = f"Hello {user_name or ''}, here are your {target_hour} o'clock medicines:" if target_time else f"Hello {user_name or ''}, here are your medicines:"

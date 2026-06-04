@@ -73,12 +73,12 @@ const DoctorHomeScreen = ({ navigation }: any) => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="dark-content" />
+      <StatusBar barStyle="light-content" />
 
       {/* Header */}
       <View style={styles.header}>
         <View>
-          <Text style={styles.welcome}>Clinical Portal</Text>
+          <Text style={styles.welcome}>CLINICAL PORTAL</Text>
           <Text style={styles.userName}>Doctor Dashboard</Text>
         </View>
         <TouchableOpacity style={styles.profileBtn} onPress={handleLogout}>
@@ -115,7 +115,7 @@ const DoctorHomeScreen = ({ navigation }: any) => {
             <View style={styles.row}>
               <TouchableOpacity
                 style={[styles.bentoCard, styles.statsCard, { width: HALF_WIDTH, backgroundColor: Colors.softGold }]}
-                onPress={() => navigation.navigate('PendingReports')}
+                onPress={() => navigation.navigate('ReportScreen', { role: 'doctor' })}
               >
                 <View style={styles.statsIconBox}>
                   <Smile color={Colors.gold} size={22} />
@@ -146,11 +146,11 @@ const DoctorHomeScreen = ({ navigation }: any) => {
               onPress={() => navigation.navigate('ReportScreen', { role: 'doctor' })}
             >
               <View style={styles.wideCardText}>
-                <Text style={styles.wideCardLabel}>MENTAL HEALTH REVIEW</Text>
+                <Text style={styles.wideCardLabel}>Mental Health Review</Text>
                 <Text style={styles.wideCardTitle}>
                   {dashboard?.pendingCount > 0
-                    ? `${dashboard.pendingCount} Reports Awaiting`
-                    : 'All Reports Reviewed'}
+                    ? `${dashboard.pendingCount} reports pending`
+                    : 'All reports reviewed'}
                 </Text>
                 <Text style={styles.wideCardSub}>Tap to review pending sessions</Text>
               </View>
@@ -160,7 +160,7 @@ const DoctorHomeScreen = ({ navigation }: any) => {
             </TouchableOpacity>
 
             <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>Psych-Profiles</Text>
+              <Text style={styles.sectionTitle}>Patient Profiles</Text>
               <Text style={styles.seeAll}>{patients.length} patients</Text>
             </View>
           </View>
@@ -186,7 +186,7 @@ const DoctorHomeScreen = ({ navigation }: any) => {
               <View style={styles.patientInfo}>
                 <Text style={styles.patientName}>{item.name}</Text>
                 <Text style={styles.patientMeta}>
-                  Age: {item.age} • {item.conditions?.[0] || 'General'}
+                  Age: {item.age} • {item.conditions?.[0] || 'Normal'}
                 </Text>
               </View>
               <View style={styles.patientUpdate}>
