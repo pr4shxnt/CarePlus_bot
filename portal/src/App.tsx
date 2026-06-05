@@ -37,7 +37,7 @@ function App() {
   }, []);
 
   return (
-    <div className="dark bg-background text-foreground min-h-screen">
+    <div className="bg-background text-foreground min-h-screen">
       <TooltipProvider>
         <Router>
           <Routes>
