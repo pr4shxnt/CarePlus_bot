@@ -18,7 +18,7 @@ import {
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import { Colors } from '../theme/colors';
-import { User, Lock, ShieldCheck, ArrowRight, Zap } from 'lucide-react-native';
+import { User, Lock, ShieldCheck, ArrowRight, Zap, Eye, EyeOff } from 'lucide-react-native';
 import { AuthService } from '../services/auth.service';
 
 const { width } = Dimensions.get('window');
@@ -28,7 +28,7 @@ const LoginScreen = ({ navigation }: any) => {
   const [password, setPassword] = useState('');
   const [role, setRole] = useState<'doctor' | 'guardian'>('guardian');
   const [loading, setLoading] = useState(false);
-  const [isPasswordVisible] = useState(false);
+  const [isPasswordVisible, setIsPasswordVisible] = useState(false);
 
   // Animation values
   const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -234,6 +234,17 @@ const LoginScreen = ({ navigation }: any) => {
                       value={password}
                       onChangeText={setPassword}
                     />
+                    <TouchableOpacity
+                      onPress={() => setIsPasswordVisible(!isPasswordVisible)}
+                      activeOpacity={0.7}
+                      style={styles.eyeIcon}
+                    >
+                      {isPasswordVisible ? (
+                        <EyeOff color={Colors.gray} size={20} />
+                      ) : (
+                        <Eye color={Colors.gray} size={20} />
+                      )}
+                    </TouchableOpacity>
                   </View>
                 </View>
 
@@ -409,6 +420,10 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: Colors.secondary,
     fontWeight: '600',
+  },
+  eyeIcon: {
+    padding: 4,
+    opacity: 0.6,
   },
   forgotBtn: {
     alignSelf: 'flex-end',

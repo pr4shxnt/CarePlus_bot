@@ -1,7 +1,12 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { Check, Eye, EyeOff } from "lucide-react";
 
 export const Registration = () => {
   const [role, setRole] = useState("guardian");
+  const [isEmailVerified, setIsEmailVerified] = useState(false);
+  const [googleLoaded, setGoogleLoaded] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -21,8 +26,69 @@ export const Registration = () => {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
+  const handleGoogleCredentialResponse = async (response) => {
+    try {
+      const res = await fetch(
+        "https://skkcg1pw-4000.inc1.devtunnels.ms/api/auth/verify-google-token",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ idToken: response.credential }),
+        }
+      );
+      const data = await res.json();
+      if (data.success) {
+        setFormData((prev) => ({ ...prev, email: data.email }));
+        setIsEmailVerified(true);
+      } else {
+        alert(data.error || "Google email verification failed.");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Failed to connect to the verification server.");
+    }
+  };
+
+  useEffect(() => {
+    const checkGoogle = () => {
+      if (window.google) {
+        setGoogleLoaded(true);
+      } else {
+        setTimeout(checkGoogle, 100);
+      }
+    };
+    checkGoogle();
+  }, []);
+
+  useEffect(() => {
+    if (googleLoaded && !isEmailVerified) {
+      const btn = document.getElementById("google-verify-btn");
+      if (btn && btn.children.length === 0) {
+        try {
+          window.google.accounts.id.initialize({
+            client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID || "44430947651-mmos6g35gibdn6bejvfkk8am8322m1tn.apps.googleusercontent.com",
+            callback: handleGoogleCredentialResponse,
+          });
+          window.google.accounts.id.renderButton(
+            btn,
+            { theme: "outline", size: "large", text: "continue_with" }
+          );
+        } catch (err) {
+          console.error("Error rendering Google button:", err);
+        }
+      }
+    }
+  });
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    if (!isEmailVerified) {
+      alert("Please verify your email address using Google verification first.");
+      return;
+    }
 
     if (formData.password !== formData.confirmPassword) {
       alert("Passwords do not match!");
@@ -106,42 +172,76 @@ export const Registration = () => {
           </div>
           <div className="form-group">
             <label htmlFor="reg-email">Email Address</label>
-            <input
-              type="email"
-              id="reg-email"
-              name="email"
-              value={formData.email}
-              onChange={handleChange}
-              placeholder="john@example.com"
-              required
-            />
+            <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+              <input
+                type="email"
+                id="reg-email"
+                name="email"
+                value={formData.email}
+                onChange={handleChange}
+                placeholder={isEmailVerified ? "" : "Verify email below"}
+                required
+                disabled={true}
+                style={{ flex: 1, backgroundColor: "#f5f5f5", color: "#666", cursor: "not-allowed" }}
+              />
+              {isEmailVerified && (
+                <div style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: "42px", height: "42px", borderRadius: "12px", backgroundColor: "#e6f4ea", border: "2px solid #34a853" }}>
+                  <Check style={{ color: "#34a853", width: "22px", height: "22px" }} />
+                </div>
+              )}
+            </div>
+            {!isEmailVerified && (
+              <div style={{ marginTop: "10px" }}>
+                <div id="google-verify-btn"></div>
+              </div>
+            )}
           </div>
           <div className="form-row">
             <div className="form-group">
               <label htmlFor="password">Password</label>
-              <input
-                type="password"
-                id="password"
-                name="password"
-                value={formData.password}
-                onChange={handleChange}
-                placeholder="********"
-                required
-                minLength={8}
-              />
+              <div className="password-wrapper">
+                <input
+                  type={showPassword ? "text" : "password"}
+                  id="password"
+                  name="password"
+                  value={formData.password}
+                  onChange={handleChange}
+                  placeholder="********"
+                  required
+                  minLength={8}
+                />
+                <button
+                  type="button"
+                  className="password-toggle-btn"
+                  onClick={() => setShowPassword(!showPassword)}
+                  aria-label={showPassword ? "Hide password" : "Show password"}
+                >
+                  {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                </button>
+              </div>
             </div>
             <div className="form-group">
               <label htmlFor="confirm-password">Confirm Password</label>
-              <input
-                type="password"
-                id="confirm-password"
-                name="confirmPassword"
-                value={formData.confirmPassword}
-                onChange={handleChange}
-                placeholder="********"
-                required
-                minLength={8}
-              />
+              <div className="password-wrapper">
+                <input
+                  type={showConfirmPassword ? "text" : "password"}
+                  id="confirm-password"
+                  name="confirmPassword"
+                  value={formData.confirmPassword}
+                  onChange={handleChange}
+                  placeholder="********"
+                  required
+                  minLength={8}
+                />
+                <button
+                  type="button"
+                  className="password-toggle-btn"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  aria-label={showConfirmPassword ? "Hide password" : "Show password"}
+                >
+                  {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                </button>
+              </div>
             </div>
           </div>
 

@@ -95557,11 +95557,40 @@ async function updateMe(req, res) {
   });
   res.json(ok(user, "Profile updated."));
 }
+async function verifyGoogleToken(req, res) {
+  const { idToken } = req.body;
+  if (!idToken) {
+    res.status(400).json({ success: false, error: "ID token is required." });
+    return;
+  }
+  try {
+    const response = await fetch(`https://oauth2.googleapis.com/tokeninfo?id_token=${idToken}`);
+    if (!response.ok) {
+      res.status(400).json({ success: false, error: "Invalid Google token." });
+      return;
+    }
+    const payload = await response.json();
+    const clientId = process.env.GOOGLE_CLIENT_ID || "44430947651-mmos6g35gibdn6bejvfkk8am8322m1tn.apps.googleusercontent.com";
+    if (payload.aud !== clientId) {
+      res.status(400).json({ success: false, error: "Token client ID mismatch." });
+      return;
+    }
+    if (!payload.email_verified) {
+      res.status(400).json({ success: false, error: "Google email is not verified." });
+      return;
+    }
+    res.json({ success: true, email: payload.email });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false, error: "Server error verifying Google token." });
+  }
+}
 
 // src/routes/auth.routes.ts
 var router = import_express.Router();
 router.post("/register", validate(RegisterSchema), register);
 router.post("/login", validate(LoginSchema), login);
+router.post("/verify-google-token", verifyGoogleToken);
 router.get("/me", authenticate, me);
 router.patch("/me", authenticate, updateMe);
 var auth_routes_default = router;

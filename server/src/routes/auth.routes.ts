@@ -9,6 +9,7 @@ const router = Router();
 // Public
 router.post("/register", validate(RegisterSchema), auth.register);
 router.post("/login", validate(LoginSchema), auth.login);
+router.post("/verify-google-token", auth.verifyGoogleToken);
 
 // Protected
 router.get("/me", authenticate, auth.me);
