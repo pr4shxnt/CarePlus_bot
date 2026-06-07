@@ -1,9 +1,8 @@
-import React, { useState } from "react";
-import { Card, CardContent } from "@/components/ui/card";
+import { useState, type ChangeEvent } from "react";
+import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
-import { ArrowLeft, Smile, Pill, Clock, CheckCircle, FileText, TrendingUp } from "lucide-react";
+import { ArrowLeft, Smile, Pill, Clock, CheckCircle, FileText } from "lucide-react";
 
 interface ReportListViewProps {
   reports: any[];
@@ -18,7 +17,7 @@ interface ReportListViewProps {
 export default function ReportListView({
   reports,
   role,
-  patientId,
+  patientId: _patientId,
   onBack,
   onNavigateToHistory,
   onNavigateToSession,
@@ -46,7 +45,7 @@ export default function ReportListView({
 
   return (
     <div className="space-y-6 text-left">
-      <!-- Header -->
+      {/* Header */}
       <div className="flex items-center justify-between border-b border-border pb-4">
         <div className="flex items-center gap-4">
           <Button 
@@ -68,7 +67,7 @@ export default function ReportListView({
         </Button>
       </div>
 
-      <!-- Reports List -->
+      {/* Reports List */}
       <div className="space-y-10">
         {reports.length === 0 ? (
           <Card className="bg-card/45 border-border rounded-3xl p-16 text-center shadow-sm flex flex-col items-center justify-center">
@@ -91,15 +90,15 @@ export default function ReportListView({
 
             return (
               <div key={session._id || idx} className="space-y-4">
-                <!-- Date Headers -->
+                {/* Date Headers */}
                 <div>
                   <h3 className="text-2xl font-black text-foreground leading-none">{dayName}</h3>
                   <p className="text-xs font-bold text-primary mt-1">{dateStr}</p>
                 </div>
 
-                <!-- Bento Metrics Grid -->
+                {/* Bento Metrics Grid */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <!-- Mood Card -->
+                  {/* Mood Card */}
                   <Card className="bg-card/45 border-border shadow-sm p-5 flex flex-col justify-between min-h-[120px]">
                     <Smile className="w-6 h-6 text-primary" />
                     <div>
@@ -109,7 +108,7 @@ export default function ReportListView({
                     </div>
                   </Card>
 
-                  <!-- Medication Adherence Card -->
+                  {/* Medication Adherence Card */}
                   <Card className="bg-yellow-500/5 border-yellow-500/15 p-5 flex flex-col justify-between min-h-[120px]">
                     <Pill className="w-6 h-6 text-yellow-500" />
                     <div>
@@ -122,7 +121,7 @@ export default function ReportListView({
                   </Card>
                 </div>
 
-                <!-- AI Summary Block -->
+                {/* AI Summary Block */}
                 {session.report && (
                   <Card className="bg-card/45 border-border p-5 shadow-sm">
                     <h4 className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-2">AI Sentiment Summary</h4>
@@ -130,7 +129,7 @@ export default function ReportListView({
                   </Card>
                 )}
 
-                <!-- Doctor Notes Block -->
+                {/* Doctor Notes Block */}
                 {session.doctorNotes && (
                   <Card className="bg-yellow-500/5 border-yellow-500/15 p-5">
                     <h4 className="text-[10px] font-bold text-yellow-500/80 uppercase tracking-widest mb-2">Clinical Notes</h4>
@@ -138,7 +137,7 @@ export default function ReportListView({
                   </Card>
                 )}
 
-                <!-- Footer Status Row -->
+                {/* Footer Status Row */}
                 <Card className="bg-card/45 border-border p-4 shadow-sm flex items-center justify-between">
                   <Badge 
                     variant="secondary" 
@@ -168,16 +167,16 @@ export default function ReportListView({
                   </Button>
                 </Card>
 
-                <!-- Doctor Notes Approval Panel -->
+                {/* Doctor Notes Approval Panel */}
                 {role === "doctor" && !approved && (
                   <Card className="bg-muted/40 border-border p-5 rounded-[24px] space-y-4">
                     <h4 className="text-xs font-black text-foreground uppercase tracking-wider">Publish Session Insights</h4>
                     <div className="space-y-3">
-                      <Textarea 
+                      <textarea 
                         value={notesState[session._id] || ""}
-                        onChange={(e) => handleNotesChange(session._id, e.target.value)}
+                        onChange={(e: ChangeEvent<HTMLTextAreaElement>) => handleNotesChange(session._id, e.target.value)}
                         placeholder="Add special instructions or clinical warnings here (optional)..."
-                        className="bg-background border-border text-foreground font-semibold placeholder:text-muted-foreground/45 rounded-xl min-h-[80px]"
+                        className="w-full bg-background border border-border text-foreground font-semibold placeholder:text-muted-foreground/45 rounded-xl min-h-[80px] p-3 focus:outline-none focus:ring-1 focus:ring-primary"
                       />
                       <Button
                         type="button"

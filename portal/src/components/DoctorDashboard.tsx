@@ -1,5 +1,4 @@
-import React from "react";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Search, Filter, Smile, Zap, MessageSquare, FileText, User } from "lucide-react";
@@ -30,9 +29,9 @@ export default function DoctorDashboard({
 
   return (
     <div className="space-y-8 text-left">
-      <!-- Bento Stats Grid -->
+      {/* Bento Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <!-- Search Bento Card -->
+        {/* Search Bento Card */}
         <Card className="bg-card/45 border-border backdrop-blur shadow-sm p-6 flex items-center gap-4">
           <div className="w-12 h-12 rounded-2xl bg-muted/60 flex items-center justify-center text-muted-foreground shrink-0">
             <Search className="w-5 h-5" />
@@ -52,7 +51,7 @@ export default function DoctorDashboard({
           </div>
         </Card>
 
-        <!-- Pending Reports Stats Card -->
+        {/* Pending Reports Stats Card */}
         <Card 
           onClick={onNavigateToReports}
           className="bg-yellow-500/5 hover:bg-yellow-500/10 cursor-pointer border-yellow-500/15 shadow-sm p-6 flex flex-col justify-between h-[130px] transition-all relative group"
@@ -68,23 +67,23 @@ export default function DoctorDashboard({
           </div>
           <div>
             <p className="text-2xl font-black text-foreground">{String(pendingCount).padStart(2, "0")}</p>
-            <p class="text-xs font-bold text-muted-foreground mt-0.5">Pending Reports</p>
+            <p className="text-xs font-bold text-muted-foreground mt-0.5">Pending Reports</p>
           </div>
         </Card>
 
-        <!-- Approved Reports Stats Card -->
+        {/* Approved Reports Stats Card */}
         <Card className="bg-card/45 border-border shadow-sm p-6 flex flex-col justify-between h-[130px]">
           <div className="w-11 h-11 rounded-xl bg-muted flex items-center justify-center text-teal-400">
             <MessageSquare className="w-5 h-5" />
           </div>
           <div>
             <p className="text-2xl font-black text-foreground">{String(approvedCount).padStart(2, "0")}</p>
-            <p class="text-xs font-bold text-muted-foreground mt-0.5">Approved Logs</p>
+            <p className="text-xs font-bold text-muted-foreground mt-0.5">Approved Logs</p>
           </div>
         </Card>
       </div>
 
-      <!-- Wide Banner CTA -->
+      {/* Wide Banner CTA */}
       <Card 
         onClick={onNavigateToReports}
         className="bg-yellow-500 hover:bg-yellow-600 border-0 rounded-[24px] p-6 flex items-center justify-between shadow-md cursor-pointer transition-all group text-yellow-950"
@@ -101,9 +100,9 @@ export default function DoctorDashboard({
         </div>
       </Card>
 
-      <!-- Psych Profiles List -->
+      {/* Psych Profiles List */}
       <div className="space-y-4">
-        <div class="flex justify-between items-center px-1">
+        <div className="flex justify-between items-center px-1">
           <h2 className="text-lg font-black text-foreground tracking-tight">Psych-Profiles</h2>
           <span className="text-xs font-bold text-muted-foreground">{patients.length} patients</span>
         </div>

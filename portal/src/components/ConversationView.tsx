@@ -1,4 +1,4 @@
-import React from "react";
+
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -33,7 +33,7 @@ export default function ConversationView({
 
   return (
     <div className="space-y-6 text-left">
-      <!-- Header -->
+      {/* Header */}
       <div className="flex items-center gap-4 border-b border-border pb-4">
         <Button 
           variant="outline" 
@@ -49,7 +49,7 @@ export default function ConversationView({
         </div>
       </div>
 
-      <!-- Session Meta Cards -->
+      {/* Session Meta Cards */}
       <Card className="bg-card/45 border-border p-5 shadow-sm space-y-4">
         <div className="flex flex-wrap gap-2">
           <Badge variant="outline" className="flex items-center gap-1.5 bg-background border-border text-foreground text-xs font-bold px-3 py-1.5 rounded-xl">
@@ -80,7 +80,7 @@ export default function ConversationView({
         </div>
       </Card>
 
-      <!-- Analysis Banners -->
+      {/* Analysis Banners */}
       {(mood || meds.length > 0) && (
         <div className="flex flex-wrap gap-2">
           {mood && (
@@ -106,7 +106,7 @@ export default function ConversationView({
         </div>
       )}
 
-      <!-- Chat Bubble Box -->
+      {/* Chat Bubble Box */}
       <Card className="bg-card/45 border-border p-6 md:p-8 shadow-sm space-y-6">
         <div className="flex items-center gap-2 border-b border-border pb-3 mb-6">
           <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Chat Log</span>
@@ -146,7 +146,7 @@ export default function ConversationView({
         </div>
       </Card>
 
-      <!-- AI Summary -->
+      {/* AI Summary */}
       {session.report && (
         <Card className="bg-card/45 border-border p-5 shadow-sm">
           <div className="flex items-center gap-2 mb-2">
@@ -157,7 +157,7 @@ export default function ConversationView({
         </Card>
       )}
 
-      <!-- Doctor Notes -->
+      {/* Doctor Notes */}
       {session.doctorNotes && (
         <Card className="bg-yellow-500/5 border-yellow-500/15 p-5">
           <div className="flex items-center gap-2 mb-2">

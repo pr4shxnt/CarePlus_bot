@@ -7,6 +7,8 @@ import PatientDetailView from "@/components/PatientDetailView";
 import ReportListView from "@/components/ReportListView";
 import SessionHistoryView from "@/components/SessionHistoryView";
 import ConversationView from "@/components/ConversationView";
+import GuardianDashboard from "@/components/GuardianDashboard";
+import ConnectDeviceView from "@/components/ConnectDeviceView";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -74,7 +76,6 @@ import {
   Calendar,
   Pill,
   MessageSquare,
-  Clock,
   Zap,
   User,
 } from "lucide-react";
@@ -1810,6 +1811,84 @@ export default function Dashboard() {
                       }}
                     />
                   )
+                )}
+                {/* --- GUARDIAN DASHBOARD TAB --- */}
+                {activeTab === "guardian_dashboard" && (
+                  <GuardianDashboard
+                    dashboard={guardianDashboard}
+                    reports={reports}
+                    onNavigateToReports={() => setActiveTab("guardian_reports")}
+                    onNavigateToSessions={() => setActiveTab("guardian_sessions")}
+                    onNavigateToDevice={() => setActiveTab("guardian_device")}
+                  />
+                )}
+
+                {/* --- GUARDIAN REPORTS TAB --- */}
+                {activeTab === "guardian_reports" && (
+                  selectedSessionId ? (
+                    <ConversationView
+                      session={sessions.find((s) => s._id === selectedSessionId)}
+                      onBack={() => {
+                        setSelectedSessionId(null);
+                      }}
+                    />
+                  ) : (
+                    <ReportListView
+                      reports={reports}
+                      role="guardian"
+                      patientId={guardianDashboard?.patient?._id || ""}
+                      onBack={() => {
+                        setActiveTab("guardian_dashboard");
+                      }}
+                      onNavigateToHistory={() => {
+                        setActiveTab("guardian_sessions");
+                      }}
+                      onNavigateToSession={(sId) => {
+                        setSelectedSessionId(sId);
+                      }}
+                      onApprove={async () => {}}
+                    />
+                  )
+                )}
+
+                {/* --- GUARDIAN SESSIONS TAB --- */}
+                {activeTab === "guardian_sessions" && (
+                  selectedSessionId ? (
+                    <ConversationView
+                      session={sessions.find((s) => s._id === selectedSessionId)}
+                      onBack={() => {
+                        setSelectedSessionId(null);
+                      }}
+                    />
+                  ) : (
+                    <SessionHistoryView
+                      sessions={sessions}
+                      role="guardian"
+                      patientId={guardianDashboard?.patient?._id || ""}
+                      onBack={() => {
+                        setActiveTab("guardian_reports");
+                      }}
+                      onSelectSession={(sId) => {
+                        setSelectedSessionId(sId);
+                      }}
+                    />
+                  )
+                )}
+
+                {/* --- GUARDIAN DEVICE LINK TAB --- */}
+                {activeTab === "guardian_device" && (
+                  <ConnectDeviceView
+                    botId={guardianDashboard?.patient?.botId || ""}
+                    onBack={() => {
+                      setActiveTab("guardian_dashboard");
+                    }}
+                    onLinkBot={(newBotId) => {
+                      setGuardianDashboard((prev: any) => ({
+                        ...prev,
+                        patient: prev?.patient ? { ...prev.patient, botId: newBotId } : null
+                      }));
+                    }}
+                  />
                 )}
               </>
             )}

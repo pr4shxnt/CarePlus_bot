@@ -1,5 +1,4 @@
-import React from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, User, Smile, MessageSquare, Activity, Pill } from "lucide-react";
@@ -23,7 +22,7 @@ export default function PatientDetailView({
 
   return (
     <div className="space-y-6 text-left">
-      <!-- Back Header -->
+      {/* Back Header */}
       <div className="flex items-center gap-4">
         <Button 
           variant="outline" 
@@ -36,14 +35,14 @@ export default function PatientDetailView({
         <h1 className="text-xl font-black text-foreground">Patient Profile</h1>
       </div>
 
-      <!-- Detail Layout -->
+      {/* Detail Layout */}
       <div className="space-y-6">
-        <!-- Profile Banner -->
+        {/* Profile Banner */}
         <Card className="bg-card/45 border-border shadow-sm p-6 md:p-8 flex flex-col md:flex-row items-center gap-6">
           <div className="w-20 h-20 rounded-3xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary shrink-0 shadow-sm">
             <User className="w-10 h-10" />
           </div>
-          <div class="flex-1 text-center md:text-left min-w-0">
+          <div className="flex-1 text-center md:text-left min-w-0">
             <h2 className="text-2xl font-black text-foreground truncate">{patient?.name ?? "Unknown Patient"}</h2>
             <p className="text-xs font-bold text-muted-foreground mt-0.5">Psych-Monitoring &bull; Age: {patient?.age ?? "—"}</p>
             <Badge variant="outline" className="bg-yellow-500/10 text-yellow-500 border-yellow-500/20 text-xs font-black uppercase px-4 py-1 rounded-xl mt-3 tracking-wider">
@@ -52,16 +51,16 @@ export default function PatientDetailView({
           </div>
         </Card>
 
-        <!-- Vitals Summary Row -->
+        {/* Vitals Summary Row */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <!-- Current Mood Vital Card -->
+          {/* Current Mood Vital Card */}
           <Card className="bg-card/45 border-border shadow-sm p-6 flex flex-col items-center justify-center text-center h-[130px]">
             <Smile className="w-6 h-6 text-primary mb-2" />
             <p className="text-lg font-black text-foreground">{patient?.mood || "Good"}</p>
             <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mt-1">Current Mood</p>
           </Card>
 
-          <!-- Loneliness Vital Card -->
+          {/* Loneliness Vital Card */}
           <Card className="bg-yellow-500/5 border-yellow-500/15 p-6 flex flex-col items-center justify-center text-center h-[130px]">
             <MessageSquare className="w-6 h-6 text-yellow-500 mb-2" />
             <p className="text-lg font-black text-yellow-500">12%</p>
@@ -69,7 +68,7 @@ export default function PatientDetailView({
           </Card>
         </div>
 
-        <!-- Psych-Sentiment Analysis CTA Block -->
+        {/* Psych-Sentiment Analysis CTA Block */}
         <Card 
           onClick={() => onNavigateToReports(patient?._id)}
           className="bg-card/45 hover:bg-card/85 border-border shadow-sm p-6 flex items-center justify-between group cursor-pointer transition text-left"
@@ -86,7 +85,7 @@ export default function PatientDetailView({
           <span className="text-xs font-black text-primary group-hover:underline shrink-0 pl-2">View</span>
         </Card>
 
-        <!-- Medication Schedule -->
+        {/* Medication Schedule */}
         <Card className="bg-card/45 border-border shadow-sm p-6 md:p-8">
           <div className="flex justify-between items-center border-b border-border pb-4 mb-4">
             <h3 className="font-black text-base text-foreground">Medication Schedule</h3>
