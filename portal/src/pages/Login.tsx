@@ -36,9 +36,10 @@ export default function Login() {
       if (res.success && res.data?.token && res.data?.user) {
         const loggedUser = res.data.user;
 
-        // Ensure this is an admin
-        if (loggedUser.role !== "admin") {
-          setError("Access denied. Only administrators can access the portal.");
+        // Ensure this is an admin, doctor, or guardian
+        const allowedRoles = ["admin", "doctor", "guardian"];
+        if (!allowedRoles.includes(loggedUser.role)) {
+          setError("Access denied. Invalid portal role.");
           setLoading(false);
           return;
         }
@@ -70,7 +71,7 @@ export default function Login() {
             CarePlus <span className="text-primary font-normal">Portal</span>
           </CardTitle>
           <CardDescription className="text-muted-foreground">
-            Sign in to access the system administrator dashboard.
+            Sign in to access the clinical & guardian dashboards.
           </CardDescription>
         </CardHeader>
         <form onSubmit={handleLogin}>
