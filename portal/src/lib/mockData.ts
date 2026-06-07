@@ -172,6 +172,25 @@ export function getMockDataFallback(endpoint: string, options: RequestInit = {})
   }
 
   if (endpoint.includes("/approve")) {
+    const match = endpoint.match(/\/reports\/([a-zA-Z0-9_-]+)\/approve/);
+    const reportId = match ? match[1] : null;
+    const body = options.body ? JSON.parse(options.body as string) : {};
+    const notes = body.doctorNotes || "";
+    
+    if (reportId) {
+      const rep = MOCK_REPORTS.find(r => r._id === reportId);
+      if (rep) {
+        rep.reportStatus = "approved";
+        rep.doctorNotes = notes;
+        rep.reviewedBy = { name: "Dr. Adit" };
+      }
+      const ses = MOCK_SESSIONS.find(s => s._id === reportId) as any;
+      if (ses) {
+        ses.reportStatus = "approved";
+        ses.doctorNotes = notes;
+        ses.reviewedBy = { name: "Dr. Adit" };
+      }
+    }
     return { success: true, message: "Approved successfully" };
   }
 
