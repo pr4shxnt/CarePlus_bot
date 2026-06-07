@@ -1732,12 +1732,26 @@ export default function Dashboard() {
                     />
                   ) : (
                     <div className="space-y-4">
-                      <div className="flex justify-between items-center px-1 text-left">
-                        <h2 className="text-lg font-black text-foreground tracking-tight">Select Patient Profile</h2>
-                        <span className="text-xs font-bold text-muted-foreground">{patients.length} patients</span>
+                      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-border pb-4">
+                        <div className="text-left">
+                          <h2 className="text-lg font-black text-foreground tracking-tight">Select Patient Profile</h2>
+                          <p className="text-xs text-muted-foreground mt-0.5">Click a patient to open their detailed psych-profile file</p>
+                        </div>
+                        <div className="flex items-center gap-2 bg-card/45 border border-border px-3 py-1.5 rounded-xl shrink-0">
+                          <User className="w-4 h-4 text-muted-foreground" />
+                          <input
+                            type="text"
+                            placeholder="Filter profiles..."
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            className="bg-transparent border-none text-xs font-bold text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-0"
+                          />
+                        </div>
                       </div>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {patients.map((patient) => (
+                        {patients
+                          .filter((p) => p.name?.toLowerCase().includes(searchQuery.toLowerCase()))
+                          .map((patient) => (
                           <Card
                             key={patient._id}
                             onClick={() => {
