@@ -1025,10 +1025,12 @@ export default function Dashboard() {
                                   dataKey="name"
                                   stroke="var(--muted-foreground)"
                                   fontSize={12}
+                                  dy={8}
                                 />
                                 <YAxis
                                   stroke="var(--muted-foreground)"
                                   fontSize={12}
+                                  dx={-8}
                                 />
                                 <ChartTooltip
                                   cursor={false}
@@ -1156,11 +1158,13 @@ export default function Dashboard() {
                                 dataKey="name"
                                 stroke="var(--muted-foreground)"
                                 fontSize={12}
+                                dy={8}
                               />
                               <YAxis
                                 stroke="var(--muted-foreground)"
                                 fontSize={12}
                                 allowDecimals={false}
+                                dx={-8}
                               />
                               <ChartTooltip
                                 cursor={false}
