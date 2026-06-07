@@ -3,8 +3,24 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, MessageSquare, Clock, Smile, CheckCircle, FileText } from "lucide-react";
 
+interface SessionTurn {
+  role: string;
+  content: string;
+}
+
+interface CompanionSession {
+  _id: string;
+  patientId: any;
+  startedAt: string;
+  createdAt?: string;
+  durationSeconds: number;
+  reportStatus: string;
+  analyses?: { mood: string; mood_intensity: number }[];
+  turns?: SessionTurn[];
+}
+
 interface SessionHistoryViewProps {
-  sessions: any[];
+  sessions: CompanionSession[];
   role: string;
   patientId: string;
   onBack: () => void;
@@ -46,7 +62,7 @@ export default function SessionHistoryView({
           </Card>
         ) : (
           sessions.map((session, idx) => {
-            const date = new Date(session.startedAt || session.createdAt);
+            const date = new Date(session.startedAt || session.createdAt || "");
             const isToday = new Date().toDateString() === date.toDateString();
             const dateLabel = isToday
               ? "Today"

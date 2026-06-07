@@ -4,8 +4,31 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Clock, Smile, Pill, CheckCircle, Bot, User, FileText } from "lucide-react";
 
+interface SessionTurn {
+  role: string;
+  content: string;
+}
+
+interface CompanionSession {
+  _id: string;
+  patientId: any;
+  startedAt: string;
+  createdAt?: string;
+  durationSeconds: number;
+  reportStatus: string;
+  analyses?: { 
+    mood: string; 
+    mood_intensity: number;
+    medicine_log?: { name: string; status: string }[];
+  }[];
+  turns?: SessionTurn[];
+  report?: string;
+  doctorNotes?: string;
+  reviewedBy?: { name: string };
+}
+
 interface ConversationViewProps {
-  session: any;
+  session: CompanionSession | null;
   onBack: () => void;
 }
 
@@ -15,7 +38,7 @@ export default function ConversationView({
 }: ConversationViewProps) {
   if (!session) return null;
 
-  const date = new Date(session.startedAt || session.createdAt);
+  const date = new Date(session.startedAt || session.createdAt || "");
   const dateLabel = date.toLocaleDateString("en-US", {
     weekday: "long",
     month: "long",
@@ -25,7 +48,7 @@ export default function ConversationView({
   const timeLabel = date.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" });
   const durationMins = Math.round((session.durationSeconds || 0) / 60);
   const turns = session.turns || [];
-  const analysis = session.analyses?.[0] ?? {};
+  const analysis = (session.analyses?.[0] ?? {}) as any;
   const mood = analysis.mood || null;
   const intensity = analysis.mood_intensity ?? null;
   const meds = analysis.medicine_log ?? [];

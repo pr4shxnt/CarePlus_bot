@@ -3,9 +3,23 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Search, Filter, Smile, Zap, MessageSquare, FileText, User } from "lucide-react";
 
+interface Patient {
+  _id: string;
+  name: string;
+  age: number;
+  gender: string;
+  conditions?: string[];
+  botId: string;
+  isActive: boolean;
+}
+
 interface DoctorDashboardProps {
-  dashboard: any;
-  patients: any[];
+  dashboard: {
+    patientsCount?: number;
+    pendingCount?: number;
+    approvedCount?: number;
+  } | null;
+  patients: Patient[];
   search: string;
   onSearchChange: (value: string) => void;
   onSelectPatient: (patientId: string) => void;

@@ -3,8 +3,27 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, User, Smile, MessageSquare, Activity, Pill } from "lucide-react";
 
+interface MedicineRegimen {
+  name: string;
+  dosage: string;
+  frequency: string;
+  times?: string[];
+}
+
+interface Patient {
+  _id: string;
+  name: string;
+  age: number;
+  gender: string;
+  conditions?: string[];
+  medicines?: MedicineRegimen[];
+  botId: string;
+  isActive: boolean;
+  mood?: string;
+}
+
 interface PatientDetailViewProps {
-  patient: any;
+  patient: Patient | null;
   onBack: () => void;
   onNavigateToReports: (patientId: string) => void;
 }
@@ -70,7 +89,7 @@ export default function PatientDetailView({
 
         {/* Psych-Sentiment Analysis CTA Block */}
         <Card 
-          onClick={() => onNavigateToReports(patient?._id)}
+          onClick={() => onNavigateToReports(patient?._id || "")}
           className="bg-card/45 hover:bg-card/85 border-border shadow-sm p-6 flex items-center justify-between group cursor-pointer transition text-left"
         >
           <div className="flex items-center gap-4 min-w-0">

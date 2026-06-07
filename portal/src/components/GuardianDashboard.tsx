@@ -22,9 +22,52 @@ import {
   ResponsiveContainer 
 } from "recharts";
 
+interface MedicineRegimen {
+  name: string;
+  dosage: string;
+  frequency: string;
+  times?: string[];
+}
+
+interface Patient {
+  _id: string;
+  name: string;
+  age: number;
+  gender: string;
+  conditions?: string[];
+  medicines?: MedicineRegimen[];
+  botId: string;
+  isActive: boolean;
+}
+
+interface ReportAnalysis {
+  mood: string;
+  mood_intensity: number;
+  medicine_log?: { name: string; status: string }[];
+  forgotten_items?: string[];
+}
+
+interface HealthReport {
+  _id: string;
+  patientId: string | Patient;
+  createdAt: string;
+  startedAt?: string;
+  reportStatus: string;
+  report: string;
+  doctorNotes?: string;
+  reviewedBy?: { name: string };
+  analyses?: ReportAnalysis[];
+}
+
+interface GuardianDashboardData {
+  patient: Patient | null;
+  reports?: HealthReport[];
+  stats?: { total: number };
+}
+
 interface GuardianDashboardProps {
-  dashboard: any;
-  reports: any[];
+  dashboard: GuardianDashboardData | null;
+  reports: HealthReport[];
   onNavigateToReports: () => void;
   onNavigateToSessions: () => void;
   onNavigateToDevice: () => void;

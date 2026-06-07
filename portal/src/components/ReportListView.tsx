@@ -4,8 +4,27 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Smile, Pill, Clock, CheckCircle, FileText } from "lucide-react";
 
+interface ReportAnalysis {
+  mood: string;
+  mood_intensity: number;
+  medicine_log?: { name: string; status: string }[];
+  forgotten_items?: string[];
+}
+
+interface HealthReport {
+  _id: string;
+  patientId: string | any;
+  createdAt: string;
+  startedAt?: string;
+  reportStatus: string;
+  report: string;
+  doctorNotes?: string;
+  reviewedBy?: { name: string };
+  analyses?: ReportAnalysis[];
+}
+
 interface ReportListViewProps {
-  reports: any[];
+  reports: HealthReport[];
   role: string;
   patientId: string;
   onBack: () => void;
@@ -80,7 +99,7 @@ export default function ReportListView({
             const date = new Date(session.startedAt || session.createdAt);
             const dayName = date.toLocaleDateString("en-US", { weekday: "long" });
             const dateStr = date.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
-            const analysis = session.analyses?.[0] ?? {};
+            const analysis = (session.analyses?.[0] ?? {}) as any;
             const mood = analysis.mood || "Unknown";
             const intensity = analysis.mood_intensity ?? 5;
             const meds = analysis.medicine_log ?? [];
