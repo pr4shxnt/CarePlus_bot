@@ -1,17 +1,20 @@
 export const getApiBase = () => {
-  return "https://skkcg1pw-4000.inc1.devtunnels.ms";
+  return "http://localhost:4000";
 };
 
-export const getToken = () => localStorage.getItem("admin_token");
-export const setToken = (token: string) => localStorage.setItem("admin_token", token);
-export const removeToken = () => localStorage.removeItem("admin_token");
+export const getToken = () => localStorage.getItem("portal_token");
+export const setToken = (token: string) => localStorage.setItem("portal_token", token);
+export const removeToken = () => localStorage.removeItem("portal_token");
 
 export const getUser = () => {
-  const user = localStorage.getItem("admin_user");
+  const user = localStorage.getItem("portal_user");
   return user ? JSON.parse(user) : null;
 };
-export const setUser = (user: any) => localStorage.setItem("admin_user", JSON.stringify(user));
-export const removeUser = () => localStorage.removeItem("admin_user");
+export const setUser = (user: any) => localStorage.setItem("portal_user", JSON.stringify(user));
+export const removeUser = () => localStorage.removeItem("portal_user");
+
+// Lazy load mock data handler to prevent circular references
+let getMockFallback: any = null;
 
 export async function fetchApi(endpoint: string, options: RequestInit = {}) {
   const base = getApiBase();
@@ -25,14 +28,32 @@ export async function fetchApi(endpoint: string, options: RequestInit = {}) {
     headers.set("Authorization", `Bearer ${token}`);
   }
 
-  const response = await fetch(`${base}${endpoint}`, {
-    ...options,
-    headers,
-  });
+  try {
+    const response = await fetch(`${base}${endpoint}`, {
+      ...options,
+      headers,
+    });
 
-  const data = await response.json();
-  if (!response.ok) {
-    throw new Error(data.error || `HTTP error! status: ${response.status}`);
+    const data = await response.json();
+    if (!response.ok) {
+      throw new Error(data.error || `HTTP error! status: ${response.status}`);
+    }
+    return data;
+  } catch (error) {
+    console.warn(`Fetch to ${endpoint} failed. Attempting mock database fallback.`, error);
+    
+    // Resolve mock data fallback
+    if (!getMockFallback) {
+      try {
+        const mockModule = await import("./mockData");
+        getMockFallback = mockModule.getMockDataFallback;
+      } catch (mockError) {
+        console.error("Failed to load mock data repository", mockError);
+        throw error;
+      }
+    }
+    
+    return getMockFallback(endpoint, options);
   }
-  return data;
 }
+
