@@ -1,6 +1,12 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { fetchApi, removeToken, removeUser, getUser } from "@/lib/api";
+
+import DoctorDashboard from "@/components/DoctorDashboard";
+import PatientDetailView from "@/components/PatientDetailView";
+import ReportListView from "@/components/ReportListView";
+import SessionHistoryView from "@/components/SessionHistoryView";
+import ConversationView from "@/components/ConversationView";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -67,6 +73,10 @@ import {
   Activity,
   Calendar,
   Pill,
+  MessageSquare,
+  Clock,
+  Zap,
+  User,
 } from "lucide-react";
 import {
   BarChart,
@@ -83,18 +93,35 @@ import {
   Line,
 } from "recharts";
 
-type Tab = "overview" | "users" | "doctors" | "patients" | "reports";
+type Tab = 
+  | "overview" | "users" | "doctors" | "patients" | "reports"
+  | "doctor_dashboard" | "doctor_patients" | "doctor_reports" | "doctor_sessions"
+  | "guardian_dashboard" | "guardian_reports" | "guardian_sessions" | "guardian_device";
 
 export default function Dashboard() {
   const navigate = useNavigate();
   const currentUser = getUser();
-  const [activeTab, setActiveTab] = useState<Tab>("overview");
+  const [activeTab, setActiveTab] = useState<Tab>(
+    currentUser?.role === "doctor"
+      ? "doctor_dashboard"
+      : currentUser?.role === "guardian"
+      ? "guardian_dashboard"
+      : "overview"
+  );
 
   // Data States
   const [users, setUsers] = useState<any[]>([]);
   const [doctors, setDoctors] = useState<any[]>([]);
   const [patients, setPatients] = useState<any[]>([]);
   const [reports, setReports] = useState<any[]>([]);
+  const [sessions, setSessions] = useState<any[]>([]);
+  
+  // Custom Role specific dashboard states
+  const [doctorDashboard, setDoctorDashboard] = useState<any>({});
+  const [guardianDashboard, setGuardianDashboard] = useState<any>({});
+  const [selectedPatientId, setSelectedPatientId] = useState<string | null>(null);
+  const [selectedSessionId, setSelectedSessionId] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
 
   // Loading & Error States
   const [loading, setLoading] = useState(true);
@@ -150,20 +177,46 @@ export default function Dashboard() {
     setLoading(true);
     setError("");
     try {
-      const [usersRes, doctorsRes, patientsRes, reportsRes] = await Promise.all(
-        [
+      if (currentUser?.role === "admin") {
+        const [usersRes, doctorsRes, patientsRes, reportsRes] = await Promise.all([
           fetchApi("/api/admin/users"),
           fetchApi("/api/admin/doctors"),
           fetchApi("/api/admin/patients"),
           fetchApi("/api/admin/reports"),
-        ],
-      );
-      setUsers(usersRes.data || []);
-      setDoctors(doctorsRes.data || []);
-      setPatients(patientsRes.data || []);
-      setReports(reportsRes.data || []);
+        ]);
+        setUsers(usersRes.data || []);
+        setDoctors(doctorsRes.data || []);
+        setPatients(patientsRes.data || []);
+        setReports(reportsRes.data || []);
+      } else if (currentUser?.role === "doctor") {
+        const [dashRes, patientsRes] = await Promise.all([
+          fetchApi("/api/doctor/dashboard"),
+          fetchApi("/api/doctor/patients"),
+        ]);
+        setDoctorDashboard(dashRes.data || {});
+        setPatients(patientsRes.data || []);
+        
+        // Also fetch reports and sessions for pages
+        const [reportsRes, sessionsRes] = await Promise.all([
+          fetchApi("/api/doctor/reports"),
+          fetchApi("/api/doctor/sessions"),
+        ]);
+        setReports(reportsRes.data?.reports || []);
+        setSessions(sessionsRes.data?.sessions || []);
+      } else if (currentUser?.role === "guardian") {
+        const dashRes = await fetchApi("/api/guardian/dashboard");
+        setGuardianDashboard(dashRes.data || {});
+        
+        // Fetch guardian reports and sessions
+        const [reportsRes, sessionsRes] = await Promise.all([
+          fetchApi("/api/guardian/reports"),
+          fetchApi("/api/guardian/sessions"),
+        ]);
+        setReports(reportsRes.data?.reports || []);
+        setSessions(sessionsRes.data?.sessions || []);
+      }
     } catch (err: any) {
-      setError(err.message || "Failed to fetch admin data.");
+      setError(err.message || "Failed to fetch dashboard data.");
     } finally {
       setLoading(false);
     }
@@ -173,6 +226,39 @@ export default function Dashboard() {
     removeToken();
     removeUser();
     navigate("/login");
+  };
+
+  const handleApproveReport = async (reportId: string, notes: string) => {
+    try {
+      const res = await fetchApi(`/api/doctor/reports/${reportId}/approve`, {
+        method: "POST",
+        body: JSON.stringify({ doctorNotes: notes }),
+      });
+      if (res.success) {
+        fetchData();
+      }
+    } catch (err: any) {
+      alert(err.message || "Failed to approve report.");
+    }
+  };
+
+  const getHeaderTitle = () => {
+    switch (activeTab) {
+      case "overview": return "Platform Overview";
+      case "users": return "User Directory";
+      case "doctors": return "Clinician Directory";
+      case "patients": return "Patient Directory";
+      case "reports": return "All Health Reports";
+      case "doctor_dashboard": return "Clinician Overview";
+      case "doctor_patients": return "Patient Psych-Profiles";
+      case "doctor_reports": return "Release & Review Insights";
+      case "doctor_sessions": return "Patient Session Logs";
+      case "guardian_dashboard": return "Caregiver Dashboard";
+      case "guardian_reports": return "Patient Daily Reports";
+      case "guardian_sessions": return "Companion Conversations";
+      case "guardian_device": return "Hardware Companion Linkage";
+      default: return "Dashboard";
+    }
   };
 
   // --- USER VERIFICATION (KYC & LICENSES) ---
@@ -526,85 +612,225 @@ export default function Dashboard() {
               </SidebarGroupLabel>
               <SidebarGroupContent>
                 <SidebarMenu className="gap-1">
-                  <SidebarMenuItem>
-                    <SidebarMenuButton
-                      isActive={activeTab === "overview"}
-                      onClick={() => setActiveTab("overview")}
-                      tooltip="Overview"
-                      className={`flex items-center gap-3 group-data-[state=expanded]:px-3 group-data-[state=expanded]:py-2 rounded-lg text-sm transition-all ${
-                        activeTab === "overview"
-                          ? "bg-primary/10 text-primary font-medium"
-                          : "text-muted-foreground hover:bg-card hover:text-foreground"
-                      }`}
-                    >
-                      <Activity className="h-4 w-4" />
-                      <span>Overview</span>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
+                  {currentUser?.role === "admin" && (
+                    <>
+                      <SidebarMenuItem>
+                        <SidebarMenuButton
+                          isActive={activeTab === "overview"}
+                          onClick={() => setActiveTab("overview")}
+                          tooltip="Overview"
+                          className={`flex items-center gap-3 group-data-[state=expanded]:px-3 group-data-[state=expanded]:py-2 rounded-lg text-sm transition-all ${
+                            activeTab === "overview"
+                              ? "bg-primary/10 text-primary font-medium"
+                              : "text-muted-foreground hover:bg-card hover:text-foreground"
+                          }`}
+                        >
+                          <Activity className="h-4 w-4" />
+                          <span>Overview</span>
+                        </SidebarMenuButton>
+                      </SidebarMenuItem>
 
-                  <SidebarMenuItem>
-                    <SidebarMenuButton
-                      isActive={activeTab === "users"}
-                      onClick={() => setActiveTab("users")}
-                      tooltip="User Directory"
-                      className={`flex items-center gap-3 group-data-[state=expanded]:px-3 group-data-[state=expanded]:py-2 rounded-lg text-sm transition-all ${
-                        activeTab === "users"
-                          ? "bg-primary/10 text-primary font-medium"
-                          : "text-muted-foreground hover:bg-card hover:text-foreground"
-                      }`}
-                    >
-                      <Users className="h-4 w-4" />
-                      <span>User Directory</span>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
+                      <SidebarMenuItem>
+                        <SidebarMenuButton
+                          isActive={activeTab === "users"}
+                          onClick={() => setActiveTab("users")}
+                          tooltip="User Directory"
+                          className={`flex items-center gap-3 group-data-[state=expanded]:px-3 group-data-[state=expanded]:py-2 rounded-lg text-sm transition-all ${
+                            activeTab === "users"
+                              ? "bg-primary/10 text-primary font-medium"
+                              : "text-muted-foreground hover:bg-card hover:text-foreground"
+                          }`}
+                        >
+                          <Users className="h-4 w-4" />
+                          <span>User Directory</span>
+                        </SidebarMenuButton>
+                      </SidebarMenuItem>
 
-                  <SidebarMenuItem>
-                    <SidebarMenuButton
-                      isActive={activeTab === "doctors"}
-                      onClick={() => setActiveTab("doctors")}
-                      tooltip="Doctor Profiles"
-                      className={`flex items-center gap-3 group-data-[state=expanded]:px-3 group-data-[state=expanded]:py-2 rounded-lg text-sm transition-all ${
-                        activeTab === "doctors"
-                          ? "bg-primary/10 text-primary font-medium"
-                          : "text-muted-foreground hover:bg-card hover:text-foreground"
-                      }`}
-                    >
-                      <Stethoscope className="h-4 w-4" />
-                      <span>Doctor Profiles</span>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
+                      <SidebarMenuItem>
+                        <SidebarMenuButton
+                          isActive={activeTab === "doctors"}
+                          onClick={() => setActiveTab("doctors")}
+                          tooltip="Doctor Profiles"
+                          className={`flex items-center gap-3 group-data-[state=expanded]:px-3 group-data-[state=expanded]:py-2 rounded-lg text-sm transition-all ${
+                            activeTab === "doctors"
+                              ? "bg-primary/10 text-primary font-medium"
+                              : "text-muted-foreground hover:bg-card hover:text-foreground"
+                          }`}
+                        >
+                          <Stethoscope className="h-4 w-4" />
+                          <span>Doctor Profiles</span>
+                        </SidebarMenuButton>
+                      </SidebarMenuItem>
 
-                  <SidebarMenuItem>
-                    <SidebarMenuButton
-                      isActive={activeTab === "patients"}
-                      onClick={() => setActiveTab("patients")}
-                      tooltip="Patient Profiles"
-                      className={`flex items-center gap-3 group-data-[state=expanded]:px-3 group-data-[state=expanded]:py-2 rounded-lg text-sm transition-all ${
-                        activeTab === "patients"
-                          ? "bg-primary/10 text-primary font-medium"
-                          : "text-muted-foreground hover:bg-card hover:text-foreground"
-                      }`}
-                    >
-                      <Heart className="h-4 w-4" />
-                      <span>Patient Profiles</span>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
+                      <SidebarMenuItem>
+                        <SidebarMenuButton
+                          isActive={activeTab === "patients"}
+                          onClick={() => setActiveTab("patients")}
+                          tooltip="Patient Profiles"
+                          className={`flex items-center gap-3 group-data-[state=expanded]:px-3 group-data-[state=expanded]:py-2 rounded-lg text-sm transition-all ${
+                            activeTab === "patients"
+                              ? "bg-primary/10 text-primary font-medium"
+                              : "text-muted-foreground hover:bg-card hover:text-foreground"
+                          }`}
+                        >
+                          <Heart className="h-4 w-4" />
+                          <span>Patient Profiles</span>
+                        </SidebarMenuButton>
+                      </SidebarMenuItem>
 
-                  <SidebarMenuItem>
-                    <SidebarMenuButton
-                      isActive={activeTab === "reports"}
-                      onClick={() => setActiveTab("reports")}
-                      tooltip="Health Reports"
-                      className={`flex items-center gap-3 group-data-[state=expanded]:px-3 group-data-[state=expanded]:py-2 rounded-lg text-sm transition-all ${
-                        activeTab === "reports"
-                          ? "bg-primary/10 text-primary font-medium"
-                          : "text-muted-foreground hover:bg-card hover:text-foreground"
-                      }`}
-                    >
-                      <FileText className="h-4 w-4" />
-                      <span>Health Reports</span>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
+                      <SidebarMenuItem>
+                        <SidebarMenuButton
+                          isActive={activeTab === "reports"}
+                          onClick={() => setActiveTab("reports")}
+                          tooltip="Health Reports"
+                          className={`flex items-center gap-3 group-data-[state=expanded]:px-3 group-data-[state=expanded]:py-2 rounded-lg text-sm transition-all ${
+                            activeTab === "reports"
+                              ? "bg-primary/10 text-primary font-medium"
+                              : "text-muted-foreground hover:bg-card hover:text-foreground"
+                          }`}
+                        >
+                          <FileText className="h-4 w-4" />
+                          <span>Health Reports</span>
+                        </SidebarMenuButton>
+                      </SidebarMenuItem>
+                    </>
+                  )}
+
+                  {currentUser?.role === "doctor" && (
+                    <>
+                      <SidebarMenuItem>
+                        <SidebarMenuButton
+                          isActive={activeTab === "doctor_dashboard"}
+                          onClick={() => setActiveTab("doctor_dashboard")}
+                          tooltip="Overview"
+                          className={`flex items-center gap-3 group-data-[state=expanded]:px-3 group-data-[state=expanded]:py-2 rounded-lg text-sm transition-all ${
+                            activeTab === "doctor_dashboard"
+                              ? "bg-primary/10 text-primary font-medium"
+                              : "text-muted-foreground hover:bg-card hover:text-foreground"
+                          }`}
+                        >
+                          <Activity className="h-4 w-4" />
+                          <span>Overview</span>
+                        </SidebarMenuButton>
+                      </SidebarMenuItem>
+
+                      <SidebarMenuItem>
+                        <SidebarMenuButton
+                          isActive={activeTab === "doctor_patients"}
+                          onClick={() => setActiveTab("doctor_patients")}
+                          tooltip="Psych-Profiles"
+                          className={`flex items-center gap-3 group-data-[state=expanded]:px-3 group-data-[state=expanded]:py-2 rounded-lg text-sm transition-all ${
+                            activeTab === "doctor_patients"
+                              ? "bg-primary/10 text-primary font-medium"
+                              : "text-muted-foreground hover:bg-card hover:text-foreground"
+                          }`}
+                        >
+                          <Heart className="h-4 w-4" />
+                          <span>Psych-Profiles</span>
+                        </SidebarMenuButton>
+                      </SidebarMenuItem>
+
+                      <SidebarMenuItem>
+                        <SidebarMenuButton
+                          isActive={activeTab === "doctor_reports"}
+                          onClick={() => setActiveTab("doctor_reports")}
+                          tooltip="Review Reports"
+                          className={`flex items-center gap-3 group-data-[state=expanded]:px-3 group-data-[state=expanded]:py-2 rounded-lg text-sm transition-all ${
+                            activeTab === "doctor_reports"
+                              ? "bg-primary/10 text-primary font-medium"
+                              : "text-muted-foreground hover:bg-card hover:text-foreground"
+                          }`}
+                        >
+                          <FileText className="h-4 w-4" />
+                          <span>Review Reports</span>
+                        </SidebarMenuButton>
+                      </SidebarMenuItem>
+
+                      <SidebarMenuItem>
+                        <SidebarMenuButton
+                          isActive={activeTab === "doctor_sessions"}
+                          onClick={() => setActiveTab("doctor_sessions")}
+                          tooltip="Check-in Sessions"
+                          className={`flex items-center gap-3 group-data-[state=expanded]:px-3 group-data-[state=expanded]:py-2 rounded-lg text-sm transition-all ${
+                            activeTab === "doctor_sessions"
+                              ? "bg-primary/10 text-primary font-medium"
+                              : "text-muted-foreground hover:bg-card hover:text-foreground"
+                          }`}
+                        >
+                          <MessageSquare className="h-4 w-4" />
+                          <span>Check-in Sessions</span>
+                        </SidebarMenuButton>
+                      </SidebarMenuItem>
+                    </>
+                  )}
+
+                  {currentUser?.role === "guardian" && (
+                    <>
+                      <SidebarMenuItem>
+                        <SidebarMenuButton
+                          isActive={activeTab === "guardian_dashboard"}
+                          onClick={() => setActiveTab("guardian_dashboard")}
+                          tooltip="Overview"
+                          className={`flex items-center gap-3 group-data-[state=expanded]:px-3 group-data-[state=expanded]:py-2 rounded-lg text-sm transition-all ${
+                            activeTab === "guardian_dashboard"
+                              ? "bg-primary/10 text-primary font-medium"
+                              : "text-muted-foreground hover:bg-card hover:text-foreground"
+                          }`}
+                        >
+                          <Activity className="h-4 w-4" />
+                          <span>Overview</span>
+                        </SidebarMenuButton>
+                      </SidebarMenuItem>
+
+                      <SidebarMenuItem>
+                        <SidebarMenuButton
+                          isActive={activeTab === "guardian_reports"}
+                          onClick={() => setActiveTab("guardian_reports")}
+                          tooltip="Care Insights"
+                          className={`flex items-center gap-3 group-data-[state=expanded]:px-3 group-data-[state=expanded]:py-2 rounded-lg text-sm transition-all ${
+                            activeTab === "guardian_reports"
+                              ? "bg-primary/10 text-primary font-medium"
+                              : "text-muted-foreground hover:bg-card hover:text-foreground"
+                          }`}
+                        >
+                          <FileText className="h-4 w-4" />
+                          <span>Care Insights</span>
+                        </SidebarMenuButton>
+                      </SidebarMenuItem>
+
+                      <SidebarMenuItem>
+                        <SidebarMenuButton
+                          isActive={activeTab === "guardian_sessions"}
+                          onClick={() => setActiveTab("guardian_sessions")}
+                          tooltip="Session Logs"
+                          className={`flex items-center gap-3 group-data-[state=expanded]:px-3 group-data-[state=expanded]:py-2 rounded-lg text-sm transition-all ${
+                            activeTab === "guardian_sessions"
+                              ? "bg-primary/10 text-primary font-medium"
+                              : "text-muted-foreground hover:bg-card hover:text-foreground"
+                          }`}
+                        >
+                          <MessageSquare className="h-4 w-4" />
+                          <span>Session Logs</span>
+                        </SidebarMenuButton>
+                      </SidebarMenuItem>
+
+                      <SidebarMenuItem>
+                        <SidebarMenuButton
+                          isActive={activeTab === "guardian_device"}
+                          onClick={() => setActiveTab("guardian_device")}
+                          tooltip="Connect Device"
+                          className={`flex items-center gap-3 group-data-[state=expanded]:px-3 group-data-[state=expanded]:py-2 rounded-lg text-sm transition-all ${
+                            activeTab === "guardian_device"
+                              ? "bg-primary/10 text-primary font-medium"
+                              : "text-muted-foreground hover:bg-card hover:text-foreground"
+                          }`}
+                        >
+                          <Plus className="h-4 w-4" />
+                          <span>Connect Device</span>
+                        </SidebarMenuButton>
+                      </SidebarMenuItem>
+                    </>
+                  )}
                 </SidebarMenu>
               </SidebarGroupContent>
             </SidebarGroup>
@@ -647,8 +873,8 @@ export default function Dashboard() {
           <header className="h-16 border-b border-border py-2 px-8 flex items-center justify-between bg-background/80 sticky top-0 z-10 backdrop-blur-md">
             <div className="flex items-center gap-3">
               <SidebarTrigger className="text-muted-foreground hover:text-foreground mr-2" />
-              <h1 className="text-xl  font-semibold capitalize text-foreground flex items-center gap-2">
-                {activeTab} Management
+              <h1 className="text-xl font-bold tracking-tight text-foreground flex items-center gap-2">
+                {getHeaderTitle()}
               </h1>
             </div>
             <div className="flex items-center gap-4">
@@ -1464,6 +1690,126 @@ export default function Dashboard() {
                       </Table>
                     </CardContent>
                   </Card>
+                )}
+
+                {/* --- DOCTOR DASHBOARD TAB --- */}
+                {activeTab === "doctor_dashboard" && (
+                  <DoctorDashboard
+                    dashboard={doctorDashboard}
+                    patients={patients}
+                    search={searchQuery}
+                    onSearchChange={setSearchQuery}
+                    onSelectPatient={(pId) => {
+                      setSelectedPatientId(pId);
+                      setActiveTab("doctor_patients");
+                    }}
+                    onNavigateToReports={() => setActiveTab("doctor_reports")}
+                  />
+                )}
+
+                {/* --- DOCTOR PATIENTS / DETAIL VIEW --- */}
+                {activeTab === "doctor_patients" && (
+                  selectedPatientId ? (
+                    <PatientDetailView
+                      patient={patients.find((p) => p._id === selectedPatientId)}
+                      onBack={() => {
+                        setSelectedPatientId(null);
+                        setActiveTab("doctor_dashboard");
+                      }}
+                      onNavigateToReports={(pId) => {
+                        setSelectedPatientId(pId);
+                        setActiveTab("doctor_reports");
+                      }}
+                    />
+                  ) : (
+                    <div className="space-y-4">
+                      <div className="flex justify-between items-center px-1 text-left">
+                        <h2 className="text-lg font-black text-foreground tracking-tight">Select Patient Profile</h2>
+                        <span className="text-xs font-bold text-muted-foreground">{patients.length} patients</span>
+                      </div>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {patients.map((patient) => (
+                          <Card
+                            key={patient._id}
+                            onClick={() => {
+                              setSelectedPatientId(patient._id);
+                            }}
+                            className="bg-card/45 hover:bg-card/85 cursor-pointer border-border hover:border-border/80 rounded-[20px] p-5 shadow-sm hover:shadow transition relative flex items-center gap-4 pl-6 group text-left"
+                          >
+                            <div className="absolute left-0 top-5 bottom-5 w-1 bg-yellow-500 rounded-r-lg group-hover:h-8 transition-all"></div>
+                            <div className="w-11 h-11 rounded-xl bg-muted flex items-center justify-center text-muted-foreground group-hover:bg-primary/10 group-hover:text-primary transition shrink-0">
+                              <User className="w-5 h-5" />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <h4 className="font-bold text-foreground group-hover:text-primary transition truncate">{patient.name}</h4>
+                              <p className="text-xs font-semibold text-muted-foreground mt-0.5">
+                                Age: {patient.age} &bull; {patient.conditions?.[0] || "General Dementia"}
+                              </p>
+                            </div>
+                            <div className="w-8 h-8 rounded-lg bg-yellow-500/10 flex items-center justify-center text-yellow-500 shrink-0">
+                              <Zap className="w-4 h-4 fill-yellow-500 text-yellow-500" />
+                            </div>
+                          </Card>
+                        ))}
+                      </div>
+                    </div>
+                  )
+                )}
+
+                {/* --- DOCTOR REPORTS VIEW --- */}
+                {activeTab === "doctor_reports" && (
+                  selectedSessionId ? (
+                    <ConversationView
+                      session={sessions.find((s) => s._id === selectedSessionId)}
+                      onBack={() => {
+                        setSelectedSessionId(null);
+                      }}
+                    />
+                  ) : (
+                    <ReportListView
+                      reports={reports}
+                      role="doctor"
+                      patientId={selectedPatientId || ""}
+                      onBack={() => {
+                        if (selectedPatientId) {
+                          setActiveTab("doctor_patients");
+                        } else {
+                          setActiveTab("doctor_dashboard");
+                        }
+                      }}
+                      onNavigateToHistory={() => {
+                        setActiveTab("doctor_sessions");
+                      }}
+                      onNavigateToSession={(sId) => {
+                        setSelectedSessionId(sId);
+                      }}
+                      onApprove={handleApproveReport}
+                    />
+                  )
+                )}
+
+                {/* --- DOCTOR SESSIONS / HISTORY VIEW --- */}
+                {activeTab === "doctor_sessions" && (
+                  selectedSessionId ? (
+                    <ConversationView
+                      session={sessions.find((s) => s._id === selectedSessionId)}
+                      onBack={() => {
+                        setSelectedSessionId(null);
+                      }}
+                    />
+                  ) : (
+                    <SessionHistoryView
+                      sessions={sessions}
+                      role="doctor"
+                      patientId={selectedPatientId || ""}
+                      onBack={() => {
+                        setActiveTab("doctor_reports");
+                      }}
+                      onSelectSession={(sId) => {
+                        setSelectedSessionId(sId);
+                      }}
+                    />
+                  )
                 )}
               </>
             )}
