@@ -175,9 +175,14 @@ export default function ReportListView({
                       <textarea 
                         value={notesState[session._id] || ""}
                         onChange={(e: ChangeEvent<HTMLTextAreaElement>) => handleNotesChange(session._id, e.target.value)}
+                        maxLength={250}
                         placeholder="Add special instructions or clinical warnings here (optional)..."
                         className="w-full bg-background border border-border text-foreground font-semibold placeholder:text-muted-foreground/45 rounded-xl min-h-[80px] p-3 focus:outline-none focus:ring-1 focus:ring-primary"
                       />
+                      <div className="flex justify-between items-center text-[10px] font-bold text-muted-foreground px-1">
+                        <span>Max 250 characters</span>
+                        <span>{(notesState[session._id] || "").length}/250</span>
+                      </div>
                       <Button
                         type="button"
                         disabled={submitting[session._id]}
