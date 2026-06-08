@@ -1,12 +1,33 @@
 import React, { useState, useEffect } from "react";
 import { Check, Eye, EyeOff } from "lucide-react";
 
+const DIAGNOSIS_OPTIONS = [
+  { id: "alzheimers", label: "Alzheimer's / Dementia" },
+  { id: "parkinsons", label: "Parkinson's Disease" },
+  { id: "hypertension", label: "Hypertension (High Blood Pressure)" },
+  { id: "diabetes", label: "Diabetes" },
+  { id: "heart_disease", label: "Heart Disease" },
+  { id: "arthritis", label: "Arthritis" },
+  { id: "cognitive_reminders", label: "Memory / Cognitive Reminders" },
+  { id: "other", label: "Other / Specify..." }
+];
+
 export const Registration = () => {
   const [role, setRole] = useState("guardian");
   const [isEmailVerified, setIsEmailVerified] = useState(false);
   const [googleLoaded, setGoogleLoaded] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [selectedDiagnoses, setSelectedDiagnoses] = useState([]);
+  const [otherDiagnosisText, setOtherDiagnosisText] = useState("");
+
+  const handleDiagnosisToggle = (label) => {
+    setSelectedDiagnoses((prev) =>
+      prev.includes(label)
+        ? prev.filter((item) => item !== label)
+        : [...prev, label]
+    );
+  };
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -109,7 +130,14 @@ export const Registration = () => {
       payload.relationship = formData.relationship;
       payload.patientName = formData.patientName;
       payload.gender = formData.gender;
-      payload.healthGoal = formData.healthGoal;
+      
+      payload.conditions = selectedDiagnoses.filter(item => item !== "Other / Specify...");
+      if (selectedDiagnoses.includes("Other / Specify...")) {
+        payload.healthGoal = otherDiagnosisText.trim();
+      } else {
+        payload.healthGoal = "";
+      }
+
       if (formData.dob) {
         const birthDate = new Date(formData.dob);
         payload.age = new Date().getFullYear() - birthDate.getFullYear();
@@ -379,16 +407,40 @@ export const Registration = () => {
               </div>
 
               <div className="form-group" style={{ marginTop: 20 }}>
-                <label htmlFor="patient-health-goal">
-                  Patient's Health Notes / Diagnosis
-                </label>
-                <textarea
-                  id="patient-health-goal"
-                  name="healthGoal"
-                  value={formData.healthGoal}
-                  onChange={handleChange}
-                  placeholder="e.g., Early-stage Alzheimer's, Hypertension, needs memory reminders"
-                />
+                <label>Patient's Health Notes / Diagnosis</label>
+                <div className="diagnosis-grid">
+                  {DIAGNOSIS_OPTIONS.map((option) => {
+                    const isSelected = selectedDiagnoses.includes(option.label);
+                    return (
+                      <label
+                        key={option.id}
+                        className={`diagnosis-card ${isSelected ? "selected" : ""}`}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={isSelected}
+                          onChange={() => handleDiagnosisToggle(option.label)}
+                          style={{ position: "absolute", opacity: 0, width: 0, height: 0 }}
+                        />
+                        <div className="checkbox-indicator">
+                          <Check />
+                        </div>
+                        <span className="diagnosis-label">{option.label}</span>
+                      </label>
+                    );
+                  })}
+                </div>
+                {selectedDiagnoses.includes("Other / Specify...") && (
+                  <div className="other-diagnosis-wrapper">
+                    <input
+                      type="text"
+                      className="other-diagnosis-input"
+                      placeholder="Please specify patient's notes / diagnosis"
+                      value={otherDiagnosisText}
+                      onChange={(e) => setOtherDiagnosisText(e.target.value)}
+                    />
+                  </div>
+                )}
               </div>
             </div>
           )}

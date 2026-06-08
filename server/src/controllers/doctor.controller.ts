@@ -35,7 +35,14 @@ export async function listPatients(req: Request, res: Response): Promise<void> {
 
 export async function createPatient(req: Request, res: Response): Promise<void> {
   const doctorId = new mongoose.Types.ObjectId(req.user!.userId);
-  const patient = new Patient({ ...req.body, assignedDoctorId: doctorId });
+  let guardianName: string | undefined = undefined;
+  if (req.body.guardianId) {
+    const guardianUser = await User.findById(req.body.guardianId);
+    if (guardianUser) {
+      guardianName = guardianUser.name;
+    }
+  }
+  const patient = new Patient({ ...req.body, assignedDoctorId: doctorId, guardianName });
   await patient.save();
   res.status(201).json(ok(patient, "Patient created."));
 }
@@ -51,7 +58,16 @@ export async function getPatient(req: Request, res: Response): Promise<void> {
 import { notifyBotOfUpdate } from "../services/bot.service";
 
 export async function updatePatient(req: Request, res: Response): Promise<void> {
-  const patient = await Patient.findByIdAndUpdate(req.params.id, req.body, { new: true });
+  const updateData = { ...req.body };
+  if (req.body.guardianId !== undefined) {
+    if (req.body.guardianId) {
+      const guardianUser = await User.findById(req.body.guardianId);
+      updateData.guardianName = guardianUser ? guardianUser.name : undefined;
+    } else {
+      updateData.guardianName = undefined;
+    }
+  }
+  const patient = await Patient.findByIdAndUpdate(req.params.id, updateData, { new: true });
   if (!patient) {
     res.status(404).json({ success: false, error: "Not found." });
     return;
@@ -194,6 +210,7 @@ export async function assignGuardian(req: Request, res: Response): Promise<void>
   }
 
   patient.guardianId = new mongoose.Types.ObjectId(guardianId);
+  patient.guardianName = guardian.name;
   guardian.patientBotId = patient.botId;
   await Promise.all([patient.save(), guardian.save()]);
 

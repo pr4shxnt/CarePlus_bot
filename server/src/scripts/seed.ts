@@ -94,6 +94,7 @@ async function seed() {
     ],
     assignedDoctorId: doctor._id,
     guardianId: guardian._id,
+    guardianName: guardian.name,
     notes: "Patient is focused on improving sleep and managing workplace stress.",
   });
   await patientRecord.save();

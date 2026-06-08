@@ -166,6 +166,14 @@ export async function createPatient(req: Request, res: Response): Promise<void> 
     patientUser.patientBotId = botId;
     await patientUser.save();
 
+    let guardianName: string | undefined = undefined;
+    if (guardianId) {
+      const guardianUser = await User.findById(guardianId);
+      if (guardianUser) {
+        guardianName = guardianUser.name;
+      }
+    }
+
     // Create Patient record
     const patient = new Patient({
       _id: patientUser._id,
@@ -179,6 +187,7 @@ export async function createPatient(req: Request, res: Response): Promise<void> 
       medicines: medicines || [],
       assignedDoctorId: assignedDoctorId ? new mongoose.Types.ObjectId(assignedDoctorId) : undefined,
       guardianId: guardianId ? new mongoose.Types.ObjectId(guardianId) : undefined,
+      guardianName,
       notes,
     });
 
@@ -227,6 +236,12 @@ export async function updatePatient(req: Request, res: Response): Promise<void> 
     }
     if (guardianId !== undefined) {
       patientUpdates.guardianId = guardianId ? new mongoose.Types.ObjectId(guardianId) : undefined;
+      if (guardianId) {
+        const guardianUser = await User.findById(guardianId);
+        patientUpdates.guardianName = guardianUser ? guardianUser.name : undefined;
+      } else {
+        patientUpdates.guardianName = undefined;
+      }
     }
 
     const patient = await Patient.findByIdAndUpdate(id, patientUpdates, { new: true });

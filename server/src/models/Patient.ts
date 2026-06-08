@@ -20,6 +20,7 @@ export interface IPatient extends Document {
   medicines: IMedicine[];
   assignedDoctorId?: mongoose.Types.ObjectId;
   guardianId?: mongoose.Types.ObjectId;
+  guardianName?: string;
   notes?: string;
   isActive: boolean;
   createdAt: Date;
@@ -46,6 +47,7 @@ const PatientSchema = new Schema<IPatient>(
     medicines: { type: [MedicineSchema], default: [] },
     assignedDoctorId: { type: Schema.Types.ObjectId, ref: "User", index: true },
     guardianId: { type: Schema.Types.ObjectId, ref: "User", index: true },
+    guardianName: String,
     notes: String,
     isActive: { type: Boolean, default: true },
   },

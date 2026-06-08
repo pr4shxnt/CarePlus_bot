@@ -1299,7 +1299,7 @@ export default function Dashboard() {
                                     <strong className="text-foreground">
                                       {u.relationship || "N/A"}
                                     </strong>{" "}
-                                    (Bot: {u.patientBotId || "N/A"})
+                                    (Guardian: {patients.find((p) => p.botId === u.patientBotId)?.name || "N/A"})
                                   </span>
                                 ) : (
                                   <span className="text-muted-foreground">
