@@ -35,6 +35,14 @@ export async function fetchApi(endpoint: string, options: RequestInit = {}) {
     });
 
     const data = await response.json();
+    if (response.status === 401) {
+      if (endpoint !== "/api/auth/login") {
+        removeToken();
+        removeUser();
+        window.location.href = "/login";
+      }
+      throw new Error(data.error || "Session expired. Please log in again.");
+    }
     if (!response.ok) {
       throw new Error(data.error || `HTTP error! status: ${response.status}`);
     }
