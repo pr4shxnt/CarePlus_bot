@@ -30,9 +30,32 @@ const app = express();
 
 // ── Security ──────────────────────────────────────────────────────────────
 app.use(helmet());
+const allowedOrigins = (process.env.CORS_ORIGINS || "*").split(",");
 app.use(
   cors({
-    origin: (process.env.CORS_ORIGINS || "*").split(","),
+    origin: (origin, callback) => {
+      // Allow requests with no origin (like mobile apps, curl, etc.)
+      if (!origin) return callback(null, true);
+
+      // Check exact matches
+      if (
+        allowedOrigins.indexOf(origin) !== -1 ||
+        allowedOrigins.includes("*")
+      ) {
+        return callback(null, true);
+      }
+
+      // Check dev tunnels, localhost, or domain subdomains
+      if (
+        origin.endsWith(".devtunnels.ms") ||
+        origin.endsWith(".prashantadhikari7.com.np") ||
+        origin.startsWith("http://localhost:")
+      ) {
+        return callback(null, true);
+      }
+
+      return callback(null, false);
+    },
     credentials: true,
   }),
 );

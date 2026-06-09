@@ -304,3 +304,29 @@ export async function getReport(req: Request, res: Response): Promise<void> {
     res.status(500).json({ success: false, error: err.message });
   }
 }
+
+export async function deleteUser(req: Request, res: Response): Promise<void> {
+  try {
+    const { id } = req.params;
+
+    const user = await User.findById(id);
+    if (!user) {
+      res.status(404).json({ success: false, error: "User not found." });
+      return;
+    }
+
+    // Role specific cleanups
+    if (user.role === "patient") {
+      await Patient.findByIdAndDelete(id);
+    } else if (user.role === "guardian") {
+      await Patient.updateMany({ guardianId: id }, { $unset: { guardianId: "", guardianName: "" } });
+    } else if (user.role === "doctor") {
+      await Patient.updateMany({ assignedDoctorId: id }, { $unset: { assignedDoctorId: "" } });
+    }
+
+    await User.findByIdAndDelete(id);
+    res.json(ok(null, "User deleted successfully."));
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+}

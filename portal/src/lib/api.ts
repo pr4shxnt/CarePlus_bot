@@ -40,6 +40,10 @@ export async function fetchApi(endpoint: string, options: RequestInit = {}) {
     }
     return data;
   } catch (error) {
+    if (endpoint.startsWith("/api/doctor") || endpoint.startsWith("/api/guardian")) {
+      throw error;
+    }
+
     console.warn(`Fetch to ${endpoint} failed. Attempting mock database fallback.`, error);
     
     // Resolve mock data fallback

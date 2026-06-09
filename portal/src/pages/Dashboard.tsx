@@ -132,6 +132,8 @@ export default function Dashboard() {
   const [doctorDialogOpen, setDoctorDialogOpen] = useState(false);
   const [patientDialogOpen, setPatientDialogOpen] = useState(false);
   const [reportDetailsOpen, setReportDetailsOpen] = useState(false);
+  const [userDetailsOpen, setUserDetailsOpen] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<any | null>(null);
 
   // Form States
   const [selectedDoctor, setSelectedDoctor] = useState<any | null>(null);
@@ -278,6 +280,27 @@ export default function Dashboard() {
     } catch (err: any) {
       alert(err.message || "Failed to update verification status.");
     }
+  };
+
+  const handleDeleteUser = async (userId: string) => {
+    if (!confirm("Are you sure you want to reject KYC and delete this user profile? This action cannot be undone.")) {
+      return;
+    }
+    try {
+      const res = await fetchApi(`/api/admin/users/${userId}`, {
+        method: "DELETE",
+      });
+      if (res.success) {
+        fetchData();
+      }
+    } catch (err: any) {
+      alert(err.message || "Failed to delete user.");
+    }
+  };
+
+  const handleOpenUserDetails = (user: any) => {
+    setSelectedUser(user);
+    setUserDetailsOpen(true);
   };
 
   // --- DOCTOR CRUD ACTIONS ---
@@ -1299,7 +1322,7 @@ export default function Dashboard() {
                                     <strong className="text-foreground">
                                       {u.relationship || "N/A"}
                                     </strong>{" "}
-                                    (Guardian: {patients.find((p) => p.botId === u.patientBotId)?.name || "N/A"})
+                                    (Patient: {patients.find((p) => p.botId === u.patientBotId)?.name || "N/A"})
                                   </span>
                                 ) : (
                                   <span className="text-muted-foreground">
@@ -1320,27 +1343,49 @@ export default function Dashboard() {
                                   </span>
                                 )}
                               </TableCell>
-                              <TableCell className="text-right">
+                              <TableCell className="text-right space-x-2">
                                 {u.role !== "admin" && (
-                                  <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={() =>
-                                      handleToggleVerification(
-                                        u._id,
-                                        u.is_verified,
-                                      )
-                                    }
-                                    className={
-                                      u.is_verified
-                                        ? "text-amber-400 hover:bg-amber-950/20 hover:text-amber-300"
-                                        : "text-emerald-400 hover:bg-emerald-950/20 hover:text-emerald-300"
-                                    }
-                                  >
-                                    {u.is_verified
-                                      ? "Revoke Verification"
-                                      : "Approve License & KYC"}
-                                  </Button>
+                                  <>
+                                    <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      onClick={() => handleOpenUserDetails(u)}
+                                      className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                                      title="View User Details"
+                                    >
+                                      <Eye className="h-4 w-4" />
+                                    </Button>
+
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      onClick={() =>
+                                        handleToggleVerification(
+                                          u._id,
+                                          u.is_verified,
+                                        )
+                                      }
+                                      className={
+                                        u.is_verified
+                                          ? "text-amber-400 hover:bg-amber-950/20 hover:text-amber-300"
+                                          : "text-emerald-400 hover:bg-emerald-950/20 hover:text-emerald-300"
+                                      }
+                                    >
+                                      {u.is_verified
+                                        ? "Revoke Verification"
+                                        : "Approve License & KYC"}
+                                    </Button>
+
+                                    <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      onClick={() => handleDeleteUser(u._id)}
+                                      className="h-8 w-8 text-red-400 hover:text-red-300 hover:bg-red-950/20"
+                                      title="Reject KYC / Delete User"
+                                    >
+                                      <Trash2 className="h-4 w-4" />
+                                    </Button>
+                                  </>
                                 )}
                               </TableCell>
                             </TableRow>
@@ -1916,6 +1961,150 @@ export default function Dashboard() {
             )}
           </div>
         </SidebarInset>
+
+        {/* USER PROFILE DETAILS DIALOG */}
+        <Dialog open={userDetailsOpen} onOpenChange={setUserDetailsOpen}>
+          <DialogContent className="bg-card border-border text-foreground max-w-md shadow-2xl">
+            <DialogHeader className="border-b border-border pb-4">
+              <DialogTitle className="text-primary font-bold flex items-center gap-2">
+                <User className="h-5 w-5 text-primary" />
+                <span>User Profile Details</span>
+              </DialogTitle>
+              <DialogDescription className="text-muted-foreground">
+                Detailed verification, credentials, and system information.
+              </DialogDescription>
+            </DialogHeader>
+
+            {selectedUser && (() => {
+              const patientObj = selectedUser.role === "patient"
+                ? patients.find((p) => p._id === selectedUser._id)
+                : selectedUser.role === "guardian"
+                ? patients.find((p) => p.botId === selectedUser.patientBotId)
+                : null;
+
+              return (
+                <div className="space-y-4 pt-2 text-sm">
+                  <div className="flex items-center gap-3 pb-4 border-b border-border/55">
+                    <Avatar className="h-12 w-12 bg-muted border border-border">
+                      <AvatarFallback className="text-sm uppercase font-bold">
+                        {selectedUser.name?.slice(0, 2)}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div>
+                      <h4 className="font-bold text-base text-foreground">{selectedUser.name}</h4>
+                      <p className="text-xs text-muted-foreground">{selectedUser.email}</p>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground block">System Role</span>
+                      <Badge variant="outline" className="mt-1 capitalize">
+                        {selectedUser.role}
+                      </Badge>
+                    </div>
+                    <div>
+                      <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground block">Verification Status</span>
+                      <span className={`inline-flex items-center gap-1 mt-1 text-xs font-semibold px-2 py-0.5 rounded-full ${
+                        selectedUser.is_verified
+                          ? "text-emerald-400 bg-emerald-500/5 border border-emerald-500/20"
+                          : "text-amber-500 bg-amber-500/5 border border-amber-500/20"
+                      }`}>
+                        {selectedUser.is_verified ? "Verified" : "Unverified"}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="pt-2 border-t border-border/50 space-y-3">
+                    <div>
+                      <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground block">Joined Platform</span>
+                      <span className="text-foreground font-medium">
+                        {new Date(selectedUser.createdAt).toLocaleString()}
+                      </span>
+                    </div>
+
+                    {selectedUser.role === "doctor" && (
+                      <>
+                        <div>
+                          <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground block">Specialization</span>
+                          <span className="text-foreground font-medium">{selectedUser.specialization || "General Medicine"}</span>
+                        </div>
+                        <div>
+                          <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground block">License Number</span>
+                          <span className="text-foreground font-mono font-medium">{selectedUser.licenseNumber || "N/A"}</span>
+                        </div>
+                      </>
+                    )}
+
+                    {selectedUser.role === "guardian" && (
+                      <>
+                        <div>
+                          <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground block">Relationship to Patient</span>
+                          <span className="text-foreground font-medium">{selectedUser.relationship || "N/A"}</span>
+                        </div>
+                        <div>
+                          <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground block">Linked Patient Caregiver Name</span>
+                          <span className="text-foreground font-medium">{patientObj ? patientObj.name : "N/A"}</span>
+                        </div>
+                        <div>
+                          <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground block">Hardware Bot ID</span>
+                          <span className="text-primary font-mono font-medium">{selectedUser.patientBotId || "N/A"}</span>
+                        </div>
+                      </>
+                    )}
+
+                    {selectedUser.role === "patient" && patientObj && (
+                      <>
+                        <div>
+                          <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground block">Age / Gender</span>
+                          <span className="text-foreground font-medium capitalize">
+                            {patientObj.age ? `${patientObj.age} years` : "N/A"} / {patientObj.gender || "N/A"}
+                          </span>
+                        </div>
+                        <div>
+                          <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground block">Blood Group</span>
+                          <span className="text-foreground font-medium">{patientObj.bloodGroup || "N/A"}</span>
+                        </div>
+                        <div>
+                          <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground block">Medical Conditions</span>
+                          <div className="flex flex-wrap gap-1 mt-1">
+                            {patientObj.conditions && patientObj.conditions.length > 0 ? (
+                              patientObj.conditions.map((c: string, idx: number) => (
+                                <Badge key={idx} variant="outline" className="text-[10px] border-border text-muted-foreground">
+                                  {c}
+                                </Badge>
+                              ))
+                            ) : (
+                              <span className="text-muted-foreground">None</span>
+                            )}
+                          </div>
+                        </div>
+                        <div>
+                          <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground block">Allergies</span>
+                          <span className="text-foreground font-medium">
+                            {patientObj.allergies && patientObj.allergies.length > 0
+                              ? patientObj.allergies.join(", ")
+                              : "None"}
+                          </span>
+                        </div>
+                      </>
+                    )}
+                  </div>
+
+                  <DialogFooter className="pt-4 border-t border-border/80 mt-4">
+                    <Button
+                      variant="outline"
+                      onClick={() => setUserDetailsOpen(false)}
+                      className="border-border hover:bg-accent hover:text-accent-foreground w-full text-foreground hover:text-white"
+                    >
+                      Close Details
+                    </Button>
+                  </DialogFooter>
+                </div>
+              );
+            })()}
+          </DialogContent>
+        </Dialog>
 
         {/* DOCTOR DIALOG */}
         <Dialog open={doctorDialogOpen} onOpenChange={setDoctorDialogOpen}>

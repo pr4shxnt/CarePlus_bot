@@ -55,6 +55,7 @@ export const Registration = () => {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
+            "X-Tunnel-Skip-Anti-Phishing-Threshold": "true",
           },
           body: JSON.stringify({ idToken: response.credential }),
         }
@@ -151,6 +152,7 @@ export const Registration = () => {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
+            "X-Tunnel-Skip-Anti-Phishing-Threshold": "true",
           },
           body: JSON.stringify(payload),
         },
