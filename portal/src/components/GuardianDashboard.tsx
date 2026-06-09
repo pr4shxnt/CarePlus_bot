@@ -54,6 +54,7 @@ interface HealthReport {
   startedAt?: string;
   reportStatus: string;
   report: string;
+  summary?: string;
   doctorNotes?: string;
   reviewedBy?: { name: string };
   analyses?: ReportAnalysis[];
@@ -73,6 +74,52 @@ interface GuardianDashboardProps {
   onNavigateToDevice: () => void;
 }
 
+function parseReportSummary(summaryText: string) {
+  const result = {
+    mood: null as string | null,
+    intensity: null as number | null,
+    meds: [] as { name: string; status: string }[]
+  };
+  
+  if (!summaryText) return result;
+
+  // Extract Mood and intensity
+  const moodRegex = /Observed moods:\s*([A-Za-z]+)(?:\s*\(avg intensity:\s*([\d.]+)\/10\))?/i;
+  const moodMatch = summaryText.match(moodRegex);
+  if (moodMatch) {
+    result.mood = moodMatch[1].trim();
+    if (moodMatch[2]) {
+      result.intensity = Math.round(parseFloat(moodMatch[2]));
+    }
+  }
+
+  // Extract Medicines Taken
+  const takenRegex = /Taken:\s*([^\n\r]+)/i;
+  const takenMatch = summaryText.match(takenRegex);
+  if (takenMatch) {
+    const medsList = takenMatch[1].split(",").map(m => m.trim()).filter(Boolean);
+    medsList.forEach(name => {
+      if (name.toLowerCase() !== "none" && !name.includes(":") && name.length < 50) {
+        result.meds.push({ name, status: "taken" });
+      }
+    });
+  }
+
+  // Extract Medicines Missed / Pending
+  const missedRegex = /Missed:\s*([^\n\r]+)/i;
+  const missedMatch = summaryText.match(missedRegex);
+  if (missedMatch) {
+    const medsList = missedMatch[1].split(",").map(m => m.trim()).filter(Boolean);
+    medsList.forEach(name => {
+      if (name.toLowerCase() !== "none" && !name.includes(":") && name.length < 50) {
+        result.meds.push({ name, status: "missed" });
+      }
+    });
+  }
+
+  return result;
+}
+
 export default function GuardianDashboard({
   dashboard,
   reports,
@@ -88,7 +135,12 @@ export default function GuardianDashboard({
   let totalMeds = 0;
   let takenMeds = 0;
   recentReports.forEach(r => {
-    const log = r.analyses?.[0]?.medicine_log ?? [];
+    const reportContent = r.summary || r.report || "";
+    const parsed = parseReportSummary(reportContent);
+    const log = (r.analyses?.[0]?.medicine_log && r.analyses[0].medicine_log.length > 0)
+      ? r.analyses[0].medicine_log
+      : parsed.meds;
+      
     log.forEach((m: any) => {
       totalMeds++;
       if (m.status === "taken") {
@@ -99,10 +151,7 @@ export default function GuardianDashboard({
   const adherenceRate = totalMeds > 0 ? Math.round((takenMeds / totalMeds) * 100) : 100;
 
   // Next Dosage Reminders
-  const medicines = patient?.medicines ?? [
-    { name: "Metformin", dosage: "500mg", times: ["08:00 AM"] },
-    { name: "Atorvastatin", dosage: "20mg", times: ["10:00 PM"] }
-  ];
+  const medicines = patient?.medicines || [];
   const nextPill = medicines[0];
 
   // Weekly Trend Chart Data
@@ -111,10 +160,12 @@ export default function GuardianDashboard({
     .slice(-7)
     .map(r => {
       const date = new Date(r.startedAt || r.createdAt);
+      const reportContent = r.summary || r.report || "";
+      const parsed = parseReportSummary(reportContent);
       return {
         day: date.toLocaleDateString("en-US", { weekday: "short" }),
-        intensity: r.analyses?.[0]?.mood_intensity ?? 5,
-        mood: r.analyses?.[0]?.mood ?? "Calm"
+        intensity: r.analyses?.[0]?.mood_intensity ?? parsed.intensity ?? 5,
+        mood: r.analyses?.[0]?.mood ?? parsed.mood ?? "Calm"
       };
     });
 
@@ -134,9 +185,9 @@ export default function GuardianDashboard({
             </div>
             <div>
               <p className="text-[10px] font-bold text-indigo-400 uppercase tracking-widest">Active Ward</p>
-              <h2 className="text-xl font-black text-foreground mt-0.5">{patient?.name ?? "Hari Prasad"}</h2>
+              <h2 className="text-xl font-black text-foreground mt-0.5">{patient?.name ?? "No Patient Linked"}</h2>
               <p className="text-xs text-muted-foreground mt-0.5">
-                Age: {patient?.age ?? 72} &bull; {patient?.conditions?.[0] || "Early Dementia"}
+                Age: {patient?.age ?? "—"} &bull; {patient?.conditions?.[0] || "No conditions listed"}
               </p>
             </div>
           </div>
@@ -164,7 +215,7 @@ export default function GuardianDashboard({
               <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Companion Device</p>
               <h3 className="text-sm font-black text-foreground mt-0.5">Pi Companion Bot</h3>
               <p className="text-xs text-emerald-400 font-semibold mt-0.5 flex items-center gap-1">
-                <Wifi className="w-3.5 h-3.5" /> Connected &bull; bot_1
+                <Wifi className="w-3.5 h-3.5" /> Connected &bull; {patient?.botId || "Unlinked"}
               </p>
             </div>
           </div>
@@ -192,10 +243,18 @@ export default function GuardianDashboard({
           </div>
           <div>
             <p className="text-xs font-bold text-muted-foreground">Next Scheduled Dosage</p>
-            <h4 className="text-base font-black text-foreground mt-1 truncate">
-              {nextPill?.name} <span className="text-xs text-muted-foreground font-semibold">({nextPill?.dosage})</span>
-            </h4>
-            <p className="text-xs text-primary font-bold mt-0.5">Today at {nextPill?.times?.[0] || "08:00 AM"}</p>
+            {nextPill ? (
+              <>
+                <h4 className="text-base font-black text-foreground mt-1 truncate">
+                  {nextPill.name} <span className="text-xs text-muted-foreground font-semibold">({nextPill.dosage})</span>
+                </h4>
+                <p className="text-xs text-primary font-bold mt-0.5">Today at {nextPill.times?.[0] || "08:00 AM"}</p>
+              </>
+            ) : (
+              <h4 className="text-sm font-bold text-muted-foreground mt-2">
+                No medications scheduled
+              </h4>
+            )}
           </div>
         </Card>
 
@@ -304,7 +363,7 @@ export default function GuardianDashboard({
                   <Badge variant="outline" className="text-[10px] font-bold uppercase">{new Date(latestReport.startedAt || latestReport.createdAt).toLocaleDateString()}</Badge>
                 </div>
                 <p className="text-xs text-foreground/90 font-semibold leading-relaxed line-clamp-6 italic">
-                  "{latestReport.report}"
+                  "{latestReport.summary || latestReport.report}"
                 </p>
                 {latestReport.doctorNotes && (
                   <div className="bg-yellow-500/5 border border-yellow-500/10 p-3 rounded-lg mt-2 space-y-1">

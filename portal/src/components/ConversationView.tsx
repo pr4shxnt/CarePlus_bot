@@ -23,6 +23,7 @@ interface CompanionSession {
   }[];
   turns?: SessionTurn[];
   report?: string;
+  summary?: string;
   doctorNotes?: string;
   reviewedBy?: { name: string };
 }
@@ -30,6 +31,52 @@ interface CompanionSession {
 interface ConversationViewProps {
   session: CompanionSession | null;
   onBack: () => void;
+}
+
+function parseReportSummary(summaryText: string) {
+  const result = {
+    mood: null as string | null,
+    intensity: null as number | null,
+    meds: [] as { name: string; status: string }[]
+  };
+  
+  if (!summaryText) return result;
+
+  // Extract Mood and intensity
+  const moodRegex = /Observed moods:\s*([A-Za-z]+)(?:\s*\(avg intensity:\s*([\d.]+)\/10\))?/i;
+  const moodMatch = summaryText.match(moodRegex);
+  if (moodMatch) {
+    result.mood = moodMatch[1].trim();
+    if (moodMatch[2]) {
+      result.intensity = Math.round(parseFloat(moodMatch[2]));
+    }
+  }
+
+  // Extract Medicines Taken
+  const takenRegex = /Taken:\s*([^\n\r]+)/i;
+  const takenMatch = summaryText.match(takenRegex);
+  if (takenMatch) {
+    const medsList = takenMatch[1].split(",").map(m => m.trim()).filter(Boolean);
+    medsList.forEach(name => {
+      if (name.toLowerCase() !== "none" && !name.includes(":") && name.length < 50) {
+        result.meds.push({ name, status: "taken" });
+      }
+    });
+  }
+
+  // Extract Medicines Missed / Pending
+  const missedRegex = /Missed:\s*([^\n\r]+)/i;
+  const missedMatch = summaryText.match(missedRegex);
+  if (missedMatch) {
+    const medsList = missedMatch[1].split(",").map(m => m.trim()).filter(Boolean);
+    medsList.forEach(name => {
+      if (name.toLowerCase() !== "none" && !name.includes(":") && name.length < 50) {
+        result.meds.push({ name, status: "missed" });
+      }
+    });
+  }
+
+  return result;
 }
 
 export default function ConversationView({
@@ -48,10 +95,16 @@ export default function ConversationView({
   const timeLabel = date.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" });
   const durationMins = Math.round((session.durationSeconds || 0) / 60);
   const turns = session.turns || [];
+  
+  const reportContent = session.summary || session.report || "";
+  const parsed = parseReportSummary(reportContent);
+
   const analysis = (session.analyses?.[0] ?? {}) as any;
-  const mood = analysis.mood || null;
-  const intensity = analysis.mood_intensity ?? null;
-  const meds = analysis.medicine_log ?? [];
+  const mood = analysis.mood || parsed.mood || null;
+  const intensity = analysis.mood_intensity ?? parsed.intensity ?? null;
+  const meds = (analysis.medicine_log && analysis.medicine_log.length > 0)
+    ? analysis.medicine_log
+    : parsed.meds;
   const approved = session.reportStatus === "approved";
 
   return (
@@ -168,15 +221,16 @@ export default function ConversationView({
           )}
         </div>
       </Card>
-
       {/* AI Summary */}
-      {session.report && (
+      {(session.summary || session.report) && (
         <Card className="bg-card/45 border-border p-5 shadow-sm">
           <div className="flex items-center gap-2 mb-2">
             <FileText className="w-4 h-4 text-primary" />
             <h4 className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">AI Summary</h4>
           </div>
-          <p className="text-foreground/90 text-sm font-semibold leading-relaxed">{session.report}</p>
+          <p className="text-foreground/90 text-sm font-semibold leading-relaxed">
+            {session.summary || session.report}
+          </p>
         </Card>
       )}
 

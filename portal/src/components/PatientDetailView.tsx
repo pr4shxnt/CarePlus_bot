@@ -16,6 +16,7 @@ interface Patient {
   age: number;
   gender: string;
   conditions?: string[];
+  allergies?: string[];
   medicines?: MedicineRegimen[];
   botId: string;
   isActive: boolean;
@@ -33,11 +34,7 @@ export default function PatientDetailView({
   onBack,
   onNavigateToReports
 }: PatientDetailViewProps) {
-  // Mock fallback medicines matching RN schema
-  const medicines = patient?.medicines ?? [
-    { name: "Metformin", dosage: "500mg", frequency: "daily", times: ["08:00 AM"] },
-    { name: "Atorvastatin", dosage: "20mg", frequency: "daily", times: ["10:00 PM"] }
-  ];
+  const medicines = patient?.medicines || [];
 
   return (
     <div className="space-y-6 text-left">
@@ -79,11 +76,15 @@ export default function PatientDetailView({
             <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mt-1">Current Mood</p>
           </Card>
 
-          {/* Loneliness Vital Card */}
+          {/* Allergies Vital Card */}
           <Card className="bg-yellow-500/5 border-yellow-500/15 p-6 flex flex-col items-center justify-center text-center h-[130px]">
             <MessageSquare className="w-6 h-6 text-yellow-500 mb-2" />
-            <p className="text-lg font-black text-yellow-500">12%</p>
-            <p className="text-[10px] font-bold text-yellow-500/80 uppercase tracking-widest mt-1">% Lonely</p>
+            <p className="text-lg font-black text-yellow-500">
+              {patient?.allergies && patient.allergies.length > 0
+                ? patient.allergies.length
+                : 0}
+            </p>
+            <p className="text-[10px] font-bold text-yellow-500/80 uppercase tracking-widest mt-1">Allergies Logged</p>
           </Card>
         </div>
 

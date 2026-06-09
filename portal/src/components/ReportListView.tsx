@@ -18,6 +18,7 @@ interface HealthReport {
   startedAt?: string;
   reportStatus: string;
   report: string;
+  summary?: string;
   doctorNotes?: string;
   reviewedBy?: { name: string };
   analyses?: ReportAnalysis[];
@@ -33,10 +34,56 @@ interface ReportListViewProps {
   onApprove: (reportId: string, notes: string) => Promise<void>;
 }
 
+function parseReportSummary(summaryText: string) {
+  const result = {
+    mood: null as string | null,
+    intensity: null as number | null,
+    meds: [] as { name: string; status: string }[]
+  };
+  
+  if (!summaryText) return result;
+
+  // Extract Mood and intensity
+  const moodRegex = /Observed moods:\s*([A-Za-z]+)(?:\s*\(avg intensity:\s*([\d.]+)\/10\))?/i;
+  const moodMatch = summaryText.match(moodRegex);
+  if (moodMatch) {
+    result.mood = moodMatch[1].trim();
+    if (moodMatch[2]) {
+      result.intensity = Math.round(parseFloat(moodMatch[2]));
+    }
+  }
+
+  // Extract Medicines Taken
+  const takenRegex = /Taken:\s*([^\n\r]+)/i;
+  const takenMatch = summaryText.match(takenRegex);
+  if (takenMatch) {
+    const medsList = takenMatch[1].split(",").map(m => m.trim()).filter(Boolean);
+    medsList.forEach(name => {
+      if (name.toLowerCase() !== "none" && !name.includes(":") && name.length < 50) {
+        result.meds.push({ name, status: "taken" });
+      }
+    });
+  }
+
+  // Extract Medicines Missed / Pending
+  const missedRegex = /Missed:\s*([^\n\r]+)/i;
+  const missedMatch = summaryText.match(missedRegex);
+  if (missedMatch) {
+    const medsList = missedMatch[1].split(",").map(m => m.trim()).filter(Boolean);
+    medsList.forEach(name => {
+      if (name.toLowerCase() !== "none" && !name.includes(":") && name.length < 50) {
+        result.meds.push({ name, status: "missed" });
+      }
+    });
+  }
+
+  return result;
+}
+
 export default function ReportListView({
   reports,
   role,
-  patientId: _patientId,
+  patientId,
   onBack,
   onNavigateToHistory,
   onNavigateToSession,
@@ -59,6 +106,14 @@ export default function ReportListView({
       setSubmitting(prev => ({ ...prev, [reportId]: false }));
     }
   };
+
+  const filteredReports = reports.filter(rep => {
+    if (!patientId) return true;
+    const pId = typeof rep.patientId === "object" && rep.patientId !== null
+      ? rep.patientId._id
+      : rep.patientId;
+    return String(pId) === String(patientId);
+  });
 
   const titleText = role === "doctor" ? "Reports" : "CarePlus Insights";
 
@@ -88,31 +143,46 @@ export default function ReportListView({
 
       {/* Reports List */}
       <div className="space-y-10">
-        {reports.length === 0 ? (
+        {filteredReports.length === 0 ? (
           <Card className="bg-card/45 border-border rounded-3xl p-16 text-center shadow-sm flex flex-col items-center justify-center">
             <FileText className="w-10 h-10 text-muted-foreground/30 mb-3" />
             <p className="font-bold text-foreground">No reports recorded yet</p>
             <p className="text-muted-foreground text-xs mt-0.5">Check back later for daily companion summaries</p>
           </Card>
         ) : (
-          reports.map((session, idx) => {
+          filteredReports.map((session, idx) => {
             const date = new Date(session.startedAt || session.createdAt);
             const dayName = date.toLocaleDateString("en-US", { weekday: "long" });
             const dateStr = date.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
+            const reportContent = session.summary || session.report || "";
+            const parsed = parseReportSummary(reportContent);
+
             const analysis = (session.analyses?.[0] ?? {}) as any;
-            const mood = analysis.mood || "Unknown";
-            const intensity = analysis.mood_intensity ?? 5;
-            const meds = analysis.medicine_log ?? [];
+            const mood = analysis.mood || parsed.mood || "Unknown";
+            const intensity = analysis.mood_intensity ?? parsed.intensity ?? 5;
+            const meds = (analysis.medicine_log && analysis.medicine_log.length > 0)
+              ? analysis.medicine_log
+              : parsed.meds;
             const takenCount = meds.filter((m: any) => m.status === "taken").length;
             const adherence = meds.length > 0 ? Math.round((takenCount / meds.length) * 100) : null;
             const approved = session.reportStatus === "approved";
+            const patientName = typeof session.patientId === "object" && session.patientId !== null
+              ? session.patientId.name
+              : null;
 
             return (
               <div key={session._id || idx} className="space-y-4">
                 {/* Date Headers */}
-                <div>
-                  <h3 className="text-2xl font-black text-foreground leading-none">{dayName}</h3>
-                  <p className="text-xs font-bold text-primary mt-1">{dateStr}</p>
+                <div className="flex justify-between items-end">
+                  <div>
+                    <h3 className="text-2xl font-black text-foreground leading-none">{dayName}</h3>
+                    <p className="text-xs font-bold text-primary mt-1">{dateStr}</p>
+                  </div>
+                  {patientName && (
+                    <Badge variant="outline" className="bg-primary/5 text-primary border-primary/10 text-xs font-black uppercase py-1.5 px-3 rounded-xl">
+                      {patientName}
+                    </Badge>
+                  )}
                 </div>
 
                 {/* Bento Metrics Grid */}
@@ -139,6 +209,36 @@ export default function ReportListView({
                     </div>
                   </Card>
                 </div>
+
+                {/* Pill logs detail list */}
+                {meds && meds.length > 0 && (
+                  <Card className="bg-card/45 border-border p-5 shadow-sm space-y-3">
+                    <h4 className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Pill Intake Logs</h4>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      {meds.map((log: any, logIdx: number) => (
+                        <div
+                          key={logIdx}
+                          className="flex justify-between items-center bg-background px-3 py-2 rounded-lg border border-border text-xs"
+                        >
+                          <span className="font-medium text-foreground">
+                            {log.name}
+                          </span>
+                          <Badge
+                            className={
+                              log.status === "taken"
+                                ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-400"
+                                : log.status === "missed"
+                                  ? "bg-red-500/10 border-red-500/20 text-red-400"
+                                  : "bg-amber-500/10 border-amber-500/20 text-amber-400"
+                            }
+                          >
+                            {log.status}
+                          </Badge>
+                        </div>
+                      ))}
+                    </div>
+                  </Card>
+                )}
 
                 {/* AI Summary Block */}
                 {session.report && (
@@ -214,7 +314,7 @@ export default function ReportListView({
                   </Card>
                 )}
 
-                {idx < reports.length - 1 && <div className="h-px bg-border my-8" />}
+                {idx < filteredReports.length - 1 && <div className="h-px bg-border my-8" />}
               </div>
             );
           })

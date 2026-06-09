@@ -30,10 +30,18 @@ interface SessionHistoryViewProps {
 export default function SessionHistoryView({
   sessions,
   role: _role,
-  patientId: _patientId,
+  patientId,
   onBack,
   onSelectSession
 }: SessionHistoryViewProps) {
+  const filteredSessions = sessions.filter(session => {
+    if (!patientId) return true;
+    const pId = typeof session.patientId === "object" && session.patientId !== null
+      ? session.patientId._id
+      : session.patientId;
+    return String(pId) === String(patientId);
+  });
+
   return (
     <div className="space-y-6 text-left">
       {/* Header */}
@@ -48,20 +56,20 @@ export default function SessionHistoryView({
         </Button>
         <div>
           <h1 className="text-xl font-black text-foreground">All Sessions</h1>
-          <p className="text-xs font-bold text-muted-foreground mt-0.5">{sessions.length} sessions &bull; most recent first</p>
+          <p className="text-xs font-bold text-muted-foreground mt-0.5">{filteredSessions.length} sessions &bull; most recent first</p>
         </div>
       </div>
 
       {/* List */}
       <div className="space-y-4">
-        {sessions.length === 0 ? (
+        {filteredSessions.length === 0 ? (
           <Card className="bg-card/45 border-border rounded-3xl p-16 text-center shadow-sm flex flex-col items-center justify-center">
             <FileText className="w-10 h-10 text-muted-foreground/30 mb-3" />
             <p className="font-bold text-foreground">No sessions recorded yet</p>
             <p className="text-muted-foreground text-xs mt-0.5">Check back later for logs from the robot companion</p>
           </Card>
         ) : (
-          sessions.map((session, idx) => {
+          filteredSessions.map((session, idx) => {
             const date = new Date(session.startedAt || session.createdAt || "");
             const isToday = new Date().toDateString() === date.toDateString();
             const dateLabel = isToday
@@ -72,6 +80,9 @@ export default function SessionHistoryView({
             const turnCount = session.turns?.length ?? 0;
             const mood = session.analyses?.[0]?.mood;
             const approved = session.reportStatus === "approved";
+            const patientName = typeof session.patientId === "object" && session.patientId !== null
+              ? session.patientId.name
+              : null;
 
             return (
               <Card
@@ -85,7 +96,14 @@ export default function SessionHistoryView({
                 <div className="flex-1 p-5 md:p-6 space-y-4 min-w-0">
                   {/* Top Row */}
                   <div className="flex justify-between items-center gap-2">
-                    <span className="font-black text-base text-foreground group-hover:text-primary transition truncate">{dateLabel}</span>
+                    <div className="flex items-center gap-2 min-w-0">
+                      <span className="font-black text-base text-foreground group-hover:text-primary transition truncate">{dateLabel}</span>
+                      {patientName && (
+                        <Badge variant="outline" className="bg-primary/5 text-primary border-primary/10 text-[10px] font-black uppercase px-2 py-0.5 rounded-lg truncate">
+                          {patientName}
+                        </Badge>
+                      )}
+                    </div>
                     <span className="text-xs font-semibold text-muted-foreground shrink-0">{timeLabel}</span>
                   </div>
 
@@ -119,12 +137,12 @@ export default function SessionHistoryView({
                     >
                       {approved ? (
                         <>
-                          <CheckCircle className="w-3 h-3" />
+                          <CheckCircle className="w-3.5 h-3.5" />
                           Approved
                         </>
                       ) : (
                         <>
-                          <Clock className="w-3 h-3" />
+                          <Clock className="w-3.5 h-3.5" />
                           Pending
                         </>
                       )}
