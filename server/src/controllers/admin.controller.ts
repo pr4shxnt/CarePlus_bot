@@ -4,6 +4,7 @@ import { Patient } from "../models/Patient";
 import { Report } from "../models/Report";
 import { ok } from "../types";
 import mongoose from "mongoose";
+import { sendRejectionEmail } from "../services/email.service";
 
 // 1. Shows users
 export async function listUsers(req: Request, res: Response): Promise<void> {
@@ -326,6 +327,32 @@ export async function deleteUser(req: Request, res: Response): Promise<void> {
 
     await User.findByIdAndDelete(id);
     res.json(ok(null, "User deleted successfully."));
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+}
+
+export async function rejectUser(req: Request, res: Response): Promise<void> {
+  try {
+    const { id } = req.params;
+    const { reason } = req.body;
+
+    const user = await User.findById(id);
+    if (!user) {
+      res.status(404).json({ success: false, error: "User not found." });
+      return;
+    }
+
+    user.is_verified = false;
+    await user.save();
+
+    try {
+      await sendRejectionEmail(user.email, user.name, reason);
+    } catch (emailErr: any) {
+      console.error(`Failed to send rejection email to ${user.email}:`, emailErr);
+    }
+
+    res.json(ok(user, "User rejected and verification status set to false. Rejection email sent."));
   } catch (err: any) {
     res.status(500).json({ success: false, error: err.message });
   }

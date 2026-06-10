@@ -78,6 +78,7 @@ import {
   MessageSquare,
   Zap,
   User,
+  XCircle,
 } from "lucide-react";
 import {
   BarChart,
@@ -282,19 +283,19 @@ export default function Dashboard() {
     }
   };
 
-  const handleDeleteUser = async (userId: string) => {
-    if (!confirm("Are you sure you want to reject KYC and delete this user profile? This action cannot be undone.")) {
+  const handleRejectUser = async (userId: string) => {
+    if (!confirm("Are you sure you want to reject this user's KYC/license? This will revoke their verification and send a notification email.")) {
       return;
     }
     try {
-      const res = await fetchApi(`/api/admin/users/${userId}`, {
-        method: "DELETE",
+      const res = await fetchApi(`/api/admin/users/${userId}/reject`, {
+        method: "POST",
       });
       if (res.success) {
         fetchData();
       }
     } catch (err: any) {
-      alert(err.message || "Failed to delete user.");
+      alert(err.message || "Failed to reject user.");
     }
   };
 
@@ -1379,11 +1380,11 @@ export default function Dashboard() {
                                     <Button
                                       variant="ghost"
                                       size="icon"
-                                      onClick={() => handleDeleteUser(u._id)}
+                                      onClick={() => handleRejectUser(u._id)}
                                       className="h-8 w-8 text-red-400 hover:text-red-300 hover:bg-red-950/20"
-                                      title="Reject KYC / Delete User"
+                                      title="Reject KYC / Revoke Verification"
                                     >
-                                      <Trash2 className="h-4 w-4" />
+                                      <XCircle className="h-4 w-4" />
                                     </Button>
                                   </>
                                 )}
