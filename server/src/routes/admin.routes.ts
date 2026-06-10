@@ -10,6 +10,7 @@ router.use(authenticate, authorize("admin"));
 // User listing & verification (KYC/Doctor licenses)
 router.get("/users", admin.listUsers);
 router.post("/users/:id/verify", admin.verifyUser);
+router.post("/users/:id/reject", admin.rejectUser);
 router.delete("/users/:id", admin.deleteUser);
 
 // Doctor CRUD
