@@ -78,10 +78,10 @@ export default function App() {
         </ul>
         <button 
           className="nav-btn" 
-          id="launch-btn" 
-          onClick={() => window.location.href = "http://localhost:3000"}
+          id="signin-btn" 
+          onClick={() => window.location.href = "https://admin-care-plus.vercel.app"}
         >
-          Launch App
+          Sign In
         </button>
       </nav>
 

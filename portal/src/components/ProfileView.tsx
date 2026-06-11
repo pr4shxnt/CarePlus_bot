@@ -128,6 +128,11 @@ export default function ProfileView({ user, onProfileUpdate }: ProfileViewProps)
       return;
     }
 
+    if (newPassword === currentPassword) {
+      setSecurityError("New password cannot be the same as your current password.");
+      return;
+    }
+
     if (!passCriteria.length || !passCriteria.uppercase || !passCriteria.lowercase || !passCriteria.number) {
       setSecurityError("Password does not meet the strength requirements.");
       return;

@@ -238,6 +238,15 @@ export async function changePassword(req: Request, res: Response): Promise<void>
     return;
   }
 
+  const isSamePassword = await user.comparePassword(newPassword);
+  if (isSamePassword) {
+    res.status(400).json({
+      success: false,
+      error: "New password cannot be the same as your current password.",
+    });
+    return;
+  }
+
   user.passwordHash = newPassword;
   await user.save();
 
