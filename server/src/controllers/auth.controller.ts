@@ -139,23 +139,111 @@ export async function me(req: Request, res: Response): Promise<void> {
   res.json(ok(user));
 }
 
+export const UpdateProfileSchema = z.object({
+  name: z.string().min(2, "Name must be at least 2 characters").optional(),
+  email: z.string().email("Invalid email format").optional(),
+  phoneNumber: z.string().optional(),
+  address: z.string().optional(),
+  avatar: z.string().optional(),
+  specialization: z.string().optional(),
+  licenseNumber: z.string().optional(),
+  relationship: z.string().optional(),
+  currentPassword: z.string().optional(),
+});
+
+export const ChangePasswordSchema = z.object({
+  currentPassword: z.string().min(1, "Current password is required"),
+  newPassword: z.string()
+    .min(8, "New password must be at least 8 characters long")
+    .refine((val) => /[A-Z]/.test(val), { message: "New password must contain at least one uppercase letter" })
+    .refine((val) => /[a-z]/.test(val), { message: "New password must contain at least one lowercase letter" })
+    .refine((val) => /[0-9]/.test(val), { message: "New password must contain at least one number" }),
+});
+
 export async function updateMe(req: Request, res: Response): Promise<void> {
-  const allowed = [
+  const body = req.body as z.infer<typeof UpdateProfileSchema>;
+  
+  const user = await User.findById(req.user!.userId).select("+passwordHash");
+  if (!user) {
+    res.status(404).json({ success: false, error: "User not found." });
+    return;
+  }
+
+  // Security Check: Re-authentication before sensitive changes (email change)
+  if (body.email !== undefined && body.email.toLowerCase() !== user.email.toLowerCase()) {
+    if (!body.currentPassword) {
+      res.status(400).json({
+        success: false,
+        error: "Current password is required to change your email address.",
+      });
+      return;
+    }
+    const isPasswordValid = await user.comparePassword(body.currentPassword);
+    if (!isPasswordValid) {
+      res.status(401).json({
+        success: false,
+        error: "Incorrect current password. Re-authentication failed.",
+      });
+      return;
+    }
+
+    // Check if email is already taken
+    const existing = await User.findOne({ email: body.email.toLowerCase() });
+    if (existing && existing._id.toString() !== user._id.toString()) {
+      res.status(409).json({
+        success: false,
+        error: "Email address is already in use by another account.",
+      });
+      return;
+    }
+  }
+
+  const allowed: (keyof typeof body)[] = [
     "name",
+    "email",
+    "phoneNumber",
+    "address",
+    "avatar",
     "specialization",
     "licenseNumber",
     "patientBotId",
     "relationship",
   ];
-  const updates: Record<string, unknown> = {};
+
   for (const key of allowed) {
-    if (req.body[key] !== undefined) updates[key] = req.body[key];
+    if (body[key] !== undefined) {
+      (user as any)[key] = body[key];
+    }
   }
-  const user = await User.findByIdAndUpdate(req.user!.userId, updates, {
-    new: true,
-  });
-  res.json(ok(user, "Profile updated."));
+
+  await user.save();
+  res.json(ok(user, "Profile updated successfully."));
 }
+
+export async function changePassword(req: Request, res: Response): Promise<void> {
+  const { currentPassword, newPassword } = req.body as z.infer<typeof ChangePasswordSchema>;
+
+  const user = await User.findById(req.user!.userId).select("+passwordHash");
+  if (!user) {
+    res.status(404).json({ success: false, error: "User not found." });
+    return;
+  }
+
+  const isPasswordValid = await user.comparePassword(currentPassword);
+  if (!isPasswordValid) {
+    res.status(401).json({
+      success: false,
+      error: "Incorrect current password.",
+    });
+    return;
+  }
+
+  user.passwordHash = newPassword;
+  await user.save();
+
+  res.json(ok(null, "Password changed successfully."));
+}
+
 
 export async function verifyGoogleToken(req: Request, res: Response): Promise<void> {
   const { idToken } = req.body;

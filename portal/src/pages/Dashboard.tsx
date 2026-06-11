@@ -9,6 +9,7 @@ import SessionHistoryView from "@/components/SessionHistoryView";
 import ConversationView from "@/components/ConversationView";
 import GuardianDashboard from "@/components/GuardianDashboard";
 import ConnectDeviceView from "@/components/ConnectDeviceView";
+import ProfileView from "@/components/ProfileView";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -36,7 +37,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import {
   Tooltip,
   TooltipContent,
@@ -98,11 +99,12 @@ import {
 type Tab = 
   | "overview" | "users" | "doctors" | "patients" | "reports"
   | "doctor_dashboard" | "doctor_patients" | "doctor_reports" | "doctor_sessions"
-  | "guardian_dashboard" | "guardian_reports" | "guardian_sessions" | "guardian_device";
+  | "guardian_dashboard" | "guardian_reports" | "guardian_sessions" | "guardian_device"
+  | "profile";
 
 export default function Dashboard() {
   const navigate = useNavigate();
-  const currentUser = getUser();
+  const [currentUser, setCurrentUser] = useState(getUser());
   const [activeTab, setActiveTab] = useState<Tab>(
     currentUser?.role === "doctor"
       ? "doctor_dashboard"
@@ -261,6 +263,7 @@ export default function Dashboard() {
       case "guardian_reports": return "Patient Daily Reports";
       case "guardian_sessions": return "Companion Conversations";
       case "guardian_device": return "Hardware Companion Linkage";
+      case "profile": return "Profile Settings";
       default: return "Dashboard";
     }
   };
@@ -863,12 +866,38 @@ export default function Dashboard() {
                 </SidebarMenu>
               </SidebarGroupContent>
             </SidebarGroup>
+
+            <SidebarGroup className="mt-auto">
+              <SidebarGroupLabel className="text-muted-foreground uppercase text-[10px] tracking-wider px-2 group-data-[state=collapsed]:hidden">
+                Account
+              </SidebarGroupLabel>
+              <SidebarGroupContent>
+                <SidebarMenu>
+                  <SidebarMenuItem>
+                    <SidebarMenuButton
+                      isActive={activeTab === "profile"}
+                      onClick={() => setActiveTab("profile")}
+                      tooltip="Profile Settings"
+                      className={`flex items-center gap-3 group-data-[state=expanded]:px-3 group-data-[state=expanded]:py-2 rounded-lg text-sm transition-all ${
+                        activeTab === "profile"
+                          ? "bg-primary/10 text-primary font-medium"
+                          : "text-muted-foreground hover:bg-card hover:text-foreground"
+                      }`}
+                    >
+                      <User className="h-4 w-4" />
+                      <span>Profile Settings</span>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                </SidebarMenu>
+              </SidebarGroupContent>
+            </SidebarGroup>
           </SidebarContent>
 
           <SidebarFooter className="border-t border-border group-data-[state=expanded]:p-4 group-data-[state=collapsed]:p-2">
             <div className="flex flex-col gap-3">
               <div className="flex items-center gap-3 px-2 py-1.5 overflow-hidden group-data-[state=collapsed]:hidden">
                 <Avatar className="h-9 w-9 bg-muted border border-primary/20">
+                  <AvatarImage src={currentUser?.avatar} />
                   <AvatarFallback className="text-primary text-xs font-semibold">
                     {currentUser?.name?.slice(0, 2).toUpperCase() || "AD"}
                   </AvatarFallback>
@@ -1955,6 +1984,16 @@ export default function Dashboard() {
                         ...prev,
                         patient: prev?.patient ? { ...prev.patient, botId: newBotId } : null
                       }));
+                    }}
+                  />
+                )}
+
+                {/* --- PROFILE SETTINGS TAB --- */}
+                {activeTab === "profile" && (
+                  <ProfileView
+                    user={currentUser}
+                    onProfileUpdate={(updatedUser) => {
+                      setCurrentUser(updatedUser);
                     }}
                   />
                 )}

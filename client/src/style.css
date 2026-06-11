@@ -1006,3 +1006,99 @@ section {
     transform: translateY(0);
   }
 }
+
+/* Custom Multi-select Dropdown styling */
+.multi-select-container {
+  position: relative;
+  width: 100%;
+}
+
+.multi-select-trigger {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  padding: 15px 20px;
+  border-radius: 15px;
+  border: 2px solid #eee;
+  background-color: #fff;
+  font-family: inherit;
+  font-size: 1rem;
+  font-weight: 500;
+  text-align: left;
+  color: var(--text-dark);
+  cursor: pointer;
+  transition: border-color 0.3s, background-color 0.3s;
+}
+
+.multi-select-trigger:focus,
+.multi-select-container.open .multi-select-trigger {
+  outline: none;
+  border-color: var(--accent-primary);
+  background-color: rgba(77, 208, 225, 0.05);
+}
+
+.multi-select-placeholder {
+  color: #888;
+}
+
+.multi-select-arrow {
+  font-size: 0.8rem;
+  transition: transform 0.2s ease;
+  color: #888;
+}
+
+.multi-select-container.open .multi-select-arrow {
+  transform: rotate(180deg);
+}
+
+.multi-select-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  margin-top: 8px;
+  background-color: #fff;
+  border: 2px solid #eee;
+  border-radius: 15px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+  z-index: 1000;
+  max-height: 250px;
+  overflow-y: auto;
+  animation: fadeInSlide 0.2s ease-out;
+}
+
+.multi-select-option {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 20px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  user-select: none;
+}
+
+.multi-select-option:hover {
+  background-color: rgba(77, 208, 225, 0.05);
+}
+
+.multi-select-option.selected {
+  background-color: rgba(77, 208, 225, 0.08);
+}
+
+.multi-select-option-label {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text-dark);
+}
+
+.multi-select-option.selected .checkbox-indicator {
+  border-color: var(--accent-primary);
+  background-color: var(--accent-primary);
+}
+
+.multi-select-option.selected .checkbox-indicator svg {
+  opacity: 1;
+  transform: scale(1);
+}
+
