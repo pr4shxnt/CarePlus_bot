@@ -12,6 +12,20 @@ const DIAGNOSIS_OPTIONS = [
   { id: "other", label: "Other / Specify..." }
 ];
 
+const RELATIONSHIP_OPTIONS = [
+  "Parent",
+  "Mother",
+  "Father",
+  "Guardian",
+  "Spouse",
+  "Sibling",
+  "Child",
+  "Relative",
+  "Friend",
+  "Caregiver",
+  "Other"
+];
+
 export const Registration = () => {
   const [role, setRole] = useState("guardian");
   const [isEmailVerified, setIsEmailVerified] = useState(false);
@@ -20,6 +34,8 @@ export const Registration = () => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [selectedDiagnoses, setSelectedDiagnoses] = useState([]);
   const [otherDiagnosisText, setOtherDiagnosisText] = useState("");
+  const [selectedRelationships, setSelectedRelationships] = useState([]);
+  const [isRelationshipDropdownOpen, setIsRelationshipDropdownOpen] = useState(false);
 
   const handleDiagnosisToggle = (label) => {
     setSelectedDiagnoses((prev) =>
@@ -28,6 +44,26 @@ export const Registration = () => {
         : [...prev, label]
     );
   };
+
+  const handleRelationshipToggle = (option) => {
+    setSelectedRelationships((prev) => {
+      const next = prev.includes(option)
+        ? prev.filter((item) => item !== option)
+        : [...prev, option];
+      setFormData((prevForm) => ({ ...prevForm, relationship: next.join(", ") }));
+      return next;
+    });
+  };
+
+  useEffect(() => {
+    const handleOutsideClick = (event) => {
+      if (!event.target.closest(".multi-select-container")) {
+        setIsRelationshipDropdownOpen(false);
+      }
+    };
+    document.addEventListener("click", handleOutsideClick);
+    return () => document.removeEventListener("click", handleOutsideClick);
+  }, []);
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -128,6 +164,10 @@ export const Registration = () => {
       payload.specialization = formData.specialization;
       payload.licenseNumber = formData.licenseNumber;
     } else if (role === "guardian") {
+      if (!formData.relationship) {
+        alert("Please select at least one relationship to patient.");
+        return;
+      }
       payload.relationship = formData.relationship;
       payload.patientName = formData.patientName;
       payload.gender = formData.gender;
@@ -141,7 +181,12 @@ export const Registration = () => {
 
       if (formData.dob) {
         const birthDate = new Date(formData.dob);
-        payload.age = new Date().getFullYear() - birthDate.getFullYear();
+        const calculatedAge = new Date().getFullYear() - birthDate.getFullYear();
+        if (calculatedAge > 110) {
+          alert("Patient age cannot exceed 110 years.");
+          return;
+        }
+        payload.age = calculatedAge;
       }
     }
 
@@ -340,16 +385,40 @@ export const Registration = () => {
               </h3>
 
               <div className="form-group">
-                <label htmlFor="relationship">Relationship to Patient</label>
-                <input
-                  type="text"
-                  id="relationship"
-                  name="relationship"
-                  value={formData.relationship}
-                  onChange={handleChange}
-                  placeholder="e.g. Son, Daughter, Spouse"
-                  required
-                />
+                <label>Relationship to Patient</label>
+                <div className={`multi-select-container ${isRelationshipDropdownOpen ? "open" : ""}`}>
+                  <button
+                    type="button"
+                    className="multi-select-trigger"
+                    onClick={() => setIsRelationshipDropdownOpen(!isRelationshipDropdownOpen)}
+                  >
+                    {formData.relationship ? (
+                      <span>{formData.relationship}</span>
+                    ) : (
+                      <span className="multi-select-placeholder">Select relationship(s)...</span>
+                    )}
+                    <span className="multi-select-arrow">▼</span>
+                  </button>
+                  {isRelationshipDropdownOpen && (
+                    <div className="multi-select-dropdown">
+                      {RELATIONSHIP_OPTIONS.map((option) => {
+                        const isSelected = selectedRelationships.includes(option);
+                        return (
+                          <div
+                            key={option}
+                            className={`multi-select-option ${isSelected ? "selected" : ""}`}
+                            onClick={() => handleRelationshipToggle(option)}
+                          >
+                            <div className="checkbox-indicator">
+                              {isSelected && <Check style={{ strokeWidth: 3, width: 14, height: 14, stroke: "white" }} />}
+                            </div>
+                            <span className="multi-select-option-label">{option}</span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
               </div>
 
               <h4
@@ -388,6 +457,11 @@ export const Registration = () => {
                     onChange={handleChange}
                     required
                   />
+                  {formData.dob && (new Date().getFullYear() - new Date(formData.dob).getFullYear() > 110) && (
+                    <span className="error-message" style={{ color: "#ef4444", fontSize: "0.85rem", marginTop: "5px", fontWeight: "bold" }}>
+                      Patient age cannot exceed 110 years.
+                    </span>
+                  )}
                 </div>
                 <div className="form-group">
                   <label htmlFor="patient-gender">Patient's Gender</label>

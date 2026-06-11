@@ -16,6 +16,9 @@ export interface IUser extends Document {
   // Guardian-specific
   patientBotId?: string;   // the Pi bot ID this guardian monitors
   relationship?: string;   // e.g. "Son", "Daughter"
+  phoneNumber?: string;
+  address?: string;
+  avatar?: string;
   createdAt: Date;
   updatedAt: Date;
   comparePassword(plain: string): Promise<boolean>;
@@ -33,6 +36,9 @@ const UserSchema = new Schema<IUser>(
     licenseNumber: String,
     patientBotId: { type: String, index: true },
     relationship: String,
+    phoneNumber: String,
+    address: String,
+    avatar: String,
   },
   { timestamps: true }
 );
