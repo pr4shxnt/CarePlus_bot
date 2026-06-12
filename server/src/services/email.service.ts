@@ -1,17 +1,15 @@
 import nodemailer from "nodemailer";
 
-// Retrieve SMTP settings from environment variables with safe defaults
-const host = process.env.SMTP_HOST || "smtp.ethereal.email";
-const port = parseInt(process.env.SMTP_PORT || "587", 10);
-const user = process.env.SMTP_USER || "";
-const pass = process.env.SMTP_PASS || "";
-const from = process.env.SMTP_FROM || '"CarePlus Support" <no-reply@careplus.com>';
+// Retrieve email credentials from environment variables
+const user = process.env.EMAIL_USER || "";
+const pass = process.env.EMAIL_PASS || "";
+const from = user ? `"CarePlus Support" <${user}>` : '"CarePlus Support" <no-reply@careplus.com>';
 
-// Create the transporter. Safe check for credentials.
+// Create the Gmail SMTP transporter
 const transporter = nodemailer.createTransport({
-  host,
-  port,
-  secure: port === 465, // true for 465, false for other ports
+  host: "smtp.gmail.com",
+  port: 587,
+  secure: false, // STARTTLS
   auth: user && pass ? { user, pass } : undefined,
 });
 
@@ -25,7 +23,7 @@ const transporter = nodemailer.createTransport({
 export async function sendRejectionEmail(to: string, name: string, reason?: string): Promise<void> {
   // Safe check: If credentials are not configured, print to console as fallback
   if (!user || !pass) {
-    console.warn(`⚠️ SMTP credentials not set (SMTP_USER/SMTP_PASS). Rejection email for ${name} (${to}) logged to console.`);
+    console.warn(`⚠️ Email credentials not set (EMAIL_USER/EMAIL_PASS). Rejection email for ${name} (${to}) logged to console.`);
     console.log(`
 =========================================
 [SMTP MOCK EMAIL REJECTION NOTICE]
