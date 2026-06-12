@@ -138,6 +138,11 @@ export default function Dashboard() {
   const [userDetailsOpen, setUserDetailsOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<any | null>(null);
 
+  // Rejection modal state
+  const [rejectDialogOpen, setRejectDialogOpen] = useState(false);
+  const [rejectTargetId, setRejectTargetId] = useState<string | null>(null);
+  const [rejectNote, setRejectNote] = useState("");
+
   // Form States
   const [selectedDoctor, setSelectedDoctor] = useState<any | null>(null);
   const [doctorForm, setDoctorForm] = useState({
@@ -286,15 +291,23 @@ export default function Dashboard() {
     }
   };
 
-  const handleRejectUser = async (userId: string) => {
-    if (!confirm("Are you sure you want to reject this user's KYC/license? This will revoke their verification and send a notification email.")) {
-      return;
-    }
+  const handleRejectUser = (userId: string) => {
+    setRejectTargetId(userId);
+    setRejectNote("");
+    setRejectDialogOpen(true);
+  };
+
+  const confirmRejectUser = async () => {
+    if (!rejectTargetId) return;
     try {
-      const res = await fetchApi(`/api/admin/users/${userId}/reject`, {
+      const res = await fetchApi(`/api/admin/users/${rejectTargetId}/reject`, {
         method: "POST",
+        body: JSON.stringify({ reason: rejectNote.trim() || undefined }),
       });
       if (res.success) {
+        setRejectDialogOpen(false);
+        setRejectTargetId(null);
+        setRejectNote("");
         fetchData();
       }
     } catch (err: any) {
@@ -2811,6 +2824,53 @@ export default function Dashboard() {
           </DialogContent>
         </Dialog>
       </div>
+      {/* Rejection Note Modal */}
+      <Dialog open={rejectDialogOpen} onOpenChange={(open) => { setRejectDialogOpen(open); if (!open) setRejectNote(""); }}>
+        <DialogContent className="bg-card border-border text-foreground max-w-md shadow-2xl">
+          <DialogHeader>
+            <DialogTitle className="text-red-400 font-bold flex items-center gap-2">
+              <XCircle className="h-5 w-5" />
+              Reject KYC / License
+            </DialogTitle>
+            <DialogDescription className="text-muted-foreground">
+              Optionally provide a reason for rejection. This note will be included in the notification email sent to the user.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="py-2 space-y-2">
+            <Label htmlFor="reject-note" className="text-sm text-foreground">
+              Rejection Reason <span className="text-muted-foreground">(optional)</span>
+            </Label>
+            <textarea
+              id="reject-note"
+              value={rejectNote}
+              onChange={(e) => setRejectNote(e.target.value)}
+              placeholder="e.g. License document is expired or unreadable..."
+              rows={4}
+              className="w-full rounded-md border border-border bg-background text-foreground placeholder:text-muted-foreground text-sm px-3 py-2 resize-none focus:outline-none focus:ring-2 focus:ring-red-500/40"
+            />
+          </div>
+
+          <DialogFooter className="pt-4 border-t border-border/80 gap-2">
+            <Button
+              variant="outline"
+              className="border-border text-muted-foreground hover:text-foreground"
+              onClick={() => { setRejectDialogOpen(false); setRejectNote(""); }}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={confirmRejectUser}
+              className="bg-red-600 hover:bg-red-700 text-white font-semibold"
+            >
+              <XCircle className="h-4 w-4 mr-1" />
+              Confirm Rejection
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
     </SidebarProvider>
+
   );
 }
