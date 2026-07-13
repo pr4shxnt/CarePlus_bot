@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { Check, Eye, EyeOff } from "lucide-react";
 
+const API_BASE =
+  import.meta.env.VITE_API_BASE || "https://q4n8mbr4-4000.inc1.devtunnels.ms";
+
 const DIAGNOSIS_OPTIONS = [
   { id: "alzheimers", label: "Alzheimer's / Dementia" },
   { id: "parkinsons", label: "Parkinson's Disease" },
@@ -86,7 +89,7 @@ export const Registration = () => {
   const handleGoogleCredentialResponse = async (response) => {
     try {
       const res = await fetch(
-        "https://skkcg1pw-4000.inc1.devtunnels.ms/api/auth/verify-google-token",
+        `${API_BASE}/api/auth/verify-google-token`,
         {
           method: "POST",
           headers: {
@@ -192,7 +195,7 @@ export const Registration = () => {
 
     try {
       const response = await fetch(
-        "https://skkcg1pw-4000.inc1.devtunnels.ms/api/auth/register",
+        `${API_BASE}/api/auth/register`,
         {
           method: "POST",
           headers: {

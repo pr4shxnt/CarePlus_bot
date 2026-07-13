@@ -6,8 +6,8 @@ import os
 import signal
 
 # Configuration
-BOT_URL = "http://localhost:5000"
-SERVER_URL = "http://localhost:4000"
+BOT_URL = os.environ.get("CAREPLUS_BOT_URL", "http://localhost:5000")
+SERVER_URL = os.environ.get("CAREPLUS_SERVER_URL", "https://q4n8mbr4-4000.inc1.devtunnels.ms")
 USER_ID = "system-test-user"
 
 class TestSystemIntegration(unittest.TestCase):

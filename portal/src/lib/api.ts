@@ -1,5 +1,5 @@
 export const getApiBase = () => {
-  return "http://localhost:4000";
+  return import.meta.env.VITE_API_BASE || "https://q4n8mbr4-4000.inc1.devtunnels.ms";
 };
 
 export const getToken = () => localStorage.getItem("portal_token");

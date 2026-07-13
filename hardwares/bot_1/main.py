@@ -1,20 +1,25 @@
-from fastapi import FastAPI, Request, HTTPException, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI, Request, HTTPException, WebSocket, WebSocketDisconnect, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, Response
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 from pathlib import Path
 from typing import Optional, List
-import subprocess
+import base64
 import tempfile
 import os
 import shutil
 import logging
 import json
 import asyncio
+from transformers import pipeline
+import torch
 from app.services.agent import swastha_agent
 from app.database.db import init_db, get_db
 from app.services.sync import start_sync_worker
+from app.services.tts_service import synthesize_speech
+from app.services.tts_queue import TtsQueue, TtsJob
+from app.services.text_utils import split_sentences
 
 # Setup logging
 logging.basicConfig(level=logging.INFO)
@@ -57,10 +62,20 @@ async def update_records(request: Request, update: PatientUpdate):
                 conn.close()
     return {"success": False, "message": "Unknown update type"}
 
+asr_pipeline = None
+
 @app.on_event("startup")
 async def startup_event():
     init_db()
     start_sync_worker()
+    global asr_pipeline
+    try:
+        model_path = Path(__file__).resolve().parent / "models" / "whisper-small-nepali"
+        device = "cuda:0" if torch.cuda.is_available() else "cpu"
+        asr_pipeline = pipeline("automatic-speech-recognition", model=str(model_path), device=device)
+        logger.info("Whisper model loaded successfully.")
+    except Exception as e:
+        logger.error(f"Failed to load Whisper model: {e}")
 
 # CORS configuration
 app.add_middleware(
@@ -71,13 +86,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Piper TTS configuration
 BASE_DIR = Path(__file__).resolve().parent
-DEFAULT_MODEL = BASE_DIR / "models" / "ne_NP-chitwan-medium.onnx"
-DEFAULT_CONFIG = BASE_DIR / "models" / "ne_NP-chitwan-medium.onnx.json"
-
-MODEL_PATH = Path(os.getenv("PIPER_MODEL", str(DEFAULT_MODEL)))
-CONFIG_PATH = Path(os.getenv("PIPER_CONFIG", str(DEFAULT_CONFIG)))
 
 class TtsRequest(BaseModel):
     text: str
@@ -113,6 +122,31 @@ async def trigger_sync():
 @app.websocket("/ws/chat")
 async def websocket_chat_endpoint(websocket: WebSocket):
     await websocket.accept()
+    send_lock = asyncio.Lock()
+
+    async def send_json_safe(payload):
+        async with send_lock:
+            await websocket.send_json(payload)
+
+    async def tts_worker(tts_queue: TtsQueue):
+        # Consumes sentence chunks FIFO and streams synthesized audio back as it's
+        # ready, so playback of sentence 1 can start while sentence 2+ still stream.
+        while True:
+            job = await tts_queue.dequeue()
+            if job.text is None:
+                break
+            try:
+                audio_bytes = await synthesize_speech(job.text)
+                await send_json_safe({
+                    "type": "audio_chunk",
+                    "seq": job.seq,
+                    "text": job.text,
+                    "audio_b64": base64.b64encode(audio_bytes).decode("ascii"),
+                })
+            except Exception as e:
+                logger.error(f"TTS chunk synthesis failed (seq={job.seq}): {e}")
+                await send_json_safe({"type": "audio_chunk_error", "seq": job.seq, "detail": str(e)})
+
     try:
         while True:
             data = await websocket.receive_text()
@@ -124,18 +158,39 @@ async def websocket_chat_endpoint(websocket: WebSocket):
             if not message:
                 continue
 
+            tts_queue = TtsQueue()
+            worker_task = asyncio.create_task(tts_worker(tts_queue))
+            next_seq = 0
+
             full_reply = ""
-            async for chunk in swastha_agent.run_chat_stream(user_id, message, history):
-                full_reply += chunk
-                await websocket.send_json({"type": "token", "content": chunk})
-            
-            await websocket.send_json({"type": "done", "full_reply": full_reply})
-            
+            buffer = ""
+            try:
+                async for chunk in swastha_agent.run_chat_stream(user_id, message, history):
+                    full_reply += chunk
+                    buffer += chunk
+                    await send_json_safe({"type": "token", "content": chunk})
+
+                    sentences, buffer = split_sentences(buffer)
+                    for sentence in sentences:
+                        tts_queue.enqueue(TtsJob(seq=next_seq, text=sentence))
+                        next_seq += 1
+
+                leftover = buffer.strip()
+                if leftover:
+                    tts_queue.enqueue(TtsJob(seq=next_seq, text=leftover))
+                    next_seq += 1
+            finally:
+                # Sentinel tells the worker to stop once it drains what's queued.
+                tts_queue.enqueue(TtsJob(seq=-1, text=None))
+                await worker_task
+
+            await send_json_safe({"type": "done", "full_reply": full_reply, "total_audio_chunks": next_seq})
+
     except WebSocketDisconnect:
         logger.info("WebSocket disconnected")
     except Exception as e:
         logger.error(f"WebSocket error: {e}")
-        await websocket.send_json({"type": "error", "content": str(e)})
+        await send_json_safe({"type": "error", "content": str(e)})
 
 # Legacy AI Agent Endpoints (refactored to be async)
 @app.post("/api/chat/agent")
@@ -187,58 +242,39 @@ async def log_medicine_endpoint(request: MedicineLogRequest):
 # TTS Endpoint (refactored to be async)
 @app.post("/tts")
 async def tts(request: TtsRequest):
-    if not request.text or not request.text.strip():
-        raise HTTPException(status_code=400, detail="Text for TTS cannot be empty")
-
-    if not MODEL_PATH.exists() or not CONFIG_PATH.exists():
-        raise HTTPException(status_code=500, detail="Piper model/config not found")
-
-    # Priority logic for finding the piper executable
-    piper_env = os.getenv("PIPER_BIN")
-    piper_venv_python = Path(__file__).resolve().parents[1] / "piperapi" / "tts-env" / "bin" / "python"
-    
-    if piper_env and Path(piper_env).exists():
-        piper_cmd = [piper_env]
-    elif piper_venv_python.exists():
-        # Use python -m piper to bypass broken shebangs in moved venvs
-        piper_cmd = [str(piper_venv_python), "-m", "piper"]
-    else:
-        piper_path = shutil.which("piper")
-        if piper_path:
-            piper_cmd = [piper_path]
-        else:
-            raise HTTPException(status_code=500, detail="Piper executable not found.")
-
-    with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as temp_audio:
-        output_path = Path(temp_audio.name)
-
     try:
-        def run_piper():
-            full_cmd = piper_cmd + [
-                "--model", str(MODEL_PATH),
-                "--config", str(CONFIG_PATH),
-                "--output_file", str(output_path),
-            ]
-            return subprocess.run(
-                full_cmd,
-                input=request.text,
-                capture_output=True,
-                text=True,
-                check=True,
-            )
-        
-        await asyncio.to_thread(run_piper)
-    except subprocess.CalledProcessError as exc:
-        logger.error(f"Piper failed: {exc.stderr}")
-        output_path.unlink(missing_ok=True)
-        raise HTTPException(status_code=500, detail=f"Piper failed: {exc.stderr}")
-    except Exception as exc:
-        logger.exception("Piper CLI failed")
-        output_path.unlink(missing_ok=True)
-        raise HTTPException(status_code=500, detail=f"Piper error: {str(exc)}")
+        audio_bytes = await synthesize_speech(request.text)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+    except RuntimeError as exc:
+        raise HTTPException(status_code=500, detail=str(exc))
 
-    return FileResponse(path=str(output_path), media_type="audio/wav", filename="tts.wav")
+    return Response(content=audio_bytes, media_type="audio/wav")
 
+@app.post("/api/transcribe")
+async def transcribe_audio(audio: UploadFile = File(...)):
+    if asr_pipeline is None:
+        raise HTTPException(status_code=500, detail="Speech model is not loaded yet")
+    suffix = Path(audio.filename or "").suffix or ".webm"
+    with tempfile.NamedTemporaryFile(suffix=suffix, delete=False) as temp_audio:
+        shutil.copyfileobj(audio.file, temp_audio)
+        temp_path = temp_audio.name
+    
+    try:
+        # Run inference in a thread so it doesn't block asyncio event loop
+        def run_inference():
+            return asr_pipeline(temp_path)
+            
+        result = await asyncio.to_thread(run_inference)
+        transcript = result.get("text", "")
+        return {"text": transcript.strip()}
+    except Exception as e:
+        logger.error(f"Transcription error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        os.remove(temp_path)
+
+app.mount("/web", StaticFiles(directory=str(BASE_DIR / "web_client"), html=True), name="web_client")
 app.mount("/", StaticFiles(directory=str(BASE_DIR / "public"), html=True), name="static")
 
 @app.get("/favicon.ico", include_in_schema=False)

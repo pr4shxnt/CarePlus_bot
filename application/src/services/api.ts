@@ -1,6 +1,6 @@
 import { StorageService } from './storage.service';
 
-const BASE_URL = 'https://skkcg1pw-4000.inc1.devtunnels.ms/api';
+const BASE_URL = 'https://q4n8mbr4-4000.inc1.devtunnels.ms/api';
 
 export const request = async (endpoint: string, options: any = {}) => {
   const url = `${BASE_URL}${endpoint}`;

@@ -8,7 +8,7 @@ from ..database.db import get_db
 
 logger = logging.getLogger("careplus.sync")
 
-SERVER_URL = os.getenv("CENTRAL_SERVER_URL", "http://localhost:4000")
+SERVER_URL = os.getenv("CENTRAL_SERVER_URL", "https://q4n8mbr4-4000.inc1.devtunnels.ms")
 PATIENT_ID = os.getenv("PATIENT_ID", "664f1234567890abcdef1234") # MongoDB _id
 
 def format_iso(ts_str):

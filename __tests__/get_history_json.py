@@ -1,8 +1,11 @@
+import os
 import requests
 import json
 import sys
 
-def get_history(user_id, session_id=None, server_url="http://localhost:3000"):
+DEFAULT_SERVER_URL = os.environ.get("CAREPLUS_SERVER_URL", "https://q4n8mbr4-4000.inc1.devtunnels.ms")
+
+def get_history(user_id, session_id=None, server_url=DEFAULT_SERVER_URL):
     try:
         url = f"{server_url}/api/history?userId={user_id}"
         if session_id:
@@ -26,7 +29,7 @@ def get_history(user_id, session_id=None, server_url="http://localhost:3000"):
     except json.JSONDecodeError:
         print("Error: Failed to parse response as JSON")
 
-def list_sessions(user_id, server_url="http://localhost:3000"):
+def list_sessions(user_id, server_url=DEFAULT_SERVER_URL):
     try:
         url = f"{server_url}/api/history/sessions?userId={user_id}"
         print(f"Fetching sessions from: {url}")

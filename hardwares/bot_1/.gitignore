@@ -87,6 +87,9 @@ cython_debug/
 # OS/IDE specific
 .idea/
 .vscode/
+
+# Large downloaded model weights (fetch via huggingface-hub, don't commit)
+models/whisper-small-nepali/
 *.swp
 *.swo
 .DS_Store
