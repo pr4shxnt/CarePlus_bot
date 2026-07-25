@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Care+ Academic Poster — Sunway College Kathmandu</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  @page { size: A0 landscape; margin: 0; }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    background: #d4d8e0;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    padding: 24px;
+    min-height: 100vh;
+  }
+
+  /* A0 landscape = 1189mm × 841mm  (ratio ≈ 1.4142 : 1) */
+  .poster {
+    width: 1680px;
+    height: 1188px;
+    background: #f2f4f8;
+    display: flex;
+    flex-direction: column;
+    border: 2px solid #bbb;
+    box-shadow: 0 6px 32px rgba(0,0,0,0.22);
+    overflow: hidden;
+  }
+
+  /* ── HEADER ── */
+  .header {
+    background: linear-gradient(135deg, #1a2e5a 0%, #2a4a8e 60%, #1e6b8a 100%);
+    padding: 12px 22px 10px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-shrink: 0;
+  }
+
+  .header-left { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+
+  .logo-robot { width: 64px; height: 64px; object-fit: contain; filter: drop-shadow(0 2px 6px rgba(0,0,0,0.3)); }
+
+  .logo-text-block { color: #fff; }
+  .logo-text-block .project-name { font-size: 26px; font-weight: 800; letter-spacing: -0.5px; line-height: 1; }
+  .logo-text-block .project-name span { color: #7dd3fc; }
+  .logo-text-block .project-sub { font-size: 9px; font-weight: 400; opacity: 0.75; letter-spacing: 0.5px; margin-top: 2px; }
+
+  .divider-v { width: 1px; height: 60px; background: rgba(255,255,255,0.25); margin: 0 6px; flex-shrink: 0; }
+
+  .header-title { flex: 1; text-align: center; }
+  .header-title h1 { font-size: 20px; font-weight: 800; color: #fff; line-height: 1.2; }
+  .header-title .authors { font-size: 10.5px; font-weight: 500; color: #bfe0ff; margin-top: 5px; }
+  .header-title .affil { font-size: 9.5px; color: #93c5fd; font-style: italic; margin-top: 2px; }
+
+  .header-right { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; flex-shrink: 0; }
+  .badge {
+    background: rgba(255,255,255,0.12);
+    border: 1px solid rgba(255,255,255,0.25);
+    color: #fff;
+    font-size: 8.5px;
+    font-weight: 700;
+    padding: 5px 10px;
+    border-radius: 5px;
+    text-align: center;
+    line-height: 1.4;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+  }
+  .badge .big { font-size: 14px; font-weight: 800; display: block; }
+
+  /* ── BODY GRID ── */
+  .body {
+    flex: 1;
+    display: grid;
+    grid-template-columns: 1fr 1.2fr 1.2fr 1fr;
+    min-height: 0;
+  }
+
+  /* ── COLUMN ── */
+  .col {
+    display: flex;
+    flex-direction: column;
+    border-right: 1px solid #c8cdd8;
+    overflow: hidden;
+  }
+  .col:last-child { border-right: none; }
+
+  /* ── SECTION ── */
+  .section {
+    border-bottom: 1px solid #c8cdd8;
+    padding: 8px 11px 8px;
+    display: flex;
+    flex-direction: column;
+  }
+  .section:last-child { border-bottom: none; flex: 1; }
+
+  .section-title {
+    font-size: 9px;
+    font-weight: 800;
+    letter-spacing: 1.2px;
+    text-transform: uppercase;
+    text-align: center;
+    background: #1e3a6e;
+    color: #fff;
+    padding: 3px 0;
+    margin: -8px -11px 7px;
+  }
+
+  .section p, .section li {
+    font-size: 8.5px;
+    line-height: 1.55;
+    color: #1a1a2e;
+  }
+  .section ul { padding-left: 13px; }
+  .section ul li { margin-bottom: 2.5px; }
+  .section b { font-weight: 700; }
+
+  /* ── FIGURE IMAGES ── */
+  .fig-img {
+    width: 100%;
+    border-radius: 4px;
+    border: 1px solid #dde2ef;
+    display: block;
+    background: #fff;
+  }
+  .fig-caption {
+    font-size: 7.5px;
+    font-style: italic;
+    text-align: center;
+    color: #555;
+    margin-top: 3px;
+  }
+
+  /* ── ROBOT SPOTLIGHT ── */
+  .robot-spot {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: #eef3ff;
+    border: 1px solid #c5d5f5;
+    border-radius: 6px;
+    padding: 6px 8px;
+    margin-bottom: 6px;
+  }
+  .robot-spot img { width: 52px; height: 52px; object-fit: contain; flex-shrink: 0; }
+  .robot-spot-text { font-size: 8px; color: #1a2a4a; line-height: 1.45; }
+  .robot-spot-text b { font-size: 9px; display: block; margin-bottom: 2px; color: #1e3a6e; }
+
+  /* ── FLOW BOX ── */
+  .flow-box {
+    background: #fff;
+    border: 1px solid #c5d5f5;
+    border-radius: 5px;
+    padding: 6px 8px;
+    margin: 5px 0;
+  }
+  .flow-box .flow-title {
+    font-size: 8px; font-weight: 700; color: #1e3a6e;
+    margin-bottom: 4px; text-align: center;
+    text-transform: uppercase; letter-spacing: 0.5px;
+  }
+  .flow-step { display: flex; align-items: flex-start; gap: 5px; margin-bottom: 3px; }
+  .flow-num {
+    background: #1e3a6e; color: #fff; font-size: 7.5px; font-weight: 700;
+    width: 15px; height: 15px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 1px;
+  }
+  .flow-text { font-size: 8px; color: #1a1a2e; line-height: 1.35; }
+
+  /* ── TECH TABLE ── */
+  .tech-table { width: 100%; border-collapse: collapse; margin-top: 5px; }
+  .tech-table th { background: #1e3a6e; color: #fff; font-size: 7.5px; font-weight: 700; padding: 3px 5px; text-align: left; }
+  .tech-table td { font-size: 8px; padding: 2.5px 5px; border-bottom: 1px solid #e0e4ef; color: #1a1a2e; }
+  .tech-table tr:nth-child(even) td { background: #f0f4fb; }
+
+  /* ── PERSONA CARD ── */
+  .persona-card {
+    background: #fff;
+    border-left: 3px solid #1e3a6e;
+    padding: 4px 6px;
+    margin-bottom: 4px;
+    border-radius: 0 4px 4px 0;
+  }
+  .persona-card .p-name { font-size: 8px; font-weight: 700; color: #1e3a6e; }
+  .persona-card .p-desc { font-size: 7.5px; color: #444; margin-top: 1px; line-height: 1.35; }
+
+  /* ── SDG BADGES ── */
+  .sdg-row { display: flex; gap: 5px; margin-top: 5px; }
+  .sdg-badge { padding: 4px 7px; border-radius: 4px; font-size: 7.5px; font-weight: 700; color: #fff; text-align: center; flex: 1; }
+  .sdg3  { background: #4c9b4f; }
+  .sdg9  { background: #e07820; }
+  .sdg10 { background: #d01070; }
+
+  /* ── RESULT BARS ── */
+  .result-bar-wrap { margin-bottom: 4px; }
+  .result-bar-label { font-size: 8px; color: #1a1a2e; font-weight: 600; margin-bottom: 1.5px; }
+  .result-bar-track { background: #dde4f5; border-radius: 3px; height: 9px; width: 100%; position: relative; }
+  .result-bar-fill { height: 100%; border-radius: 3px; }
+  .result-bar-pct { font-size: 7px; color: #fff; position: absolute; right: 3px; top: 0; line-height: 9px; font-weight: 700; }
+
+  /* ── MILESTONE NODES ── */
+  .milestone-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; margin: 5px 0; }
+  .ms-node {
+    background: #fff;
+    border: 1.5px solid #1e3a6e;
+    border-radius: 6px;
+    padding: 4px 5px;
+    text-align: center;
+  }
+  .ms-node .ms-num { font-size: 13px; font-weight: 800; color: #1e3a6e; line-height: 1; }
+  .ms-node .ms-label { font-size: 7px; font-weight: 700; color: #333; text-transform: uppercase; letter-spacing: 0.3px; margin-top: 1px; }
+  .ms-node .ms-desc { font-size: 6.5px; color: #555; margin-top: 1px; line-height: 1.3; }
+
+  /* ── REFS ── */
+  .ref-list { list-style: decimal; padding-left: 12px; }
+  .ref-list li { font-size: 7.5px; color: #333; margin-bottom: 2px; line-height: 1.4; }
+
+  @media print {
+    body { background: none; padding: 0; }
+    .poster { box-shadow: none; width: 100%; height: 100vh; }
+  }
+</style>
+</head>
+<body>
+<div class="poster">
+
+  <!-- ════ HEADER ════ -->
+  <div class="header">
+    <div class="header-left">
+      <img class="logo-robot" src="robot.png" alt="Care+ Robot Mascot" />
+      <div class="logo-text-block">
+        <div class="project-name">Care<span>+</span></div>
+        <div class="project-sub">AI &amp; IoT Healthcare Companion</div>
+      </div>
+    </div>
+    <div class="divider-v"></div>
+
+    <div class="header-title">
+      <h1>Care+: A Privacy-First AI &amp; IoT Healthcare Companion for Elderly Home Care in Nepal</h1>
+      <div class="authors">Team Git Force &nbsp;·&nbsp; Prashant Thakur &amp; Team</div>
+      <div class="affil">Sunway College Kathmandu — Semester 2 Innovation Project, 2026</div>
+    </div>
+
+    <div class="divider-v"></div>
+    <div class="header-right">
+      <div class="badge">SUNWAY COLLEGE<span class="big">KTM</span></div>
+      <div class="badge">INNOVATION PROJECT<span class="big">2026</span></div>
+    </div>
+  </div>
+
+  <!-- ════ BODY ════ -->
+  <div class="body">
+
+    <!-- ══ COL 1 ══ -->
+    <div class="col">
+
+      <div class="section">
+        <div class="section-title">Motivation</div>
+        <div class="robot-spot">
+          <img src="robot.png" alt="Care+ companion robot" />
+          <div class="robot-spot-text">
+            <b>The Problem</b>
+            Nepal's elderly population is left behind as youth migrate abroad. No affordable, Nepali-language AI companion exists for home-based care.
+          </div>
+        </div>
+        <ul>
+          <li>Critical shortage of home-care resources as youth migrate abroad for work and study.</li>
+          <li>Existing digital health tools are English-only, cloud-dependent, focused on hospital booking — not ongoing home care.</li>
+          <li>Elderly patients miss medicines; emotional states go unmonitored; remote guardians rely on daily phone calls.</li>
+          <li>Inconsistent internet makes cloud services unreliable in rural Nepal.</li>
+        </ul>
+      </div>
+
+      <div class="section">
+        <div class="section-title">Introduction</div>
+        <ul>
+          <li><b>Goal:</b> Build a privacy-first, local-AI healthcare companion for elderly Nepali speakers at home.</li>
+          <li><b>What we built:</b> Raspberry Pi edge device running Whisper STT, Gemma LLM, and Piper TTS — paired with a mobile app and web dashboard.</li>
+          <li><b>Team:</b> Team Git Force — four students at Sunway College Kathmandu with shared expertise in AI, IoT, and human-centred design.</li>
+          <li><b>Scope:</b> Patient voice interaction, medicine reminders, mood tracking, caregiver coordination — all on a single home device.</li>
+        </ul>
+      </div>
+
+      <div class="section">
+        <div class="section-title">User Personas</div>
+        <div class="persona-card">
+          <div class="p-name">👵 Maya Devi, 72 — Retired, Kathmandu</div>
+          <div class="p-desc">Prefers speaking over typing; struggles with English apps; wants to live independently at home with medicine support.</div>
+        </div>
+        <div class="persona-card">
+          <div class="p-name">👨‍💻 Suman, 38 — Engineer, Australia</div>
+          <div class="p-desc">Parents live in Nepal; wants real-time, reassuring medication updates without calling every day.</div>
+        </div>
+        <div class="persona-card">
+          <div class="p-name">👩‍⚕️ Nurse Rina, 29 — Caregiver, Lalitpur</div>
+          <div class="p-desc">Manages multiple patients; needs structured care logs and consolidated dashboards.</div>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-title">SDG Alignment</div>
+        <p>Care+ directly supports three UN Sustainable Development Goals:</p>
+        <div class="sdg-row">
+          <div class="sdg-badge sdg3">SDG 3<br>Good Health</div>
+          <div class="sdg-badge sdg9">SDG 9<br>Innovation</div>
+          <div class="sdg-badge sdg10">SDG 10<br>Reduced Inequality</div>
+        </div>
+        <p style="margin-top:5px;font-size:8px;">SDG 3 is primary — Care+ directly improves medication adherence and ongoing wellbeing monitoring. SDG 9 and 10 reflect the technology-driven, inclusive design approach.</p>
+      </div>
+
+      <div class="section">
+        <div class="section-title">Challenges &amp; Solutions</div>
+        <ul>
+          <li><b>Noisy environments:</b> Audio preprocessing, confidence scoring, and repeat-confirmation prompts.</li>
+          <li><b>Raspberry Pi failures:</b> Watchdog scripts and automatic service restarts.</li>
+          <li><b>Dashboard sync lag:</b> Event-driven backend architecture with clear ownership.</li>
+          <li><b>Team coordination:</b> Weekly sprint planning and shared API contracts across 4 parallel work streams.</li>
+        </ul>
+      </div>
+
+    </div><!-- /col1 -->
+
+    <!-- ══ COL 2 ══ -->
+    <div class="col">
+
+      <div class="section">
+        <div class="section-title">System Architecture</div>
+        <img class="fig-img" src="arch.png" alt="Care+ System Architecture Diagram" style="max-height:290px;object-fit:contain;" />
+        <div class="fig-caption">Fig I: Care+ System Architecture — Raspberry Pi edge device with FastAPI orchestration, Gemma LLM, Whisper STT, Piper TTS, and role-based dashboards</div>
+      </div>
+
+      <div class="section">
+        <div class="section-title">How It Works — Interaction Loop</div>
+        <div class="flow-box">
+          <div class="flow-step"><div class="flow-num">1</div><div class="flow-text"><b>Voice Input</b> — User speaks naturally in Nepali or English</div></div>
+          <div class="flow-step"><div class="flow-num">2</div><div class="flow-text"><b>Whisper STT</b> — Speech converted to text on-device (Nepali fine-tuned)</div></div>
+          <div class="flow-step"><div class="flow-num">3</div><div class="flow-text"><b>FastAPI Orchestration</b> — Routes request to local LLM service</div></div>
+          <div class="flow-step"><div class="flow-num">4</div><div class="flow-text"><b>Gemma LLM + RAG</b> — Determines intent: reply / medicine / mood / report</div></div>
+          <div class="flow-step"><div class="flow-num">5</div><div class="flow-text"><b>Piper TTS</b> — Response synthesised to natural Nepali speech output</div></div>
+          <div class="flow-step"><div class="flow-num">6</div><div class="flow-text"><b>Dashboard Sync</b> — Care events persisted to SQLite (local) + MongoDB (cloud)</div></div>
+        </div>
+        <div class="fig-caption">Fig II: Core Interaction Loop</div>
+      </div>
+
+      <div class="section">
+        <div class="section-title">Technology Stack</div>
+        <table class="tech-table">
+          <tr><th>Component</th><th>Technology</th></tr>
+          <tr><td>Edge Device</td><td>Raspberry Pi 4B</td></tr>
+          <tr><td>AI / LLM</td><td>Ollama — Gemma 4 (e2b)</td></tr>
+          <tr><td>Speech-to-Text</td><td>Whisper (Nepali fine-tuned)</td></tr>
+          <tr><td>Text-to-Speech</td><td>Piper TTS (Nepali models)</td></tr>
+          <tr><td>AI Server</td><td>FastAPI (Python 3.10+)</td></tr>
+          <tr><td>Orchestrator</td><td>Bun + TypeScript</td></tr>
+          <tr><td>Mobile App</td><td>React Native</td></tr>
+          <tr><td>Web Dashboard</td><td>Next.js</td></tr>
+          <tr><td>Database</td><td>SQLite (local) + MongoDB (cloud)</td></tr>
+        </table>
+        <div class="fig-caption">Fig III: Technology Stack</div>
+      </div>
+
+    </div><!-- /col2 -->
+
+    <!-- ══ COL 3 ══ -->
+    <div class="col">
+
+      <div class="section">
+        <div class="section-title">App Screenshots — Live MVP</div>
+        <div style="display:flex;gap:5px;align-items:flex-start;justify-content:center;">
+          <div style="flex:1;display:flex;flex-direction:column;align-items:center;">
+            <img src="screen_guardian.jpg" alt="Guardian Dashboard" style="width:100%;max-height:210px;object-fit:cover;object-position:top;border-radius:8px;border:1px solid #c5d5f5;box-shadow:0 2px 6px rgba(0,0,0,0.12);" />
+            <div class="fig-caption" style="margin-top:3px;">Guardian Dashboard</div>
+          </div>
+          <div style="flex:1;display:flex;flex-direction:column;align-items:center;">
+            <img src="screen_doctor.jpg" alt="Doctor Dashboard" style="width:100%;max-height:210px;object-fit:cover;object-position:top;border-radius:8px;border:1px solid #c5d5f5;box-shadow:0 2px 6px rgba(0,0,0,0.12);" />
+            <div class="fig-caption" style="margin-top:3px;">Doctor Dashboard</div>
+          </div>
+          <div style="flex:1;display:flex;flex-direction:column;align-items:center;">
+            <img src="screen_chat.jpg" alt="AI Conversation in Nepali" style="width:100%;max-height:210px;object-fit:cover;object-position:top;border-radius:8px;border:1px solid #c5d5f5;box-shadow:0 2px 6px rgba(0,0,0,0.12);" />
+            <div class="fig-caption" style="margin-top:3px;">AI Chat (Nepali)</div>
+          </div>
+        </div>
+        <div class="fig-caption" style="margin-top:4px;">Fig IV: Real MVP Screenshots — Guardian App, Doctor Clinical Portal, and Nepali-language AI Conversation</div>
+      </div>
+
+      <div class="section">
+        <div class="section-title">Use Case Diagram</div>
+        <img class="fig-img" src="usecase.png" alt="Care+ Use Case Diagram" style="max-height:200px;object-fit:contain;" />
+        <div class="fig-caption">Fig V: Use Case Diagram — Actors: Elderly Patient, Caregiver, Guardian, Doctor</div>
+      </div>
+
+      <div class="section">
+        <div class="section-title">Methodology — Agile Milestones</div>
+        <p style="margin-bottom:5px;">Design Thinking + Agile across four milestone sprints:</p>
+        <div class="milestone-grid">
+          <div class="ms-node"><div class="ms-num">M1</div><div class="ms-label">AI Orchestration</div><div class="ms-desc">Whisper STT/TTS integration &amp; server routing</div></div>
+          <div class="ms-node"><div class="ms-num">M2</div><div class="ms-label">Medical Mgmt</div><div class="ms-desc">Medicine CRUD, intake confirmation, object queries</div></div>
+          <div class="ms-node"><div class="ms-num">M3</div><div class="ms-label">Emotional Analytics</div><div class="ms-desc">Mood tracking, JSON report engine, PDF pipeline</div></div>
+          <div class="ms-node"><div class="ms-num">M4</div><div class="ms-label">Multi-User Ecosystem</div><div class="ms-desc">Raspberry Pi hardening &amp; role dashboards sync</div></div>
+        </div>
+        <div class="fig-caption">Fig VI: Development Milestones</div>
+      </div>
+
+    </div><!-- /col3 -->
+
+    <!-- ══ COL 4 ══ -->
+    <div class="col">
+
+      <div class="section">
+        <div class="section-title">Results &amp; Testing</div>
+        <p style="margin-bottom:5px;">MVP validated through unit testing, hardware reliability testing, voice recognition in varied environments, and informal user acceptance testing with elderly pilot participants.</p>
+
+        <div class="result-bar-wrap">
+          <div class="result-bar-label">Medicine Reminder Delivery</div>
+          <div class="result-bar-track"><div class="result-bar-fill" style="width:92%;background:#1e3a6e;"><div class="result-bar-pct">92%</div></div></div>
+        </div>
+        <div class="result-bar-wrap">
+          <div class="result-bar-label">Voice Recognition (quiet env.)</div>
+          <div class="result-bar-track"><div class="result-bar-fill" style="width:88%;background:#2563a8;"><div class="result-bar-pct">88%</div></div></div>
+        </div>
+        <div class="result-bar-wrap">
+          <div class="result-bar-label">Dashboard Sync Reliability</div>
+          <div class="result-bar-track"><div class="result-bar-fill" style="width:95%;background:#1e6b8a;"><div class="result-bar-pct">95%</div></div></div>
+        </div>
+        <div class="result-bar-wrap">
+          <div class="result-bar-label">Elderly Preference: Voice vs. Text App</div>
+          <div class="result-bar-track"><div class="result-bar-fill" style="width:85%;background:#c0392b;"><div class="result-bar-pct">85%</div></div></div>
+        </div>
+        <div class="fig-caption" style="margin-top:4px;">Fig VII: MVP Performance Indicators (Informal Pilot)</div>
+      </div>
+
+      <div class="section">
+        <div class="section-title">Value Proposition &amp; Business Model</div>
+        <ul>
+          <li><b>For elderly users:</b> Independence and reassurance in native language.</li>
+          <li><b>For guardians abroad:</b> Real-time medication and mood dashboards — no daily calls needed.</li>
+          <li><b>For institutions:</b> Scalable monitoring layer for multiple home-care patients.</li>
+        </ul>
+        <div class="flow-box" style="margin-top:5px;">
+          <div class="flow-title">Pricing Strategy</div>
+          <div class="flow-step"><div class="flow-num" style="font-size:6px;width:15px;height:15px;">₨</div><div class="flow-text"><b>One-time hardware:</b> Rs. 52,999 (excl. VAT)</div></div>
+          <div class="flow-step"><div class="flow-num" style="font-size:9px;width:15px;height:15px;">∞</div><div class="flow-text"><b>Monthly subscription:</b> Rs. 2,000/month (cloud sync + dashboards)</div></div>
+          <div class="flow-step"><div class="flow-num" style="font-size:9px;width:15px;height:15px;">🏥</div><div class="flow-text"><b>Institutional licensing</b> for healthcare partners at scale</div></div>
+        </div>
+        <p style="margin-top:4px;font-size:7.5px;"><b>USP:</b> The only privacy-first, Nepali-first AI companion that unifies medicine adherence, emotional monitoring, and multi-role caregiver coordination in a single home device.</p>
+      </div>
+
+      <div class="section">
+        <div class="section-title">Conclusion</div>
+        <ul>
+          <li>Care+ validates that a culturally relevant AI health companion can be built within an academic timeframe.</li>
+          <li>Local AI processing eliminates cloud dependency — critical for Nepal's connectivity landscape.</li>
+          <li>Voice interaction proved significantly more accessible to elderly participants than text-based apps.</li>
+          <li>Guardian reassurance improved markedly with access to real-time medication and mood dashboards.</li>
+          <li>Clear pathway to pilot implementation in the Kathmandu Valley and beyond.</li>
+        </ul>
+      </div>
+
+      <div class="section">
+        <div class="section-title">Future Scope</div>
+        <ul>
+          <li>Clinical validation of mood and emotional trend analysis with healthcare professionals.</li>
+          <li>Wearable integration — heart rate, sleep, and movement monitoring.</li>
+          <li>Expanded multilingual support for South Asian languages.</li>
+          <li>Clinical APIs to connect Care+ with hospital information systems.</li>
+          <li>Scale from households to community and institutional settings.</li>
+        </ul>
+      </div>
+
+      <div class="section">
+        <div class="section-title">References</div>
+        <ol class="ref-list">
+          <li>Alzheimer's Disease International. (2023). <i>World Alzheimer Report 2023</i>. ADI, London.</li>
+          <li>Radford, A. et al. (2023). Robust Speech Recognition via Large-Scale Weak Supervision. <i>ICML 2023</i>.</li>
+          <li>Government of Nepal, CBS. (2021). <i>National Population and Housing Census 2021</i>. Kathmandu.</li>
+          <li>WHO. (2022). <i>Ageing and Health Fact Sheet</i>. World Health Organization.</li>
+          <li>Rhasspy. (2024). Piper TTS. <i>github.com/rhasspy/piper</i></li>
+        </ol>
+      </div>
+
+    </div><!-- /col4 -->
+
+  </div><!-- /body -->
+</div><!-- /poster -->
+</body>
+</html>

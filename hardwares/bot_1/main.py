@@ -274,12 +274,23 @@ async def transcribe_audio(audio: UploadFile = File(...)):
     finally:
         os.remove(temp_path)
 
-app.mount("/web", StaticFiles(directory=str(BASE_DIR / "web_client"), html=True), name="web_client")
-app.mount("/", StaticFiles(directory=str(BASE_DIR / "public"), html=True), name="static")
+# Serve static assets (js, css, etc.) from /public
+app.mount("/static", StaticFiles(directory=str(BASE_DIR / "public")), name="static_assets")
 
 @app.get("/favicon.ico", include_in_schema=False)
 async def favicon():
-    return FileResponse("public/favicon.ico") if os.path.exists("public/favicon.ico") else Response(status_code=204)
+    fav = BASE_DIR / "public" / "favicon.ico"
+    return FileResponse(str(fav)) if fav.exists() else Response(status_code=204)
+
+# Catch-all: serve index.html for the root and any unmatched GET
+@app.get("/{full_path:path}", include_in_schema=False)
+async def serve_frontend(full_path: str):
+    # If a real file exists in public/, serve it directly
+    target = BASE_DIR / "public" / full_path
+    if target.is_file():
+        return FileResponse(str(target))
+    # Otherwise fall back to index.html (SPA behaviour)
+    return FileResponse(str(BASE_DIR / "public" / "index.html"))
 
 if __name__ == "__main__":
     import uvicorn
